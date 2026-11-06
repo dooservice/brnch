@@ -18,7 +18,6 @@ $info.FileName = $job.program
 $info.Arguments = (@($job.arguments) | ForEach-Object { ConvertTo-CommandLineArgument ([string]$_) }) -join ' '
 $info.WorkingDirectory = $job.directory
 $info.UseShellExecute = $false
-$info.CreateNoWindow = $true
 $job.environment.PSObject.Properties | ForEach-Object { $info.EnvironmentVariables[$_.Name] = [string]$_.Value }
 $process = [Diagnostics.Process]::Start($info)
 $process.WaitForExit()
