@@ -1,0 +1,30 @@
+name: Sandbox probes
+
+# Measures, on disposable runners, what each platform's sandbox hides from an agent process.
+on:
+  workflow_dispatch:
+  push:
+    branches: [probes/sandbox]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash probes/sandbox/linux-bubblewrap.sh
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash probes/sandbox/macos-seatbelt.sh
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - shell: pwsh
+        run: probes/sandbox/windows-dedicated-user.ps1
