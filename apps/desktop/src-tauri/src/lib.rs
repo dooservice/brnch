@@ -1,5 +1,6 @@
 //! The brnch window: a thin Tauri shell. Every rule lives in the crates it calls.
 
+mod agent_account;
 mod agent_detector;
 mod desktop_application;
 mod interrupted_runs;
@@ -42,6 +43,7 @@ pub use workspace_files::{FileContent, FileEntry, TextMatch, WorkspaceFiles};
 pub use workspace_statistics::WorkspaceStatistics;
 pub use workspace_summary::{WorkspaceStatus, WorkspaceSummary};
 
+pub use agent_account::AgentAccount;
 pub use agent_detector::{AgentDetector, AgentInstallation};
 pub use desktop_application::run;
 pub use interrupted_runs::close_interrupted_runs;

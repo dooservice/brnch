@@ -322,3 +322,26 @@ pub fn find_workspace_text(
 ) -> Result<Vec<crate::TextMatch>, String> {
     Ok(files_of(&service, &workspace_identifier)?.find_text(&query))
 }
+
+#[tauri::command]
+pub async fn setup_agent_account(
+    account: State<'_, crate::AgentAccount>,
+) -> Result<brnch_sandbox::SandboxStatus, String> {
+    let account = account.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || account.set_up())
+        .await
+        .map_err(|failure| failure.to_string())?
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub async fn set_agent_api_key(
+    account: State<'_, crate::AgentAccount>,
+    api_key: Option<String>,
+) -> Result<(), String> {
+    let account = account.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || account.set_api_key(api_key.as_deref()))
+        .await
+        .map_err(|failure| failure.to_string())?
+        .map_err(|failure| describe(&failure))
+}

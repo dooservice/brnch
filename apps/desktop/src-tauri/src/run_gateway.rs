@@ -38,6 +38,7 @@ pub struct RunGateway {
     store: Arc<SqliteProjectStore>,
     workspaces_root: PathBuf,
     read_only_directories: Vec<String>,
+    agent_data_directory: PathBuf,
     connected: OnceCell<Connected>,
 }
 
@@ -46,11 +47,13 @@ impl RunGateway {
         store: Arc<SqliteProjectStore>,
         workspaces_root: PathBuf,
         read_only_directories: Vec<String>,
+        agent_data_directory: PathBuf,
     ) -> Self {
         Self {
             store,
             workspaces_root,
             read_only_directories,
+            agent_data_directory,
             connected: OnceCell::new(),
         }
     }
@@ -105,7 +108,7 @@ impl RunGateway {
 
     /// Does not need gitd, so the window can show it before anything is connected.
     pub fn sandbox_status(&self) -> SandboxStatus {
-        SandboxSelector::for_current_system().status()
+        SandboxSelector::for_current_system(&self.agent_data_directory).status()
     }
 
     pub async fn diff(&self, workspace_identifier: &str) -> BrnchResult<DiffSummary> {
@@ -143,8 +146,11 @@ impl RunGateway {
             .iter()
             .map(String::as_str)
             .collect();
-        let runner =
-            SandboxedAgentRunner::new(process, SandboxSelector::for_current_system(), &directories);
+        let runner = SandboxedAgentRunner::new(
+            process,
+            SandboxSelector::for_current_system(&self.agent_data_directory),
+            &directories,
+        );
         Ok(Connected {
             runs: RunService::new(
                 settings,

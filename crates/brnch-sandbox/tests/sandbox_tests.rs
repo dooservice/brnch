@@ -6,7 +6,6 @@ use brnch_core::agent::{
 use brnch_core::{BrnchError, BrnchResult};
 use brnch_sandbox::{
     BubblewrapBackend, SandboxBackend, SandboxProfile, SandboxedAgentRunner, UnavailableBackend,
-    WindowsAccountBackend,
 };
 
 fn profile() -> SandboxProfile {
@@ -57,25 +56,6 @@ fn the_unavailable_backend_refuses_every_agent() {
         backend.confine(&command(), &profile()),
         Err(BrnchError::SandboxUnavailable(reason)) if reason == "no sandbox here"
     ));
-}
-
-#[test]
-fn the_windows_backend_refuses_until_it_is_verified_but_has_its_grants_ready() {
-    let backend = WindowsAccountBackend::new("brnchagent");
-
-    assert!(matches!(
-        backend.confine(&command(), &profile()),
-        Err(BrnchError::SandboxUnavailable(_))
-    ));
-    let grants = backend.permission_grants(&profile());
-    assert_eq!(
-        grants[0].arguments,
-        ["/work/agent-1", "/grant", "brnchagent:(OI)(CI)M"]
-    );
-    assert_eq!(
-        grants[1].arguments,
-        ["/pool", "/grant", "brnchagent:(OI)(CI)RX"]
-    );
 }
 
 #[derive(Default, Clone)]
@@ -146,24 +126,135 @@ mod selection {
         let with_bwrap = OsString::from(&directory);
 
         assert!(
-            SandboxSelector::for_system("linux", Some(&with_bwrap))
+            SandboxSelector::for_system("linux", Some(&with_bwrap), std::path::Path::new("."))
                 .status()
                 .available
         );
         let nowhere = OsString::from("/nonexistent");
-        let without = SandboxSelector::for_system("linux", Some(&nowhere));
+        let without =
+            SandboxSelector::for_system("linux", Some(&nowhere), std::path::Path::new("."));
         assert!(!without.status().available);
         assert!(without.status().reason.unwrap().contains("not installed"));
         std::fs::remove_dir_all(&directory).unwrap();
     }
 
     #[test]
-    fn windows_and_unknown_systems_report_why_nothing_confines_the_agent() {
-        let windows = SandboxSelector::for_system("windows", None).status();
-        let other = SandboxSelector::for_system("freebsd", None).status();
+    fn windows_is_confined_only_after_its_account_was_set_up_and_unknown_systems_never() {
+        let data = std::env::temp_dir().join(format!("brnch-win-{}", std::process::id()));
+        std::fs::create_dir_all(&data).unwrap();
+        let before = SandboxSelector::for_system("windows", None, &data).status();
+        std::fs::write(data.join("agent-account.ready"), "brnchagent").unwrap();
+        let after = SandboxSelector::for_system("windows", None, &data).status();
+        let other = SandboxSelector::for_system("freebsd", None, &data).status();
 
-        assert!(!windows.available);
-        assert!(windows.reason.unwrap().contains("not verified"));
+        assert!(!before.available);
+        assert!(before.reason.unwrap().contains("not been set up"));
+        assert!(after.available);
         assert!(!other.available);
+        std::fs::remove_dir_all(&data).unwrap();
+    }
+}
+
+mod windows_account {
+    use std::path::PathBuf;
+
+    use brnch_core::BrnchError;
+    use brnch_core::agent::AgentCommand;
+    use brnch_sandbox::{SandboxBackend, SandboxProfile, WindowsAccountBackend};
+
+    fn data_directory(name: &str) -> PathBuf {
+        let directory =
+            std::env::temp_dir().join(format!("brnch-win-{name}-{}", std::process::id()));
+        std::fs::create_dir_all(directory.join("agent-jobs")).unwrap();
+        directory
+    }
+
+    fn profile() -> SandboxProfile {
+        SandboxProfile {
+            workspace_directory: "D:\\work\\agent-1".to_owned(),
+            read_only_directories: Vec::new(),
+        }
+    }
+
+    fn command() -> AgentCommand {
+        AgentCommand {
+            program: "claude".to_owned(),
+            arguments: vec!["--print".to_owned(), "say \"hi\"".to_owned()],
+        }
+    }
+
+    #[test]
+    fn it_refuses_to_start_an_agent_until_the_account_exists() {
+        let data = data_directory("refuse");
+        let backend = WindowsAccountBackend::new("brnchagent", &data);
+
+        let result = backend.confine(&command(), &profile());
+
+        assert!(
+            matches!(result, Err(BrnchError::SandboxUnavailable(reason)) if reason.contains("not been set up"))
+        );
+        std::fs::remove_dir_all(&data).unwrap();
+    }
+
+    #[test]
+    fn a_ready_account_starts_the_agent_through_the_runner_script_with_the_job_in_a_file() {
+        let data = data_directory("ready");
+        std::fs::write(data.join("agent-account.ready"), "brnchagent").unwrap();
+        let backend = WindowsAccountBackend::new("brnchagent", &data);
+
+        let confined = backend.confine(&command(), &profile()).unwrap();
+
+        assert_eq!(confined.program, "powershell.exe");
+        let argument = |name: &str| {
+            let at = confined
+                .arguments
+                .iter()
+                .position(|candidate| candidate == name)
+                .unwrap();
+            confined.arguments[at + 1].clone()
+        };
+        assert!(argument("-File").ends_with("run-as-agent.ps1"));
+        assert_eq!(argument("-Account"), "brnchagent");
+        assert_eq!(argument("-WorkspaceDirectory"), "D:\\work\\agent-1");
+        let job: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(argument("-JobFile")).unwrap()).unwrap();
+        assert_eq!(job["program"], "claude");
+        assert_eq!(job["arguments"][1], "say \"hi\"");
+        assert_eq!(job["directory"], "D:\\work\\agent-1");
+        assert!(!confined.arguments.join(" ").contains("say"));
+        std::fs::remove_dir_all(&data).unwrap();
+    }
+
+    #[test]
+    fn setup_runs_in_two_steps_and_only_the_second_asks_for_administrator_permission() {
+        let data = data_directory("setup");
+        let backend = WindowsAccountBackend::new("brnchagent", &data);
+        let scripts = backend.install_scripts().unwrap();
+
+        let steps = backend.setup_commands(true);
+        let direct = backend.setup_commands(false);
+
+        assert!(scripts.join("run-as-agent.ps1").is_file());
+        assert!(steps[0].arguments.join(" ").contains("-Phase Prepare"));
+        assert!(!steps[0].arguments.join(" ").contains("RunAs"));
+        assert!(steps[1].arguments.join(" ").contains("-Verb RunAs"));
+        assert!(steps[1].arguments.join(" ").contains("Create"));
+        assert!(direct[1].arguments.join(" ").contains("-Phase Create"));
+        assert!(!direct[1].arguments.join(" ").contains("RunAs"));
+        std::fs::remove_dir_all(&data).unwrap();
+    }
+
+    #[test]
+    fn the_api_key_travels_in_an_environment_variable_and_never_on_the_command_line() {
+        let data = data_directory("environment");
+        let backend = WindowsAccountBackend::new("brnchagent", &data);
+
+        let (command, variable) = backend.environment_command(false);
+        let (clearing, _) = backend.environment_command(true);
+
+        assert_eq!(variable, "BRNCH_AGENT_ENVIRONMENT");
+        assert!(!command.arguments.join(" ").contains("sk-"));
+        assert!(clearing.arguments.contains(&"-Clear".to_owned()));
+        std::fs::remove_dir_all(&data).unwrap();
     }
 }

@@ -20,18 +20,30 @@ pub enum SandboxSelector {
 }
 
 impl SandboxSelector {
-    pub fn for_current_system() -> Self {
-        Self::for_system(std::env::consts::OS, std::env::var_os("PATH").as_ref())
+    /// `data_directory` is where the application keeps what the Windows account needs.
+    pub fn for_current_system(data_directory: &Path) -> Self {
+        Self::for_system(
+            std::env::consts::OS,
+            std::env::var_os("PATH").as_ref(),
+            data_directory,
+        )
     }
 
     /// `operating_system` is a value of [`std::env::consts::OS`].
-    pub fn for_system(operating_system: &str, path_variable: Option<&OsString>) -> Self {
+    pub fn for_system(
+        operating_system: &str,
+        path_variable: Option<&OsString>,
+        data_directory: &Path,
+    ) -> Self {
         match operating_system {
             "linux" if Self::is_installed(BUBBLEWRAP_PROGRAM, path_variable) => {
                 Self::Bubblewrap(BubblewrapBackend)
             }
             "linux" => Self::unavailable("bubblewrap (bwrap) is not installed"),
-            "windows" => Self::WindowsAccount(WindowsAccountBackend::new(WINDOWS_AGENT_ACCOUNT)),
+            "windows" => Self::WindowsAccount(WindowsAccountBackend::new(
+                WINDOWS_AGENT_ACCOUNT,
+                data_directory,
+            )),
             _ => Self::unavailable("this system has no verified sandbox yet"),
         }
     }
@@ -43,18 +55,24 @@ impl SandboxSelector {
                 mechanism: "bubblewrap".to_owned(),
                 reason: None,
             },
-            Self::WindowsAccount(_) => SandboxStatus {
-                available: false,
+            Self::WindowsAccount(backend) => SandboxStatus {
+                available: backend.is_ready(),
                 mechanism: "dedicated Windows account".to_owned(),
-                reason: Some(
-                    "starting agents under the dedicated account is not verified yet".to_owned(),
-                ),
+                reason: (!backend.is_ready())
+                    .then(|| "the account agents run under has not been set up yet".to_owned()),
             },
             Self::Unavailable(_, reason) => SandboxStatus {
                 available: false,
                 mechanism: "none".to_owned(),
                 reason: Some(reason.clone()),
             },
+        }
+    }
+
+    pub fn windows_backend(&self) -> Option<&WindowsAccountBackend> {
+        match self {
+            Self::WindowsAccount(backend) => Some(backend),
+            _ => None,
         }
     }
 

@@ -43,12 +43,14 @@ pub fn run() {
                 Arc::clone(&store),
                 workspaces_root,
                 read_only_directories(),
+                directory.clone(),
             ));
             application.manage(crate::TerminalService::new(Arc::new(
                 crate::TauriTerminalListener {
                     application: application.handle().clone(),
                 },
             )));
+            application.manage(crate::AgentAccount::new(&directory));
             application.manage(ProjectService::new(store));
             Ok(())
         })
@@ -71,6 +73,8 @@ pub fn run() {
             project_commands::sandbox_status,
             project_commands::detect_agents,
             project_commands::gitd_status,
+            project_commands::setup_agent_account,
+            project_commands::set_agent_api_key,
             project_commands::inspect_repository,
             project_commands::inspect_local_repository,
             project_commands::workspace_statistics,
