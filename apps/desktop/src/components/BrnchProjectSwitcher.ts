@@ -12,11 +12,27 @@ export class BrnchProjectSwitcher extends LitElement {
     button.project { width: 100%; text-align: left; padding: 8px 12px; border: 0;
       background: transparent; color: inherit; cursor: pointer; font: inherit; }
     button.project[aria-current="true"] { background: var(--brnch-selected, #2a2d3a); }
-    form { display: grid; gap: 4px; padding: 12px; }
-    input { font: inherit; padding: 4px 6px; }
+    button.project:hover { background: #20222c; }
+    form { display: grid; gap: 6px; padding: 12px; border-top: 1px solid #2a2d3a; }
+    input { font: inherit; padding: 6px 8px; border: 1px solid #2a2d3a; border-radius: 4px;
+      background: #1d1f27; color: inherit; }
+    form button { font: inherit; padding: 6px; border: 0; border-radius: 4px;
+      background: #3b5bdb; color: white; cursor: pointer; }
   `;
 
   state!: ProjectSwitcherState;
+
+  private stopListening: (() => void) | null = null;
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this.stopListening = this.state.subscribe(() => this.requestUpdate());
+  }
+
+  override disconnectedCallback(): void {
+    this.stopListening?.();
+    super.disconnectedCallback();
+  }
 
   override render() {
     return html`

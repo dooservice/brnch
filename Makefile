@@ -4,7 +4,7 @@ export HOST_GID := $(shell id -g)
 
 COMPOSE := docker compose run --rm
 
-.PHONY: help images test integration lint format add check frontend-install frontend-test frontend-build desktop-check
+.PHONY: help images test integration lint format add check frontend-install frontend-test frontend-build desktop-check screenshots
 
 help:
 	@echo "make images                     Build the Docker images"
@@ -54,3 +54,7 @@ frontend-build:
 # Lints and tests the Tauri shell, which needs WebKit and GTK, in its own image.
 desktop-check:
 	docker compose run --rm desktop sh -c "cargo fmt --all --check && cargo clippy -p brnch-desktop --all-targets -- -D warnings && cargo test -p brnch-desktop"
+
+# Builds the interface and saves a picture of each state in apps/desktop/screenshots.
+screenshots: frontend-build
+	$(COMPOSE) screenshots sh -c "npm install --no-save playwright-core@1.65.0 && node screenshots/capture.mjs"

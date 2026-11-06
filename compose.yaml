@@ -72,3 +72,14 @@ services:
     build:
       context: .
       dockerfile: docker/desktop.Dockerfile
+
+  # Takes the interface screenshots in headless Chromium (browsers come with the image).
+  screenshots:
+    image: mcr.microsoft.com/playwright:v1.65.0-noble
+    user: *host-user
+    working_dir: /workspace/apps/desktop
+    volumes:
+      - .:/workspace
+    environment:
+      HOME: /workspace/.cache/home
+      npm_config_cache: /workspace/.cache/npm
