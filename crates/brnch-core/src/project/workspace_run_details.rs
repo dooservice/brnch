@@ -4,6 +4,7 @@
 pub struct WorkspaceRunDetails {
     pub run_identifier: String,
     pub agent_kind: String,
+    pub permission_mode: String,
     pub title: String,
     pub prompt: String,
     pub started_at_milliseconds: i64,

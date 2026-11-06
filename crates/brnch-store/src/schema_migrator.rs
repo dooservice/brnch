@@ -34,6 +34,7 @@ const MIGRATIONS: &[&str] = &[
         workspace_identifier TEXT PRIMARY KEY REFERENCES workspaces(identifier) ON DELETE CASCADE,
         run_identifier TEXT NOT NULL,
         agent_kind TEXT NOT NULL,
+        permission_mode TEXT NOT NULL,
         title TEXT NOT NULL,
         prompt TEXT NOT NULL,
         started_at INTEGER NOT NULL

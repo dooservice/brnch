@@ -12,6 +12,7 @@ workspace = true
 
 [dependencies]
 brnch-core = { version = "0.1.0", path = "../brnch-core" }
+serde = { version = "1.0.229", features = ["derive"] }
 
 [dev-dependencies]
 tokio = { version = "1.54.1", features = ["macros", "rt"] }

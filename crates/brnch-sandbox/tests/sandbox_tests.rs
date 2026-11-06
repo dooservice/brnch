@@ -132,3 +132,38 @@ async fn the_wrapped_runner_starts_the_confined_command() {
 
     assert_eq!(started.commands.lock().unwrap()[0].program, "bwrap");
 }
+
+mod selection {
+    use std::ffi::OsString;
+
+    use brnch_sandbox::SandboxSelector;
+
+    #[test]
+    fn linux_is_confined_only_when_bubblewrap_is_installed() {
+        let directory = std::env::temp_dir().join(format!("brnch-path-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        std::fs::write(directory.join("bwrap"), "").unwrap();
+        let with_bwrap = OsString::from(&directory);
+
+        assert!(
+            SandboxSelector::for_system("linux", Some(&with_bwrap))
+                .status()
+                .available
+        );
+        let nowhere = OsString::from("/nonexistent");
+        let without = SandboxSelector::for_system("linux", Some(&nowhere));
+        assert!(!without.status().available);
+        assert!(without.status().reason.unwrap().contains("not installed"));
+        std::fs::remove_dir_all(&directory).unwrap();
+    }
+
+    #[test]
+    fn windows_and_unknown_systems_report_why_nothing_confines_the_agent() {
+        let windows = SandboxSelector::for_system("windows", None).status();
+        let other = SandboxSelector::for_system("freebsd", None).status();
+
+        assert!(!windows.available);
+        assert!(windows.reason.unwrap().contains("not verified"));
+        assert!(!other.available);
+    }
+}

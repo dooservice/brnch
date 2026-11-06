@@ -348,11 +348,12 @@ impl RunRecordStore for SqliteProjectStore {
         self.connection()
             .execute(
                 "INSERT INTO workspace_runs
-                    (workspace_identifier, run_identifier, agent_kind, title, prompt, started_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+                    (workspace_identifier, run_identifier, agent_kind, permission_mode, title, prompt, started_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
                  ON CONFLICT(workspace_identifier) DO UPDATE SET
                     run_identifier = excluded.run_identifier,
                     agent_kind = excluded.agent_kind,
+                    permission_mode = excluded.permission_mode,
                     title = excluded.title,
                     prompt = excluded.prompt,
                     started_at = excluded.started_at",
@@ -360,6 +361,7 @@ impl RunRecordStore for SqliteProjectStore {
                     workspace.as_str(),
                     details.run_identifier,
                     details.agent_kind,
+                    details.permission_mode,
                     details.title,
                     details.prompt,
                     details.started_at_milliseconds
@@ -372,16 +374,17 @@ impl RunRecordStore for SqliteProjectStore {
     fn find_run(&self, workspace: &WorkspaceId) -> BrnchResult<Option<WorkspaceRunDetails>> {
         self.connection()
             .query_row(
-                "SELECT run_identifier, agent_kind, title, prompt, started_at
+                "SELECT run_identifier, agent_kind, permission_mode, title, prompt, started_at
                  FROM workspace_runs WHERE workspace_identifier = ?1",
                 [workspace.as_str()],
                 |row| {
                     Ok(WorkspaceRunDetails {
                         run_identifier: row.get(0)?,
                         agent_kind: row.get(1)?,
-                        title: row.get(2)?,
-                        prompt: row.get(3)?,
-                        started_at_milliseconds: row.get(4)?,
+                        permission_mode: row.get(2)?,
+                        title: row.get(3)?,
+                        prompt: row.get(4)?,
+                        started_at_milliseconds: row.get(5)?,
                     })
                 },
             )

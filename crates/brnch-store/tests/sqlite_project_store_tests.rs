@@ -239,6 +239,7 @@ mod run_records {
         WorkspaceRunDetails {
             run_identifier: "run-1".to_owned(),
             agent_kind: "claude_code".to_owned(),
+            permission_mode: "edit_files".to_owned(),
             title: title.to_owned(),
             prompt: "do the thing".to_owned(),
             started_at_milliseconds: 1_000,
