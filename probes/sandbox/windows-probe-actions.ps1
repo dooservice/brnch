@@ -4,6 +4,7 @@ param(
     [string]$RealAppData,
     [string]$Workspace,
     [string]$Pool,
+    [string]$UserToolPath,
     [string]$OutputFile
 )
 
@@ -29,7 +30,9 @@ function Test-Command([string]$label, [scriptblock]$command) {
         $null = & $command 2>&1
         if ($LASTEXITCODE -eq 0) { Add-Result $label 'funciona' '' } else { Add-Result $label 'falla' "código $LASTEXITCODE" }
     } catch {
-        Add-Result $label 'falla' $_.Exception.Message
+        $message = $_.Exception.Message
+        if ($message.Length -gt 60) { $message = $message.Substring(0, 60) }
+        Add-Result $label 'falla' $message
     }
 }
 
@@ -44,6 +47,18 @@ if ($credentialList -match 'brnch-canary') {
 }
 
 try {
+    $null = & ssh-add.exe -l 2>&1
+    $sshAddCode = $LASTEXITCODE
+} catch {
+    $sshAddCode = 2
+}
+if ($sshAddCode -eq 2) {
+    Add-Result 'agente OpenSSH (ssh-add -l)' 'bloqueado' 'no conecta'
+} else {
+    Add-Result 'agente OpenSSH (ssh-add -l)' 'accesible' "código $sshAddCode"
+}
+
+try {
     Set-Content -LiteralPath (Join-Path $Workspace 'written-by-probe.txt') -Value 'ok' -ErrorAction Stop
     Add-Result 'escribir en el workspace' 'funciona' ''
 } catch {
@@ -53,5 +68,6 @@ Test-ReadAccess 'leer el pool' (Join-Path $Pool 'object.txt')
 Test-Command 'git --version' { git --version }
 Test-Command 'node -v' { node -v }
 Test-Command 'git ls-remote por HTTPS' { git ls-remote https://github.com/dooservice/gitd HEAD }
+Test-Command 'herramienta instalada en el perfil del usuario' { & $UserToolPath }
 
 Set-Content -LiteralPath $OutputFile -Value $script:lines

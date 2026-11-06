@@ -1,6 +1,7 @@
 name: Sandbox probes
 
-# Measures, on disposable runners, what each platform's sandbox hides from an agent process.
+# Measures, on disposable runners, what each platform's sandbox hides from an agent process, and
+# publishes a branch to a real remote through gitd.
 on:
   workflow_dispatch:
   push:
@@ -14,20 +15,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - run: bash probes/sandbox/linux-bubblewrap.sh
 
   macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@v7
         with:
           go-version: stable
       - run: bash probes/sandbox/macos-seatbelt.sh
 
   windows:
-    runs-on: windows-latest
+    runs-on: windows-2025
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: samypr100/setup-dev-drive@v3
+        with:
+          drive-size: 8GB
+          drive-format: ReFS
       - shell: pwsh
         run: probes/sandbox/windows-dedicated-user.ps1
+
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - run: bash probes/publish/publish-through-gitd.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}

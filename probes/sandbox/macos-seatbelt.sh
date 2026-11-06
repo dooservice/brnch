@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
-# Probes three Seatbelt profiles on macOS: one that only hides credential files (what Codex and
-# Anthropic's sandbox do), one that also denies the Security service, and a strict one. For each
-# it reports whether the Keychain canary can be read and which common tools keep working.
+# Probes four Seatbelt profiles on macOS and reports, for each, which credential locations stay
+# readable and which common tools keep working:
+#   files-only          hides credential files only (what Codex and Anthropic's sandbox do)
+#   no-security-service also denies the Security service that guards the Keychain
+#   strict              also hides the Keychain folders and the ssh-agent sockets
+#   allowlist           denies everything, then allows only what the agent needs
 # Prints a table and never fails, so every probe is reported.
 set -u
 
 summary_file="${GITHUB_STEP_SUMMARY:-/dev/null}"
+profiles_directory="$(cd "$(dirname "$0")/macos" && pwd)"
 real_home="$HOME"
-work_directory="$(mktemp -d)"
-secret_value="SECRET-KEYCHAIN-VALUE"
+work_directory="$(cd "$(mktemp -d)" && pwd -P)"
+pool_directory="$(cd "$(mktemp -d)" && pwd -P)"
+echo "pool object" > "$pool_directory/object"
+generic_secret="SECRET-KEYCHAIN-VALUE"
+internet_secret="SECRET-INTERNET-VALUE"
 
 mkdir -p "$real_home/.ssh" "$real_home/.config/gh"
 echo "canary-ssh-key" > "$real_home/.ssh/id_test"
@@ -20,8 +27,15 @@ security unlock-keychain -p probe-password probe.keychain
 security set-keychain-settings probe.keychain
 security list-keychains -d user -s probe.keychain
 security default-keychain -d user -s probe.keychain
-security add-generic-password -a brnch -s brnch-canary -w "$secret_value" -A probe.keychain
+security add-generic-password -a brnch -s brnch-canary -w "$generic_secret" -A probe.keychain
+security add-internet-password -a probe -s github.com -r htps -w "$internet_secret" -A probe.keychain
+
 eval "$(ssh-agent -s)" > /dev/null
+launchd_style_directory="/private/tmp/com.apple.launchd.brnchprobe"
+launchd_style_socket="$launchd_style_directory/Listeners"
+mkdir -p "$launchd_style_directory"
+ssh-agent -a "$launchd_style_socket" > /dev/null
+agent_socket_real="$(python3 -c 'import os; print(os.path.realpath(os.environ["SSH_AUTH_SOCK"]))')"
 
 cat > "$work_directory/main.go" <<'GO'
 package main
@@ -51,14 +65,32 @@ files_only_rules="(version 1)
 (allow default)
 (deny file-read* (subpath \"$real_home/.ssh\") (subpath \"$real_home/.config/gh\") (literal \"$real_home/.git-credentials\"))"
 security_service_rules='(deny mach-lookup (global-name "com.apple.SecurityServer") (global-name "com.apple.securityd.xpc") (global-name "com.apple.secd"))'
-agent_socket_real="$(python3 -c 'import os; print(os.path.realpath(os.environ["SSH_AUTH_SOCK"]))')"
-strict_extra_rules="(deny file-read* (subpath \"$real_home/Library/Keychains\") (subpath \"/Library/Keychains\"))
+keychain_and_socket_rules="(deny file-read* (subpath \"$real_home/Library/Keychains\") (subpath \"/Library/Keychains\"))
 (deny network-outbound (remote unix-socket (path-literal \"$agent_socket_real\")))
 (deny network-outbound (remote unix-socket (regex #\"^/private/tmp/com\\.apple\\.launchd\\.[^/]+/Listeners\$\")))"
 
 printf '%s\n' "$files_only_rules" > "$work_directory/files-only.sb"
 printf '%s\n%s\n' "$files_only_rules" "$security_service_rules" > "$work_directory/no-security-service.sb"
-printf '%s\n%s\n%s\n' "$files_only_rules" "$security_service_rules" "$strict_extra_rules" > "$work_directory/strict.sb"
+printf '%s\n%s\n%s\n' "$files_only_rules" "$security_service_rules" "$keychain_and_socket_rules" > "$work_directory/strict.sb"
+
+{
+  cat "$profiles_directory/seatbelt_base_policy.sbpl"
+  cat "$profiles_directory/seatbelt_read_only_platform_defaults.sbpl"
+  grep -v 'com.apple.SecurityServer' "$profiles_directory/seatbelt_network_policy.sbpl"
+  cat <<RULES
+(allow file-read-metadata)
+(allow file-read*
+  (subpath "/usr") (subpath "/bin") (subpath "/sbin") (subpath "/System")
+  (subpath "/Library/Developer") (subpath "/opt/homebrew") (subpath "/private/etc")
+  (subpath "/dev") (subpath "$work_directory") (subpath "$pool_directory"))
+(allow file-map-executable
+  (subpath "/usr") (subpath "/System") (subpath "/Library/Developer")
+  (subpath "/opt/homebrew") (subpath "$work_directory"))
+(allow file-write* (subpath "$work_directory") (subpath "/private/tmp") (subpath "/private/var/folders"))
+(allow network*)
+$keychain_and_socket_rules
+RULES
+} > "$work_directory/allowlist.sb"
 
 rows=""
 record() { rows+="| $1 | $2 | $3 | $4 |"$'\n'; }
@@ -82,37 +114,57 @@ probe_working() {
   if in_profile "$profile_name" "$@" > /dev/null 2>&1; then
     record "$profile_name" "$description" "control" "funciona"
   else
-    record "$profile_name" "$description" "control" "falla"
+    record "$profile_name" "$description" "control" "**falla**"
   fi
 }
 
-keychain_output="$(security find-generic-password -s brnch-canary -w 2>&1)"
-if [ "$keychain_output" = "$secret_value" ]; then
-  record "sin sandbox" "Keychain: security find-generic-password" "línea base" "accesible (la brecha existe)"
+probe_secret_hidden() {
+  local profile_name="$1" description="$2" secret="$3"; shift 3
+  local output
+  output="$(in_profile "$profile_name" "$@" 2>&1)"
+  if [[ "$output" == *"$secret"* ]]; then
+    record "$profile_name" "$description" "bloqueo esperado" "**ACCESIBLE**"
+  else
+    record "$profile_name" "$description" "bloqueo esperado" "bloqueado"
+  fi
+}
+
+probe_agent_socket_hidden() {
+  local profile_name="$1" description="$2" socket="$3"
+  in_profile "$profile_name" env SSH_AUTH_SOCK="$socket" ssh-add -l > /dev/null 2>&1
+  local exit_code=$?
+  if [ "$exit_code" -eq 2 ]; then
+    record "$profile_name" "$description" "bloqueo esperado" "bloqueado"
+  else
+    record "$profile_name" "$description" "bloqueo esperado" "**ACCESIBLE** (código $exit_code)"
+  fi
+}
+
+baseline_output="$(security find-generic-password -s brnch-canary -w 2>&1)"
+if [ "$baseline_output" = "$generic_secret" ]; then
+  record "sin sandbox" "Keychain: contraseña genérica" "línea base" "accesible (la brecha existe)"
 else
-  record "sin sandbox" "Keychain: security find-generic-password" "línea base" "**no se pudo leer ni sin sandbox**: $keychain_output"
+  record "sin sandbox" "Keychain: contraseña genérica" "línea base" "**no se pudo leer ni sin sandbox**: $baseline_output"
+fi
+baseline_helper="$(printf 'protocol=https\nhost=github.com\n\n' | /usr/bin/git credential-osxkeychain get 2>&1)"
+if [[ "$baseline_helper" == *"$internet_secret"* ]]; then
+  record "sin sandbox" "Keychain: git credential-osxkeychain" "línea base" "accesible (la brecha existe)"
+else
+  record "sin sandbox" "Keychain: git credential-osxkeychain" "línea base" "**no se pudo leer ni sin sandbox**"
 fi
 
-for profile_name in files-only no-security-service strict; do
+for profile_name in files-only no-security-service strict allowlist; do
   probe_blocked "$profile_name" "leer ~/.ssh/id_test" cat "$real_home/.ssh/id_test"
   probe_blocked "$profile_name" "leer ~/.config/gh/hosts.yml" cat "$real_home/.config/gh/hosts.yml"
-
-  sandboxed_output="$(in_profile "$profile_name" security find-generic-password -s brnch-canary -w 2>&1)"
-  if [ "$sandboxed_output" = "$secret_value" ]; then
-    record "$profile_name" "Keychain: security find-generic-password" "bloqueo esperado" "**ACCESIBLE**"
-  else
-    record "$profile_name" "Keychain: security find-generic-password" "bloqueo esperado" "bloqueado"
-  fi
-
-  in_profile "$profile_name" ssh-add -l > /dev/null 2>&1
-  agent_exit_code=$?
-  if [ "$agent_exit_code" -eq 2 ]; then
-    record "$profile_name" "hablar con el agente SSH" "bloqueo esperado" "bloqueado"
-  else
-    record "$profile_name" "hablar con el agente SSH" "bloqueo esperado" "**ACCESIBLE** (código $agent_exit_code)"
-  fi
+  probe_blocked "$profile_name" "leer ~/.git-credentials" cat "$real_home/.git-credentials"
+  probe_secret_hidden "$profile_name" "Keychain: contraseña genérica" "$generic_secret" security find-generic-password -s brnch-canary -w
+  probe_secret_hidden "$profile_name" "Keychain: contraseña de internet" "$internet_secret" security find-internet-password -s github.com -w
+  probe_secret_hidden "$profile_name" "Keychain: git credential-osxkeychain" "$internet_secret" sh -c "printf 'protocol=https\nhost=github.com\n\n' | /usr/bin/git credential-osxkeychain get"
+  probe_agent_socket_hidden "$profile_name" "agente SSH (socket propio)" "$SSH_AUTH_SOCK"
+  probe_agent_socket_hidden "$profile_name" "agente SSH (ruta estilo launchd)" "$launchd_style_socket"
 
   probe_working "$profile_name" "escribir en el workspace" sh -c "echo ok > '$work_directory/file-$profile_name'"
+  probe_working "$profile_name" "leer el pool" cat "$pool_directory/object"
   probe_working "$profile_name" "git --version" git --version
   probe_working "$profile_name" "HTTPS con curl del sistema" /usr/bin/curl -sS -o /dev/null --max-time 20 https://api.github.com
   probe_working "$profile_name" "HTTPS con Python" python3 -c "import urllib.request as u; u.urlopen('https://api.github.com', timeout=20)"
@@ -124,6 +176,7 @@ for profile_name in files-only no-security-service strict; do
   fi
   probe_working "$profile_name" "git ls-remote por HTTPS" git ls-remote https://github.com/dooservice/gitd HEAD
 done
+probe_blocked allowlist "listar el directorio personal" ls "$real_home"
 
 report="### macOS · Seatbelt ($(sw_vers -productVersion), $(uname -m))
 
@@ -132,3 +185,8 @@ report="### macOS · Seatbelt ($(sw_vers -productVersion), $(uname -m))
 $rows"
 echo "$report"
 echo "$report" >> "$summary_file"
+
+if [[ "$rows" == *"allowlist | "*"**falla**"* ]]; then
+  echo "--- denegaciones del sandbox (últimos 3 minutos) ---"
+  log show --last 3m --predicate 'sender == "Sandbox"' --style compact 2>/dev/null | grep -i deny | tail -40 || true
+fi
