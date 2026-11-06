@@ -1,3 +1,4 @@
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::time::Duration;
@@ -9,6 +10,8 @@ use tokio::sync::Mutex;
 const SOCKET_FILE: &str = "gitd.sock";
 const CONFIG_FILE: &str = "gitd.toml";
 const LOG_FILE: &str = "gitd.log";
+const SSH_KEY_MARKER: &str = "ssh-key.path";
+const GITHUB_PREFIX: &str = "https://github.com/";
 const STATE_DIRECTORY: &str = "state";
 const READY_MARKER: &str = "gitd listening";
 const START_TIMEOUT: Duration = Duration::from_secs(20);
@@ -39,6 +42,27 @@ impl GitdSupervisor {
 
     pub fn socket(&self) -> PathBuf {
         self.directory.join(SOCKET_FILE)
+    }
+
+    /// Declares (or with `None` withdraws) the SSH key gitd reads GitHub with, which only its
+    /// configuration can hold, and restarts gitd so it takes effect.
+    pub async fn use_ssh_key(&self, key: Option<&Path>) -> BrnchResult<()> {
+        let marker = self.directory.join(SSH_KEY_MARKER);
+        std::fs::create_dir_all(&self.directory)
+            .map_err(|error| BrnchError::AgentProcess(error.to_string()))?;
+        match key {
+            Some(path) => std::fs::write(&marker, path.to_string_lossy().as_bytes())
+                .map_err(|error| BrnchError::AgentProcess(error.to_string()))?,
+            None => {
+                let _ = std::fs::remove_file(&marker);
+            }
+        }
+        let mut child = self.child.lock().await;
+        if let Some(mut running) = child.take() {
+            let _ = running.kill().await;
+        }
+        *child = Some(self.start().await?);
+        Ok(())
     }
 
     /// Starts gitd unless this supervisor already did, and returns the socket it answers on once
@@ -117,11 +141,19 @@ impl GitdSupervisor {
             .map(|root| quote(root))
             .collect::<BrnchResult<Vec<_>>>()?
             .join(", ");
-        Ok(format!(
+        let mut configuration = format!(
             "socket = {}\nstate = {}\nroots = [{roots}]\n",
             quote(&self.socket())?,
             quote(state)?
-        ))
+        );
+        if let Ok(key) = std::fs::read_to_string(self.directory.join(SSH_KEY_MARKER)) {
+            let _ = write!(
+                configuration,
+                "\n[[credentials]]\nprefix = '{GITHUB_PREFIX}'\nssh_key = {}\n",
+                quote(Path::new(key.trim()))?
+            );
+        }
+        Ok(configuration)
     }
 
     fn tail(log: &Path) -> String {

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import Badge from '@/components/badge'
 import Button from '@/components/button'
 import GithubMark from '@/components/github_mark'
-import { useGitCredentials, useRemoveGitCredential } from '../../api/use_git_credentials'
+import { useGitCredentials, useRemoveGitCredential, useRemoveSshKey } from '../../api/use_git_credentials'
 import type { GitCredential } from '../../types/settings.types'
 
 const ICONS = { token: LockIcon, ssh_key: KeyRoundIcon, github_app: GithubMark, github_login: GithubMark, other: LockIcon } as const
@@ -17,6 +17,7 @@ export default function ConnectionsList({ enabled = true }: { enabled?: boolean 
   const { t } = useTranslation('settings')
   const credentials = useGitCredentials(enabled)
   const remove = useRemoveGitCredential()
+  const removeKey = useRemoveSshKey()
   return (
     <ul className="overflow-hidden rounded-[10px] border border-line bg-card" aria-label={t('connections.saved')}>
       {(credentials.data ?? []).map(credential => {
@@ -26,7 +27,7 @@ export default function ConnectionsList({ enabled = true }: { enabled?: boolean 
             <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] border border-line bg-canvas"><Icon size={16} /></span>
             <div className="min-w-0 flex-1"><p className="truncate font-medium">{title(credential)}</p><p className="truncate text-[12px] text-muted">{t(`connections.kind.${credential.kind}`, { prefix: credential.urlPrefix })}</p></div>
             <Badge variant={credential.kind === 'github_login' ? 'success' : 'muted'}>{t(`connections.badge.${credential.kind}`)}</Badge>
-            <Button variant="ghost" className="h-7" aria-label={t('connections.forget', { name: title(credential) })} icon={<TrashIcon size={14} />} onClick={() => remove.mutate(credential.identifier)}>{t('connections.remove')}</Button>
+            <Button variant="ghost" className="h-7" aria-label={t('connections.forget', { name: title(credential) })} icon={<TrashIcon size={14} />} onClick={() => (credential.kind === 'ssh_key' ? removeKey.mutate() : remove.mutate(credential.identifier))}>{t('connections.remove')}</Button>
           </li>
         )
       })}

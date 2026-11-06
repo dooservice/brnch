@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { command } from '@/lib/tauri'
-import type { GitCredential, GithubLoginPrompt, GithubLoginResult, RepositoryAccess } from '../types/settings.types'
+import type { GitCredential, GithubLoginPrompt, GithubLoginResult, RepositoryAccess, SshKey, SshVerification } from '../types/settings.types'
 
 const credentialsQuery = queryOptions({
   queryKey: ['system', 'git-credentials'] as const,
@@ -46,4 +46,26 @@ export function useFinishGithubLogin() {
 /** Whether gitd's credentials open one repository. */
 export function useCheckRepositoryAccess() {
   return useMutation({ mutationFn: (repositoryUrl: string) => command<RepositoryAccess>('check_repository_access', { repositoryUrl }) })
+}
+
+/** The key of this computer, made the first time. */
+export function useCreateSshKey() {
+  return useMutation({ mutationFn: () => command<SshKey>('create_ssh_key') })
+}
+
+/** Lets gitd use the key, tries a repository, and withdraws the key if GitHub refuses it. */
+export function useVerifySshKey() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (repositoryUrl: string) => command<SshVerification>('verify_ssh_key', { repositoryUrl }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: credentialsQuery.queryKey }),
+  })
+}
+
+export function useRemoveSshKey() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => command<void>('remove_ssh_key'),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: credentialsQuery.queryKey }),
+  })
 }

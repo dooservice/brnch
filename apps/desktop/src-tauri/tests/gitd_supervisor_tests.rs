@@ -3,7 +3,8 @@
 
 use brnch_core::BrnchSettings;
 use brnch_core::workspace::CredentialVault;
-use brnch_desktop::GitdSupervisor;
+use brnch_core::workspace::StoredCredentialKind;
+use brnch_desktop::{GitdSupervisor, SshKeyStore};
 use brnch_gitd::GitdWorkspaceProvider;
 
 #[tokio::test]
@@ -37,5 +38,37 @@ async fn a_missing_program_is_reported_instead_of_waiting() {
     let failure = supervisor.ensure_running().await.unwrap_err();
 
     assert!(failure.to_string().contains("gitd did not start"));
+    let _ = std::fs::remove_dir_all(&directory);
+}
+
+#[tokio::test]
+#[ignore = "needs a gitd program; set BRNCH_TEST_GITD_PROGRAM"]
+async fn an_ssh_key_is_declared_to_the_shipped_gitd_and_withdrawn_again() {
+    let program = std::env::var("BRNCH_TEST_GITD_PROGRAM").expect("names a gitd program");
+    let directory = std::env::temp_dir().join(format!("brnch-gitd-ssh-{}", std::process::id()));
+    let supervisor = GitdSupervisor::new(
+        program.into(),
+        directory.join("gitd"),
+        vec![directory.join("workspaces")],
+    );
+    let keys = SshKeyStore::new(&directory.join("gitd"));
+    keys.ensure("brnch test").unwrap();
+    let socket = supervisor.ensure_running().await.unwrap();
+    let provider = GitdWorkspaceProvider::connect_at(BrnchSettings::default(), &socket)
+        .await
+        .unwrap();
+
+    supervisor
+        .use_ssh_key(Some(&keys.private_key_path()))
+        .await
+        .unwrap();
+    let declared = provider.list_credentials().await.unwrap();
+    supervisor.use_ssh_key(None).await.unwrap();
+    let withdrawn = provider.list_credentials().await.unwrap();
+
+    assert_eq!(declared.len(), 1);
+    assert_eq!(declared[0].kind, StoredCredentialKind::SshKey);
+    assert_eq!(declared[0].url_prefix, "https://github.com");
+    assert_eq!(withdrawn.len(), 0);
     let _ = std::fs::remove_dir_all(&directory);
 }

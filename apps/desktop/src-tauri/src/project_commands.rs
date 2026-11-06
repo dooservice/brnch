@@ -247,6 +247,34 @@ pub async fn check_repository_access(
 }
 
 #[tauri::command]
+pub fn create_ssh_key(
+    gateway: State<'_, RunGateway>,
+) -> Result<crate::run_gateway::SshKeySummary, String> {
+    gateway
+        .create_ssh_key()
+        .map_err(|failure| failure.to_string())
+}
+
+#[tauri::command]
+pub async fn verify_ssh_key(
+    gateway: State<'_, RunGateway>,
+    repository_url: String,
+) -> Result<crate::run_gateway::SshVerification, String> {
+    gateway
+        .verify_ssh_key(&repository_url)
+        .await
+        .map_err(|failure| failure.to_string())
+}
+
+#[tauri::command]
+pub async fn remove_ssh_key(gateway: State<'_, RunGateway>) -> Result<(), String> {
+    gateway
+        .remove_ssh_key()
+        .await
+        .map_err(|failure| failure.to_string())
+}
+
+#[tauri::command]
 pub async fn remove_git_credential(
     gateway: State<'_, RunGateway>,
     identifier: String,

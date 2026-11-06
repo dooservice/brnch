@@ -24,6 +24,7 @@ export class FakeDesktop {
   gitd: GitdStatus = { connected: true, message: null }
   credentials: GitCredential[] = []
   opened: string[] = []
+  sshAccepted = true
   repositoryAccess: { level: 'public' | 'reachable' | 'denied' | 'unknown'; defaultBranch: string; failure: string } = { level: 'reachable', defaultBranch: 'main', failure: '' }
   statistics: Array<{ workspaceIdentifier: string; files: number; added: number; removed: number }> = []
   files = new Map<string, string>()
@@ -195,6 +196,16 @@ export class FakeDesktop {
       }
       case 'check_repository_access':
         return this.repositoryAccess
+      case 'create_ssh_key':
+        return { publicKey: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ4k brnch · PC', fingerprint: 'SHA256:abc123' }
+      case 'verify_ssh_key':
+        if (this.sshAccepted) this.credentials = [...this.credentials, { identifier: 'file-1', kind: 'ssh_key', urlPrefix: 'https://github.com', actsAs: '' }]
+        return this.sshAccepted
+          ? { access: { level: 'reachable', defaultBranch: 'main', failure: '' }, enabled: true }
+          : { access: { level: 'denied', defaultBranch: '', failure: 'AUTH_REFUSED' }, enabled: false }
+      case 'remove_ssh_key':
+        this.credentials = this.credentials.filter(credential => credential.kind !== 'ssh_key')
+        return null
       case 'remove_git_credential':
         this.credentials = this.credentials.filter(credential => credential.identifier !== args?.identifier)
         return null

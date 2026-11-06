@@ -78,4 +78,29 @@ describe('first start', () => {
 
     expect(await screen.findByText('Iniciar sesión con GitHub')).toBeInTheDocument()
   })
+
+  it('makes an SSH key, shows only its public half, and keeps it once GitHub accepts it', async () => {
+    const user = userEvent.setup()
+    await openPublishingStep(user)
+
+    await user.click(await screen.findByRole('button', { name: 'Crear clave' }))
+    expect(await screen.findByText(/ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ4k/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Abrir GitHub › Settings › SSH keys/ }))
+    await user.click(screen.getByRole('button', { name: 'Comprobar' }))
+
+    expect(desktop.opened).toEqual(['https://github.com/settings/ssh/new'])
+    expect(await screen.findByText(/GitHub reconoce la clave/)).toBeInTheDocument()
+  })
+
+  it('says so when GitHub does not know the key yet, and does not finish', async () => {
+    const user = userEvent.setup()
+    desktop.sshAccepted = false
+    await openPublishingStep(user)
+
+    await user.click(await screen.findByRole('button', { name: 'Crear clave' }))
+    await user.click(await screen.findByRole('button', { name: 'Comprobar' }))
+
+    expect(await screen.findByText(/GitHub aún no reconoce la clave.*AUTH_REFUSED/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Listo' })).not.toBeInTheDocument()
+  })
 })

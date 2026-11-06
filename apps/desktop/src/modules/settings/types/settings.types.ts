@@ -49,3 +49,14 @@ export interface RepositoryAccess {
   defaultBranch: string
   failure: string
 }
+
+/** The public half of this computer's SSH key. */
+export interface SshKey {
+  publicKey: string
+  fingerprint: string
+}
+
+export interface SshVerification {
+  access: RepositoryAccess
+  enabled: boolean
+}

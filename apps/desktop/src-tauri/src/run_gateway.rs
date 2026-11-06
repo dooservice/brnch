@@ -12,12 +12,12 @@ use brnch_sandbox::{SandboxSelector, SandboxStatus, SandboxedAgentRunner};
 use brnch_store::SqliteProjectStore;
 use tokio::sync::OnceCell;
 
-use crate::GitdSupervisor;
 use crate::WorkspaceStatistics;
 use crate::{
     ConflictSummary, DiffSummary, PublishOutcome, ReviewService, RunNotifier, RunService,
     StartRunRequest,
 };
+use crate::{GitdSupervisor, SshKeyStore};
 
 type RealRunService = RunService<
     GitdWorkspaceProvider,
@@ -129,6 +129,22 @@ impl From<RepositoryAccess> for AccessSummary {
     }
 }
 
+/// The public half of this computer's SSH key.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SshKeySummary {
+    pub public_key: String,
+    pub fingerprint: String,
+}
+
+/// What checking the SSH key found, and whether gitd keeps using it.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SshVerification {
+    pub access: AccessSummary,
+    pub enabled: bool,
+}
+
 /// Connects to gitd the first time a run is asked for, so the window opens even when gitd
 /// is not running yet and the person is told what is missing instead.
 pub struct RunGateway {
@@ -137,6 +153,7 @@ pub struct RunGateway {
     read_only_directories: Vec<String>,
     agent_data_directory: PathBuf,
     gitd_supervisor: Option<GitdSupervisor>,
+    ssh_keys: SshKeyStore,
     connected: OnceCell<Connected>,
 }
 
@@ -147,11 +164,13 @@ impl RunGateway {
         read_only_directories: Vec<String>,
         agent_data_directory: PathBuf,
     ) -> Self {
+        let ssh_keys = SshKeyStore::new(&agent_data_directory.join("gitd"));
         Self {
             store,
             workspaces_root,
             read_only_directories,
             agent_data_directory,
+            ssh_keys,
             gitd_supervisor: None,
             connected: OnceCell::new(),
         }
@@ -260,6 +279,51 @@ impl RunGateway {
             .check_access(repository_url.trim())
             .await?
             .into())
+    }
+
+    fn shipped_gitd(&self) -> BrnchResult<&GitdSupervisor> {
+        self.gitd_supervisor.as_ref().ok_or_else(|| {
+            brnch_core::BrnchError::WorkspaceProvider(
+                "SSH keys need the gitd that ships with brnch, which is not in use here".to_owned(),
+            )
+        })
+    }
+
+    /// Makes this computer's SSH key if there is none yet; gitd does not use it until checked.
+    pub fn create_ssh_key(&self) -> BrnchResult<SshKeySummary> {
+        self.shipped_gitd()?;
+        let computer = std::env::var("COMPUTERNAME")
+            .or_else(|_| std::env::var("HOSTNAME"))
+            .unwrap_or_else(|_| "this computer".to_owned());
+        let key = self.ssh_keys.ensure(&format!("brnch · {computer}"))?;
+        Ok(SshKeySummary {
+            public_key: key.public_key,
+            fingerprint: key.fingerprint,
+        })
+    }
+
+    /// Lets gitd read GitHub with the key, tries `repository_url`, and withdraws the key again if
+    /// GitHub does not accept it, since a key GitHub does not know would break every repository.
+    pub async fn verify_ssh_key(&self, repository_url: &str) -> BrnchResult<SshVerification> {
+        let supervisor = self.shipped_gitd()?;
+        supervisor
+            .use_ssh_key(Some(&self.ssh_keys.private_key_path()))
+            .await?;
+        let checked = self.check_access(repository_url).await;
+        let accepted = matches!(&checked, Ok(access) if access.level == "reachable" || access.level == "public");
+        if !accepted {
+            supervisor.use_ssh_key(None).await?;
+        }
+        Ok(SshVerification {
+            access: checked?,
+            enabled: accepted,
+        })
+    }
+
+    pub async fn remove_ssh_key(&self) -> BrnchResult<()> {
+        self.shipped_gitd()?.use_ssh_key(None).await?;
+        self.ssh_keys.discard();
+        Ok(())
     }
 
     pub async fn forget_credential(&self, identifier: &str) -> BrnchResult<()> {

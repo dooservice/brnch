@@ -204,7 +204,18 @@
       "save": "Guardar en gitd"
     },
     "ssh": {
-      "soon": "La clave SSH llega en el siguiente paso."
+      "created": "1 · Clave creada para este equipo",
+      "publicKey": "Clave pública (esta sí se comparte)",
+      "copy": "Copiar",
+      "private": "Huella {{fingerprint}} · La clave privada se queda en la carpeta de datos de brnch, legible solo por tu usuario. Los agentes nunca la ven.",
+      "addTitle": "Añádela a tu cuenta de GitHub",
+      "addHint": "Pulsa el botón, pega la clave, ponle un título como «brnch · mi PC» y elige «Authentication key».",
+      "add": "Abrir GitHub › Settings › SSH keys",
+      "checkTitle": "Comprueba la conexión",
+      "repository": "Repositorio con el que comprobar",
+      "check": "Comprobar",
+      "ok": "GitHub reconoce la clave. gitd leerá y publicará por SSH.",
+      "refused": "GitHub aún no reconoce la clave. Añádela en GitHub y vuelve a comprobar; mientras tanto gitd no la usa."
     }
   }
 }

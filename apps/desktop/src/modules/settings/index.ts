@@ -1,4 +1,4 @@
-export type { AgentInstallation, GitCredential, GithubLoginPrompt, GithubLoginResult, RepositoryAccess, GitdStatus, SandboxProbeReport, SandboxStatus } from './types/settings.types'
+export type { AgentInstallation, GitCredential, GithubLoginPrompt, GithubLoginResult, RepositoryAccess, SshKey, SshVerification, GitdStatus, SandboxProbeReport, SandboxStatus } from './types/settings.types'
 export { useAgentInstallations, useGitdStatus, useProbeSandbox, useSandboxStatus, useSetAgentApiKey, useSetupAgentAccount } from './api/use_system_status'
 export { useAddGitToken, useBeginGithubLogin, useCheckRepositoryAccess, useFinishGithubLogin, useGitCredentials, useRemoveGitCredential } from './api/use_git_credentials'
 export { classifyGitdFailure } from './lib/gitd_failure'

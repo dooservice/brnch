@@ -6,6 +6,7 @@ import { useGitCredentials } from '../../api/use_git_credentials'
 import ConnectionChoices, { type ConnectionMethod } from './connection_choices'
 import ConnectionsList from './connections_list'
 import GithubSignIn from './github_sign_in'
+import SshConnection from './ssh_connection'
 import TokenConnection from './token_connection'
 
 type View = 'list' | 'choose' | ConnectionMethod
@@ -23,7 +24,7 @@ export default function PublishConnection() {
       {current === 'choose' && <ConnectionChoices onChoose={setView} />}
       {current === 'github' && <GithubSignIn onBack={() => setView('choose')} onFinished={toList} />}
       {current === 'token' && <TokenConnection onBack={() => setView('choose')} onSaved={toList} />}
-      {current === 'ssh' && <p className="text-muted">{t('connections.ssh.soon')}</p>}
+      {current === 'ssh' && <SshConnection onBack={() => setView('choose')} onFinished={toList} />}
       {current === 'list' && (
         <>
           <ConnectionsList />
