@@ -8,6 +8,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
+futures-util = { version = "0.3.34", default-features = false, features = ["alloc"] }
 thiserror = "2.0.21"
 
 [lints]

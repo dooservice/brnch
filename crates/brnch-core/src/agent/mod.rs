@@ -1,5 +1,8 @@
 //! Running an AI coding agent inside a workspace and reporting what it did.
 
+mod agent_batch_coordinator;
+mod agent_batch_item;
+mod agent_batch_report;
 mod agent_command;
 mod agent_definition;
 mod agent_outcome;
@@ -11,6 +14,9 @@ mod agent_run_request;
 mod agent_runner;
 mod output_stream;
 
+pub use agent_batch_coordinator::AgentBatchCoordinator;
+pub use agent_batch_item::AgentBatchItem;
+pub use agent_batch_report::AgentBatchReport;
 pub use agent_command::AgentCommand;
 pub use agent_definition::AgentDefinition;
 pub use agent_outcome::AgentOutcome;

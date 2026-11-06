@@ -2,14 +2,18 @@
 
 mod agent_workspace;
 mod branch_namer;
+mod conflict_analyzer;
 mod published_branch;
+mod workspace_conflict;
 mod workspace_diff;
 mod workspace_provider;
 mod workspace_request;
 
 pub use agent_workspace::AgentWorkspace;
 pub use branch_namer::BranchNamer;
+pub use conflict_analyzer::ConflictAnalyzer;
 pub use published_branch::PublishedBranch;
+pub use workspace_conflict::WorkspaceConflict;
 pub use workspace_diff::WorkspaceDiff;
 pub use workspace_provider::WorkspaceProvider;
 pub use workspace_request::WorkspaceRequest;
