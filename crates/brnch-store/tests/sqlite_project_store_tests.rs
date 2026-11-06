@@ -142,6 +142,7 @@ fn data_survives_closing_and_reopening_the_file() {
     let reopened = SqliteProjectStore::open(&path).unwrap();
 
     assert_eq!(reopened.list_projects().unwrap(), vec![created]);
+    drop(reopened);
     std::fs::remove_dir_all(&directory).unwrap();
 }
 
