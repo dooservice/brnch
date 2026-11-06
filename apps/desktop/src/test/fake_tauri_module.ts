@@ -5,5 +5,9 @@ export const fakeTauriModule = {
   insideTauri: () => true,
   command: (name: string, args?: Record<string, unknown>) => desktop.handle(name, args),
   subscribe: (eventName: string, listener: (payload: never) => void) => Promise.resolve(eventName === "agent-event" ? desktop.subscribe(listener as never) : () => undefined),
+  openExternal: (url: string) => {
+    desktop.opened.push(url)
+    return Promise.resolve()
+  },
   failureText: (error: unknown) => (typeof error === 'string' ? error : error instanceof Error ? error.message : String(error)),
 }

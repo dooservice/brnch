@@ -1,7 +1,8 @@
 use std::path::Path;
 
 use brnch_core::workspace::{
-    AgentWorkspace, ConflictAnalyzer, CredentialVault, PublishedBranch, StoredCredential,
+    AgentWorkspace, ConflictAnalyzer, CredentialVault, GithubLoginOutcome, GithubLoginPrompt,
+    PublishedBranch, RepositoryAccess, RepositoryAccessLevel, StoredCredential,
     StoredCredentialKind, WorkspaceConflict, WorkspaceDiff, WorkspaceProvider, WorkspaceRequest,
 };
 use brnch_core::{BrnchResult, BrnchSettings};
@@ -193,5 +194,63 @@ impl CredentialVault for GitdWorkspaceProvider {
             .await
             .map_err(|status| GitdFailureTranslator::translate(&gitd::Error::from(status)))?;
         Ok(())
+    }
+
+    async fn begin_github_login(&self) -> BrnchResult<GithubLoginPrompt> {
+        let response = self
+            .gitd
+            .connections()
+            .start_git_hub_login(gitd::proto::StartGitHubLoginRequest::default())
+            .await
+            .map_err(|status| GitdFailureTranslator::translate(&gitd::Error::from(status)))?
+            .into_inner();
+        Ok(GithubLoginPrompt {
+            user_code: response.user_code,
+            verification_url: response.verification_url,
+            login_identifier: response.login_id,
+            expires_in_seconds: response.expires_in_seconds,
+        })
+    }
+
+    async fn finish_github_login(&self, login_identifier: &str) -> BrnchResult<GithubLoginOutcome> {
+        let response = self
+            .gitd
+            .connections()
+            .finish_git_hub_login(gitd::proto::FinishGitHubLoginRequest {
+                login_id: login_identifier.to_owned(),
+            })
+            .await
+            .map_err(|status| GitdFailureTranslator::translate(&gitd::Error::from(status)))?
+            .into_inner();
+        let connection = response.connection.ok_or_else(|| {
+            brnch_core::BrnchError::WorkspaceProvider("gitd kept no credential".to_owned())
+        })?;
+        Ok(GithubLoginOutcome {
+            credential: Self::stored(connection),
+            install_url: response.install_url,
+        })
+    }
+
+    async fn check_access(&self, repository_url: &str) -> BrnchResult<RepositoryAccess> {
+        use gitd::proto::probe_response::Access;
+        let probed = self
+            .gitd
+            .probe(repository_url)
+            .await
+            .map_err(|failure| GitdFailureTranslator::translate(&failure))?;
+        let level = match Access::try_from(probed.access) {
+            Ok(Access::Public) => RepositoryAccessLevel::Public,
+            Ok(Access::Reachable) => RepositoryAccessLevel::Reachable,
+            Ok(Access::Denied) => RepositoryAccessLevel::Denied,
+            _ => RepositoryAccessLevel::Unknown,
+        };
+        Ok(RepositoryAccess {
+            level,
+            default_branch: probed.default_branch,
+            failure: probed
+                .failure
+                .map(|failure| failure.git_said)
+                .unwrap_or_default(),
+        })
     }
 }

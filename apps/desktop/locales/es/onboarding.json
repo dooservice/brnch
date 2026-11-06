@@ -52,9 +52,9 @@
   },
   "credential": {
     "name": "Publicación",
-    "title": "Credencial para publicar",
-    "description": "El token que empuja las ramas vive en gitd, no en brnch ni en los agentes. Aquí se lo entregas a gitd una vez.",
-    "reachable": "gitd responde. Añade un token para poder publicar.",
+    "title": "Conecta tu cuenta de GitHub",
+    "description": "Para publicar, gitd necesita acceso a tus repositorios. Elige cómo conectarlo; puedes cambiarlo o añadir otra cuenta después en Ajustes.",
+    "reachable": "gitd responde. Conecta una cuenta para poder publicar.",
     "needsGitd": "gitd tiene que estar en marcha para guardar la credencial.",
     "note": "El agente solo pide publicar; gitd empuja con este token y aplica su política.",
     "savedCount_one": "gitd guarda {{count}} credencial.",

@@ -1,7 +1,10 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use brnch_core::workspace::{CredentialVault, StoredCredential, StoredCredentialKind};
+use brnch_core::workspace::{
+    CredentialVault, GithubLoginOutcome, GithubLoginPrompt, RepositoryAccess,
+    RepositoryAccessLevel, StoredCredential, StoredCredentialKind,
+};
 use brnch_core::{BrnchResult, BrnchSettings};
 use brnch_gitd::GitdWorkspaceProvider;
 use brnch_process::ProcessAgentRunner;
@@ -59,6 +62,69 @@ impl From<StoredCredential> for CredentialSummary {
             kind,
             url_prefix: credential.url_prefix,
             acts_as: credential.acts_as,
+        }
+    }
+}
+
+/// What the person does on GitHub to sign in, as the window shows it.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GithubLoginSummary {
+    pub user_code: String,
+    pub verification_url: String,
+    pub login_identifier: String,
+    pub expires_in_seconds: i32,
+}
+
+impl From<GithubLoginPrompt> for GithubLoginSummary {
+    fn from(prompt: GithubLoginPrompt) -> Self {
+        Self {
+            user_code: prompt.user_code,
+            verification_url: prompt.verification_url,
+            login_identifier: prompt.login_identifier,
+            expires_in_seconds: prompt.expires_in_seconds,
+        }
+    }
+}
+
+/// A finished GitHub sign-in: whom gitd acts as, and where to choose the repositories.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GithubLoginResult {
+    pub credential: CredentialSummary,
+    pub install_url: String,
+}
+
+impl From<GithubLoginOutcome> for GithubLoginResult {
+    fn from(outcome: GithubLoginOutcome) -> Self {
+        Self {
+            credential: outcome.credential.into(),
+            install_url: outcome.install_url,
+        }
+    }
+}
+
+/// Whether gitd's credentials open a repository, as the window shows it.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AccessSummary {
+    pub level: &'static str,
+    pub default_branch: String,
+    pub failure: String,
+}
+
+impl From<RepositoryAccess> for AccessSummary {
+    fn from(access: RepositoryAccess) -> Self {
+        let level = match access.level {
+            RepositoryAccessLevel::Public => "public",
+            RepositoryAccessLevel::Reachable => "reachable",
+            RepositoryAccessLevel::Denied => "denied",
+            RepositoryAccessLevel::Unknown => "unknown",
+        };
+        Self {
+            level,
+            default_branch: access.default_branch,
+            failure: access.failure,
         }
     }
 }
@@ -167,6 +233,33 @@ impl RunGateway {
             .store_token(url_prefix.trim(), token.trim())
             .await?;
         Ok(stored.into())
+    }
+
+    pub async fn begin_github_login(&self) -> BrnchResult<GithubLoginSummary> {
+        let connected = self.connected.get_or_try_init(|| self.connect()).await?;
+        Ok(connected.credentials.begin_github_login().await?.into())
+    }
+
+    /// Returns once the person has authorised on GitHub, which can take minutes.
+    pub async fn finish_github_login(
+        &self,
+        login_identifier: &str,
+    ) -> BrnchResult<GithubLoginResult> {
+        let connected = self.connected.get_or_try_init(|| self.connect()).await?;
+        Ok(connected
+            .credentials
+            .finish_github_login(login_identifier)
+            .await?
+            .into())
+    }
+
+    pub async fn check_access(&self, repository_url: &str) -> BrnchResult<AccessSummary> {
+        let connected = self.connected.get_or_try_init(|| self.connect()).await?;
+        Ok(connected
+            .credentials
+            .check_access(repository_url.trim())
+            .await?
+            .into())
     }
 
     pub async fn forget_credential(&self, identifier: &str) -> BrnchResult<()> {

@@ -29,3 +29,23 @@ export interface GitCredential {
   urlPrefix: string
   actsAs: string
 }
+
+/** What the person does on GitHub to sign in. */
+export interface GithubLoginPrompt {
+  userCode: string
+  verificationUrl: string
+  loginIdentifier: string
+  expiresInSeconds: number
+}
+
+export interface GithubLoginResult {
+  credential: GitCredential
+  installUrl: string
+}
+
+/** How far gitd's credentials reach into one repository. */
+export interface RepositoryAccess {
+  level: 'public' | 'reachable' | 'denied' | 'unknown'
+  defaultBranch: string
+  failure: string
+}

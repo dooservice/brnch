@@ -7,6 +7,7 @@ export const manifest: ModuleManifest = {
     { path: '/settings', redirect: '/settings/general' },
     { path: '/settings/general', page: () => import('./views/settings_general') },
     { path: '/settings/agents', page: () => import('./views/settings_agents') },
+    { path: '/settings/connections', page: () => import('./views/settings_connections') },
     { path: '/settings/security', page: () => import('./views/settings_security') },
   ],
 }

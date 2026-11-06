@@ -63,6 +63,7 @@ fn bundled_gitd(
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .setup(|application| {
             let directory = application.path().app_data_dir()?;
             std::fs::create_dir_all(&directory)?;
@@ -113,6 +114,9 @@ pub fn run() {
             project_commands::list_git_credentials,
             project_commands::add_git_token,
             project_commands::remove_git_credential,
+            project_commands::start_github_login,
+            project_commands::finish_github_login,
+            project_commands::check_repository_access,
             project_commands::probe_sandbox,
             project_commands::setup_agent_account,
             project_commands::set_agent_api_key,

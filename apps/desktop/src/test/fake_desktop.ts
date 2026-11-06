@@ -23,6 +23,8 @@ export class FakeDesktop {
   agents: AgentInstallation[] = [{ kind: 'claude_code', installed: true, version: '2.1.0' }]
   gitd: GitdStatus = { connected: true, message: null }
   credentials: GitCredential[] = []
+  opened: string[] = []
+  repositoryAccess: { level: 'public' | 'reachable' | 'denied' | 'unknown'; defaultBranch: string; failure: string } = { level: 'reachable', defaultBranch: 'main', failure: '' }
   statistics: Array<{ workspaceIdentifier: string; files: number; added: number; removed: number }> = []
   files = new Map<string, string>()
   probeReport: { homeHidden: boolean; workspaceWritable: boolean; failure: string | null } = { homeHidden: true, workspaceWritable: true, failure: null }
@@ -184,6 +186,15 @@ export class FakeDesktop {
         this.credentials = [...this.credentials, credential]
         return credential
       }
+      case 'start_github_login':
+        return { userCode: '0EB0-9E22', verificationUrl: 'https://github.com/login/device', loginIdentifier: 'login-1', expiresInSeconds: 900 }
+      case 'finish_github_login': {
+        const credential: GitCredential = { identifier: `c${this.credentials.length + 1}`, kind: 'github_login', urlPrefix: 'https://github.com', actsAs: 'josue' }
+        this.credentials = [...this.credentials, credential]
+        return { credential, installUrl: 'https://github.com/apps/gitd-app/installations/new' }
+      }
+      case 'check_repository_access':
+        return this.repositoryAccess
       case 'remove_git_credential':
         this.credentials = this.credentials.filter(credential => credential.identifier !== args?.identifier)
         return null

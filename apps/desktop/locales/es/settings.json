@@ -4,7 +4,8 @@
     "back": "Volver a la aplicación",
     "general": "General",
     "agents": "Agentes",
-    "security": "Seguridad"
+    "security": "Seguridad",
+    "connections": "Conexiones"
   },
   "general": {
     "title": "General",
@@ -94,22 +95,116 @@
       "keyForgotten": "Olvidada."
     }
   },
-  "credentials": {
-    "saved": "Credenciales guardadas",
-    "none": "gitd aún no guarda ninguna credencial.",
+  "connections": {
+    "title": "Conexiones",
+    "description": "Las cuentas y credenciales con las que gitd publica. Las guarda gitd; los agentes nunca las reciben.",
+    "needsGitd": "gitd tiene que estar en marcha para gestionar las conexiones.",
+    "saved": "Conexiones guardadas",
+    "none": "gitd aún no guarda ninguna conexión.",
+    "addAnother": "Añadir otra conexión",
+    "done": "Listo",
+    "cancel": "Cancelar",
+    "remove": "Quitar",
+    "forget": "Quitar la conexión {{name}}",
+    "agentsNever": "Los agentes nunca reciben esta credencial: la guarda gitd y empuja las ramas por ellos.",
     "kind": {
-      "token": "Token",
-      "ssh_key": "Clave SSH",
+      "token": "Token de acceso · {{prefix}}",
+      "ssh_key": "Clave SSH · {{prefix}}",
       "github_app": "App de GitHub",
-      "github_login": "Sesión de GitHub",
+      "github_login": "github.com · sesión de GitHub · los pull requests salen a tu nombre",
+      "other": "Otra conexión"
+    },
+    "badge": {
+      "token": "Token",
+      "ssh_key": "SSH",
+      "github_app": "App",
+      "github_login": "Activa",
       "other": "Otra"
     },
-    "forget": "Olvidar {{prefix}}",
-    "prefix": "Para qué repositorios (debe empezar por el servidor)",
-    "token": "Token de acceso",
-    "tokenHint": "En GitHub: Settings › Developer settings › Fine-grained tokens, con permisos de lectura y escritura en Contents y Pull requests. brnch se lo entrega a gitd una vez y no lo vuelve a ver.",
-    "save": "Guardar en gitd",
-    "savedOk": "Guardado en gitd.",
-    "sshNote": "¿Ya usas SSH con GitHub? gitd no usa tu carpeta .ssh: lee el repositorio por HTTPS con este token, aunque esté escrito como git@github.com:…, y los agentes nunca lo reciben."
+    "choose": {
+      "label": "Formas de conectar",
+      "recommended": "Recomendado",
+      "github": {
+        "title": "Iniciar sesión con GitHub",
+        "description": "Lo más rápido. Autorizas en github.com con la cuenta que quieras.",
+        "one": "Eliges tu cuenta en GitHub, no aquí",
+        "two": "Sin copiar tokens ni claves",
+        "three": "Los pull requests salen a tu nombre",
+        "action": "Continuar con GitHub"
+      },
+      "ssh": {
+        "title": "Clave SSH",
+        "description": "brnch crea una clave para este equipo y tú la añades a tu cuenta.",
+        "one": "No caduca como un token",
+        "two": "Hay que añadirla a mano en GitHub",
+        "three": "Para repositorios por SSH",
+        "action": "Crear clave"
+      },
+      "token": {
+        "title": "Token de acceso",
+        "description": "Pegas un token personal que creas tú en GitHub.",
+        "one": "Sirve si tu organización no deja instalar apps",
+        "two": "Tú decides sus permisos",
+        "three": "Caduca: habrá que renovarlo",
+        "action": "Pegar un token"
+      }
+    },
+    "github": {
+      "codeLabel": "Tu código de un solo uso",
+      "open": "Abrir GitHub",
+      "copy": "Copiar código",
+      "opens": "Se abre {{address}} en tu navegador.",
+      "starting": "Pidiendo el código a gitd…",
+      "waiting": "Esperando a que autorices en GitHub…",
+      "expires": "El código caduca en {{time}}",
+      "retry": "Pedir otro código",
+      "step": {
+        "one": {
+          "title": "Pulsa «Abrir GitHub»",
+          "hint": "Si no tienes la sesión iniciada, GitHub te la pide."
+        },
+        "two": {
+          "title": "Elige tu cuenta e introduce el código",
+          "hint": "Si tienes varias cuentas u organizaciones, aquí decides con cuál."
+        },
+        "three": {
+          "title": "Pulsa «Authorize»",
+          "hint": "brnch lo detecta solo; no tienes que volver a pulsar nada."
+        }
+      },
+      "connected": "Conectado. gitd publicará como tu cuenta de GitHub y los pull requests saldrán a tu nombre.",
+      "account": "github.com · sesión de GitHub",
+      "active": "Activa",
+      "change": "Cambiar de cuenta",
+      "disconnect": "Desconectar",
+      "reachTitle": "Qué repositorios puede tocar gitd",
+      "reachHint": "Solo los que elijas en GitHub al instalar la app de gitd. Puedes dar todos o solo algunos, y cambiarlo cuando quieras.",
+      "choose": "Elegir repositorios en GitHub",
+      "probeLabel": "Comprueba un repositorio",
+      "probe": "Probar acceso",
+      "probeOk": "gitd puede leer este repositorio · rama principal {{branch}}",
+      "probeDenied": "gitd no llega a este repositorio. Instala la app de gitd en él desde «Elegir repositorios»."
+    },
+    "token": {
+      "prefix": "Para qué repositorios",
+      "prefixHint": "Una organización o usuario concreto, o https://github.com/ para todos.",
+      "label": "Token de acceso",
+      "show": "Mostrar el token",
+      "hide": "Ocultar el token",
+      "handed": "brnch se lo entrega a gitd una vez y no lo vuelve a ver. No queda en ningún archivo de brnch.",
+      "permissions": "Permisos que necesita el token",
+      "permission": {
+        "contents": "Contents · lectura y escritura",
+        "pulls": "Pull requests · lectura y escritura",
+        "metadata": "Metadata · lectura"
+      },
+      "fineGrained": "Mejor un token «fine-grained» limitado a los repositorios que uses.",
+      "create": "Crear un token en GitHub",
+      "expires": "Los tokens caducan. Si uno deja de funcionar, tendrás que sustituirlo.",
+      "save": "Guardar en gitd"
+    },
+    "ssh": {
+      "soon": "La clave SSH llega en el siguiente paso."
+    }
   }
 }

@@ -44,3 +44,39 @@ async fn a_token_without_a_host_is_refused() {
 
     assert!(vault.store_token("", "not-a-real-token").await.is_err());
 }
+
+#[tokio::test]
+#[ignore = "needs a running gitd and the network; run it with make integration"]
+async fn a_github_sign_in_starts_with_a_code_to_enter_on_github() {
+    let vault = GitdWorkspaceProvider::connect(BrnchSettings::default())
+        .await
+        .expect("a gitd answers on GITD_SOCKET");
+
+    let prompt = vault
+        .begin_github_login()
+        .await
+        .expect("gitd starts the sign-in");
+
+    assert_eq!(prompt.verification_url, "https://github.com/login/device");
+    assert_eq!(prompt.user_code.len(), 9);
+    assert!(prompt.expires_in_seconds > 0);
+}
+
+#[tokio::test]
+#[ignore = "needs a running gitd and the network; run it with make integration"]
+async fn a_public_repository_is_reachable_with_no_credential() {
+    let vault = GitdWorkspaceProvider::connect(BrnchSettings::default())
+        .await
+        .expect("a gitd answers on GITD_SOCKET");
+
+    let access = vault
+        .check_access("https://github.com/octocat/Hello-World")
+        .await
+        .unwrap();
+
+    assert_eq!(
+        access.level,
+        brnch_core::workspace::RepositoryAccessLevel::Public
+    );
+    assert_eq!(access.default_branch, "master");
+}

@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, BotIcon, ShieldIcon, SettingsIcon } from 'lucide-react'
+import { ArrowLeftIcon, BotIcon, PlugIcon, ShieldIcon, SettingsIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -7,6 +7,7 @@ const SECTIONS = [
   { key: 'general', icon: SettingsIcon },
   { key: 'agents', icon: BotIcon },
   { key: 'security', icon: ShieldIcon },
+  { key: 'connections', icon: PlugIcon },
 ] as const
 
 /** The settings pages share a menu on the left and a column of content. */

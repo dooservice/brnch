@@ -107,6 +107,11 @@ function fakeBackend(data) {
         case "detect_agents": return [{ kind: "claude_code", installed: true, version: "2.1.0 (Claude Code)" }];
         case "gitd_status": return data.gitd ?? { connected: true, message: null };
         case "list_git_credentials": return data.credentials ?? [];
+        case "start_github_login": return { userCode: "0EB0-9E22", verificationUrl: "https://github.com/login/device", loginIdentifier: "login-1", expiresInSeconds: 900 };
+        case "finish_github_login":
+          if (data.loginPending) return new Promise(() => {});
+          return { credential: { identifier: "c1", kind: "github_login", urlPrefix: "https://github.com", actsAs: "josue" }, installUrl: "https://github.com/apps/gitd-app/installations/new" };
+        case "check_repository_access": return { level: "reachable", defaultBranch: "main", failure: "" };
         case "plugin:event|listen": return 1;
         default: return null;
       }
@@ -162,6 +167,11 @@ const scenarios = [
   { file: "17-windows-setup", height: 1180, active: "p1", windows: true, sandbox: { available: false, mechanism: "dedicated Windows account", reason: "the agent account is not created yet" }, act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Seguridad" }).click(); } },
   { file: "19-gitd-access-denied", projects: [], active: null, onboarded: false, gitd: { connected: false, message: "the workspace provider failed: Intento de acceso a un socket no permitido por sus permisos de acceso. (os error 10013) (Unavailable)" } },
   { file: "20-credential", projects: [], active: null, onboarded: false, credentials: [{ identifier: "c1", kind: "token", urlPrefix: "https://github.com/acme", actsAs: "" }], act: async (page) => { for (let i = 0; i < 3; i++) await page.getByRole("button", { name: /Siguiente/ }).click(); } },
+  { file: "21-connect-choose", projects: [], active: null, onboarded: false, act: async (page) => { for (let i = 0; i < 3; i++) await page.getByRole("button", { name: /Siguiente/ }).click(); } },
+  { file: "22-connect-github-code", projects: [], active: null, onboarded: false, loginPending: true, act: async (page) => { for (let i = 0; i < 3; i++) await page.getByRole("button", { name: /Siguiente/ }).click(); await page.getByRole("button", { name: "Continuar con GitHub" }).click(); await page.getByText("0EB0-9E22").waitFor(); } },
+  { file: "23-connect-github-connected", projects: [], active: null, onboarded: false, act: async (page) => { for (let i = 0; i < 3; i++) await page.getByRole("button", { name: /Siguiente/ }).click(); await page.getByRole("button", { name: "Continuar con GitHub" }).click(); await page.getByRole("button", { name: "Probar acceso" }).click(); await page.getByText(/gitd puede leer/).waitFor(); } },
+  { file: "24-connect-token", projects: [], active: null, onboarded: false, act: async (page) => { for (let i = 0; i < 3; i++) await page.getByRole("button", { name: /Siguiente/ }).click(); await page.getByRole("button", { name: "Pegar un token" }).click(); } },
+  { file: "25-settings-connections", active: "p1", credentials: [{ identifier: "c1", kind: "github_login", urlPrefix: "https://github.com", actsAs: "josue" }, { identifier: "c2", kind: "token", urlPrefix: "https://github.com/acme", actsAs: "" }], act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Conexiones" }).click(); } },
   { file: "13-english", active: "p1", language: "en", act: async (page) => page.getByRole("link", { name: /add-search Claude Code/ }).click() },
 ];
 

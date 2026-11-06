@@ -52,9 +52,9 @@
   },
   "credential": {
     "name": "Publishing",
-    "title": "Credential to publish",
-    "description": "The token that pushes branches lives in gitd, not in brnch or the agents. Here you hand it to gitd once.",
-    "reachable": "gitd answers. Add a token so it can publish.",
+    "title": "Connect your GitHub account",
+    "description": "To publish, gitd needs access to your repositories. Choose how to connect it; you can change it or add another account later in Settings.",
+    "reachable": "gitd answers. Connect an account so it can publish.",
     "needsGitd": "gitd must be running to hold the credential.",
     "note": "The agent only asks to publish; gitd pushes with this token and applies its policy.",
     "savedCount_one": "gitd keeps {{count}} credential.",

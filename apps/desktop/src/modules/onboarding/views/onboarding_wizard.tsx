@@ -7,7 +7,7 @@ import Button from '@/components/button'
 import { useDialog } from '@/hooks/use_dialog'
 import { cn } from '@/lib/utils'
 import { useProjects } from '@/modules/projects'
-import { GitCredentialsForm, classifyGitdFailure, useAgentInstallations, useGitCredentials, useGitdStatus, useSandboxStatus, useSetupAgentAccount } from '@/modules/settings'
+import { PublishConnection, classifyGitdFailure, useAgentInstallations, useGitCredentials, useGitdStatus, useSandboxStatus, useSetupAgentAccount } from '@/modules/settings'
 import { failureText } from '@/lib/tauri'
 import { markOnboarded } from '../lib/onboarded'
 
@@ -89,10 +89,7 @@ export default function OnboardingWizard() {
           <details className="mt-3 text-[12px] text-muted"><summary className="cursor-pointer">{t('gitd.detail')}</summary><p className="mt-1.5 font-mono">{gitd.data.message}</p></details>
         )}
         {step === 'credential' && gitd.data?.connected && (
-          <>
-            <GitCredentialsForm />
-            <p className="mt-3 text-[12px] text-muted">{t('credential.note')}</p>
-          </>
+          <div className="mt-4"><PublishConnection /></div>
         )}
         <div className="mt-6 flex items-center gap-2.5">
           <Button variant="ghost" className="px-0" onClick={finish}>{t('skip')}</Button>

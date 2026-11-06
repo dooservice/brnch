@@ -215,6 +215,38 @@ pub async fn add_git_token(
 }
 
 #[tauri::command]
+pub async fn start_github_login(
+    gateway: State<'_, RunGateway>,
+) -> Result<crate::run_gateway::GithubLoginSummary, String> {
+    gateway
+        .begin_github_login()
+        .await
+        .map_err(|failure| failure.to_string())
+}
+
+#[tauri::command]
+pub async fn finish_github_login(
+    gateway: State<'_, RunGateway>,
+    login_identifier: String,
+) -> Result<crate::run_gateway::GithubLoginResult, String> {
+    gateway
+        .finish_github_login(&login_identifier)
+        .await
+        .map_err(|failure| failure.to_string())
+}
+
+#[tauri::command]
+pub async fn check_repository_access(
+    gateway: State<'_, RunGateway>,
+    repository_url: String,
+) -> Result<crate::run_gateway::AccessSummary, String> {
+    gateway
+        .check_access(&repository_url)
+        .await
+        .map_err(|failure| failure.to_string())
+}
+
+#[tauri::command]
 pub async fn remove_git_credential(
     gateway: State<'_, RunGateway>,
     identifier: String,

@@ -4,7 +4,8 @@
     "back": "Back to the app",
     "general": "General",
     "agents": "Agents",
-    "security": "Security"
+    "security": "Security",
+    "connections": "Connections"
   },
   "general": {
     "title": "General",
@@ -94,22 +95,116 @@
       "keyForgotten": "Forgotten."
     }
   },
-  "credentials": {
-    "saved": "Saved credentials",
-    "none": "gitd keeps no credential yet.",
+  "connections": {
+    "title": "Connections",
+    "description": "The accounts and credentials gitd publishes with. gitd keeps them; agents never receive them.",
+    "needsGitd": "gitd has to be running to manage connections.",
+    "saved": "Saved connections",
+    "none": "gitd keeps no connection yet.",
+    "addAnother": "Add another connection",
+    "done": "Done",
+    "cancel": "Cancel",
+    "remove": "Remove",
+    "forget": "Remove the connection {{name}}",
+    "agentsNever": "Agents never receive this credential: gitd keeps it and pushes branches for them.",
     "kind": {
-      "token": "Token",
-      "ssh_key": "SSH key",
+      "token": "Access token · {{prefix}}",
+      "ssh_key": "SSH key · {{prefix}}",
       "github_app": "GitHub App",
-      "github_login": "GitHub sign-in",
+      "github_login": "github.com · GitHub sign-in · pull requests are opened as you",
+      "other": "Another connection"
+    },
+    "badge": {
+      "token": "Token",
+      "ssh_key": "SSH",
+      "github_app": "App",
+      "github_login": "Active",
       "other": "Other"
     },
-    "forget": "Forget {{prefix}}",
-    "prefix": "For which repositories (it must start with the host)",
-    "token": "Access token",
-    "tokenHint": "On GitHub: Settings › Developer settings › Fine-grained tokens, with read and write on Contents and Pull requests. brnch hands it to gitd once and never sees it again.",
-    "save": "Save in gitd",
-    "savedOk": "Saved in gitd.",
-    "sshNote": "Already using SSH with GitHub? gitd does not use your .ssh folder: it reads the repository over HTTPS with this token, even when it is written as git@github.com:…, and agents never receive it."
+    "choose": {
+      "label": "Ways to connect",
+      "recommended": "Recommended",
+      "github": {
+        "title": "Sign in with GitHub",
+        "description": "The quickest. You authorise on github.com with whichever account you want.",
+        "one": "You pick the account on GitHub, not here",
+        "two": "No tokens or keys to copy",
+        "three": "Pull requests are opened as you",
+        "action": "Continue with GitHub"
+      },
+      "ssh": {
+        "title": "SSH key",
+        "description": "brnch creates a key for this computer and you add it to your account.",
+        "one": "It does not expire like a token",
+        "two": "You add it by hand on GitHub",
+        "three": "For repositories over SSH",
+        "action": "Create key"
+      },
+      "token": {
+        "title": "Access token",
+        "description": "You paste a personal token that you create on GitHub.",
+        "one": "Works if your organisation does not allow apps",
+        "two": "You decide its permissions",
+        "three": "It expires: you will have to renew it",
+        "action": "Paste a token"
+      }
+    },
+    "github": {
+      "codeLabel": "Your one-time code",
+      "open": "Open GitHub",
+      "copy": "Copy code",
+      "opens": "{{address}} opens in your browser.",
+      "starting": "Asking gitd for the code…",
+      "waiting": "Waiting for you to authorise on GitHub…",
+      "expires": "The code expires in {{time}}",
+      "retry": "Ask for another code",
+      "step": {
+        "one": {
+          "title": "Press “Open GitHub”",
+          "hint": "If you are not signed in, GitHub asks you to."
+        },
+        "two": {
+          "title": "Choose your account and enter the code",
+          "hint": "With several accounts or organisations, this is where you decide which one."
+        },
+        "three": {
+          "title": "Press “Authorize”",
+          "hint": "brnch notices by itself; you do not press anything here."
+        }
+      },
+      "connected": "Connected. gitd will publish as your GitHub account and pull requests will be opened as you.",
+      "account": "github.com · GitHub sign-in",
+      "active": "Active",
+      "change": "Change account",
+      "disconnect": "Disconnect",
+      "reachTitle": "Which repositories gitd can touch",
+      "reachHint": "Only those you choose on GitHub when installing gitd's app. You can give all or just some, and change it whenever you like.",
+      "choose": "Choose repositories on GitHub",
+      "probeLabel": "Check a repository",
+      "probe": "Test access",
+      "probeOk": "gitd can read this repository · main branch {{branch}}",
+      "probeDenied": "gitd cannot reach this repository. Install gitd's app on it from “Choose repositories”."
+    },
+    "token": {
+      "prefix": "For which repositories",
+      "prefixHint": "A specific organisation or user, or https://github.com/ for all of them.",
+      "label": "Access token",
+      "show": "Show the token",
+      "hide": "Hide the token",
+      "handed": "brnch hands it to gitd once and never sees it again. It is not kept in any brnch file.",
+      "permissions": "Permissions the token needs",
+      "permission": {
+        "contents": "Contents · read and write",
+        "pulls": "Pull requests · read and write",
+        "metadata": "Metadata · read"
+      },
+      "fineGrained": "A fine-grained token limited to the repositories you use is best.",
+      "create": "Create a token on GitHub",
+      "expires": "Tokens expire. When one stops working you will have to replace it.",
+      "save": "Save in gitd"
+    },
+    "ssh": {
+      "soon": "The SSH key arrives in the next step."
+    }
   }
 }

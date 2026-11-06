@@ -16,7 +16,10 @@ pub use branch_namer::BranchNamer;
 pub use conflict_analyzer::ConflictAnalyzer;
 pub use credential_vault::CredentialVault;
 pub use published_branch::PublishedBranch;
-pub use stored_credential::{StoredCredential, StoredCredentialKind};
+pub use stored_credential::{
+    GithubLoginOutcome, GithubLoginPrompt, RepositoryAccess, RepositoryAccessLevel,
+    StoredCredential, StoredCredentialKind,
+};
 pub use workspace_conflict::WorkspaceConflict;
 pub use workspace_diff::WorkspaceDiff;
 pub use workspace_provider::WorkspaceProvider;
