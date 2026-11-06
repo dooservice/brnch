@@ -18,7 +18,7 @@ jobs:
         with:
           persist-credentials: false
       - run: rustup update stable
-      - name: Start gitd in a terminal, as its Windows guide describes
+      - name: Start gitd in a terminal, as its Windows guide describes, and connect from Rust
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force C:\gitd-test | Out-Null
@@ -28,53 +28,20 @@ jobs:
           state = "C:/gitd-test/state"
           roots = ["C:/gitd-test/workspaces"]
           '@ | Set-Content -Encoding utf8 C:\gitd-test\gitd.toml
-          Start-Process -FilePath C:\gitd-test\gitd.exe -ArgumentList 'serve','--config','C:\gitd-test\gitd.toml' -RedirectStandardOutput C:\gitd-test\out.log -RedirectStandardError C:\gitd-test\err.log -WindowStyle Hidden
+          $gitd = Start-Process -FilePath C:\gitd-test\gitd.exe -ArgumentList 'serve','--config','C:\gitd-test\gitd.toml' -RedirectStandardOutput C:\gitd-test\out.log -RedirectStandardError C:\gitd-test\err.log -WindowStyle Hidden -PassThru
           for ($i = 0; $i -lt 30 -and -not (Test-Path C:\gitd-test\gitd.sock); $i++) { Start-Sleep -Seconds 1 }
           $env:GITD_SOCKET = 'C:\gitd-test\gitd.sock'
+          $env:GITD_TEST_ROOT = 'C:/gitd-test/workspaces'
           & C:\gitd-test\gitd.exe info
-      - name: Is gitd still running here
-        if: always()
-        shell: pwsh
-        run: |
-          Get-Process gitd -ErrorAction SilentlyContinue | Select-Object Id, ProcessName | Format-Table
-          Test-Path C:\gitd-test\gitd.sock
-          $env:GITD_SOCKET = 'C:\gitd-test\gitd.sock'
-          & C:\gitd-test\gitd.exe info
-      - name: Connect to it from Rust, as the app does
-        env:
-          GITD_SOCKET: C:\gitd-test\gitd.sock
-          GITD_TEST_ROOT: C:/gitd-test/workspaces
-        run: cargo test -p brnch-gitd --test gitd_workspace_provider_tests -- --ignored --nocapture
-      - name: Same, with the socket path in forward slashes
-        if: always()
-        env:
-          GITD_SOCKET: C:/gitd-test/gitd.sock
-          GITD_TEST_ROOT: C:/gitd-test/workspaces
-        run: cargo test -p brnch-gitd --test gitd_workspace_provider_tests -- --ignored --nocapture
-      - name: Who can open the socket
-        if: always()
-        shell: pwsh
-        run: |
-          Add-Type -AssemblyName System.Net.Sockets
-          foreach ($path in 'C:\gitd-test\gitd.sock', 'C:/gitd-test/gitd.sock') {
+          try {
+            cargo test -p brnch-gitd --test gitd_workspace_provider_tests -- --ignored --nocapture
+            $code = $LASTEXITCODE
+            "---- gitd, probed from other clients"
             $socket = New-Object System.Net.Sockets.Socket([System.Net.Sockets.AddressFamily]::Unix, [System.Net.Sockets.SocketType]::Stream, [System.Net.Sockets.ProtocolType]::Unspecified)
-            try { $socket.Connect((New-Object System.Net.Sockets.UnixDomainSocketEndPoint($path))); "dotnet $path : connected" } catch { "dotnet $path : $($_.Exception.Message)" }
-            $socket.Dispose()
+            try { $socket.Connect((New-Object System.Net.Sockets.UnixDomainSocketEndPoint('C:\gitd-test\gitd.sock'))); "dotnet: connected" } catch { "dotnet: $($_.Exception.Message)" }
+          } finally {
+            "---- what gitd logged"
+            Get-Content C:\gitd-test\out.log, C:\gitd-test\err.log -ErrorAction SilentlyContinue
+            Stop-Process -Id $gitd.Id -Force -ErrorAction SilentlyContinue
           }
-          Set-Location $env:RUNNER_TEMP
-          cargo new --quiet uds-probe
-          Set-Location uds-probe
-          cargo add uds_windows@1 --quiet
-          @'
-          fn main() {
-              for path in [r"C:\gitd-test\gitd.sock", "C:/gitd-test/gitd.sock"] {
-                  println!("uds_windows {path} : {:?}", uds_windows::UnixStream::connect(path).map(|_| "connected"));
-              }
-          }
-          '@ | Set-Content src/main.rs
-          cargo run --quiet
-      - name: What gitd logged
-        if: always()
-        shell: pwsh
-        run: |
-          Get-Content C:\gitd-test\out.log, C:\gitd-test\err.log -ErrorAction SilentlyContinue
+          exit $code
