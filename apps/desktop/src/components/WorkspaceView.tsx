@@ -1,7 +1,11 @@
 import { FileText, GitCompareArrows, MessageSquare, SquareTerminal } from "lucide-react";
-import { useState } from "react";
+import { Play } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import type { ProjectSwitcherState } from "../state/ProjectSwitcherState";
+import { useWorkspaceTimeline } from "../state/useWorkspaceTimeline";
+import type { WorkspaceTimelineState } from "../state/WorkspaceTimelineState";
+import { AgentTimeline } from "./AgentTimeline";
 
 const TABS = [
   { key: "agent", label: "Agente", icon: MessageSquare, empty: "Aquí verás lo que hace el agente de este workspace." },
@@ -13,10 +17,24 @@ const TABS = [
 type TabKey = (typeof TABS)[number]["key"];
 
 /** The active project's workspace: its header and the four tabs from the design. */
-export function WorkspaceView({ state }: { readonly state: ProjectSwitcherState }) {
+interface WorkspaceViewProps {
+  readonly state: ProjectSwitcherState;
+  readonly timeline: WorkspaceTimelineState;
+  readonly onNewRun: () => void;
+}
+
+export function WorkspaceView({ state, timeline, onNewRun }: WorkspaceViewProps) {
+  useWorkspaceTimeline(timeline);
   const [tab, setTab] = useState<TabKey>("agent");
   const project = state.projects.find((candidate) => candidate.identifier === state.activeProjectIdentifier);
   const workspace = state.selectedWorkspace;
+  const selectedIdentifier = workspace?.identifier ?? null;
+
+  useEffect(() => {
+    if (selectedIdentifier !== null) {
+      void timeline.loadHistory(selectedIdentifier);
+    }
+  }, [timeline, selectedIdentifier]);
 
   if (!project) {
     return (
@@ -31,7 +49,8 @@ export function WorkspaceView({ state }: { readonly state: ProjectSwitcherState 
     <main className="flex min-w-0 flex-1 flex-col">
       <header className="flex h-12 items-center gap-2.5 border-b border-line px-4">
         <h1 className="truncate text-[15px] font-semibold">{workspace ? workspace.branchName : project.name}</h1>
-        <span className="truncate font-mono text-[12px] text-muted">{workspace ? workspace.directory : project.repositoryUrl}</span>
+        <span className="flex-1 truncate font-mono text-[12px] text-muted">{workspace ? workspace.directory : project.repositoryUrl}</span>
+        <button type="button" onClick={onNewRun} className="flex h-7 items-center gap-1.5 rounded-md bg-ink px-3 font-medium text-canvas"><Play size={13} />Nueva corrida</button>
       </header>
       <div role="tablist" className="flex h-9.5 items-end gap-0.5 border-b border-line px-3">
         {TABS.map(({ key, label, icon: Icon }) => (
@@ -48,8 +67,10 @@ export function WorkspaceView({ state }: { readonly state: ProjectSwitcherState 
           </button>
         ))}
       </div>
-      <section role="tabpanel" className="flex flex-1 items-center justify-center p-8 text-center text-muted">
-        {workspace ? current.empty : "Elige un workspace en la barra lateral."}
+      <section role="tabpanel" className="flex flex-1 flex-col overflow-y-auto p-6 text-muted">
+        {!workspace && <p className="m-auto">Elige un workspace en la barra lateral o lanza una corrida.</p>}
+        {workspace && tab === "agent" && <AgentTimeline entries={timeline.eventsOf(workspace.identifier)} />}
+        {workspace && tab !== "agent" && <p className="m-auto text-center">{current.empty}</p>}
       </section>
     </main>
   );

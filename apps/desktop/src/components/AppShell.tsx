@@ -3,20 +3,33 @@ import { useEffect, useState } from "react";
 
 import type { ProjectSwitcherState } from "../state/ProjectSwitcherState";
 import { useProjectSwitcher } from "../state/useProjectSwitcher";
+import type { WorkspaceTimelineState } from "../state/WorkspaceTimelineState";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { CommandPalette } from "./CommandPalette";
+import { NewRunDialog } from "./NewRunDialog";
 import { ProjectSidebar } from "./ProjectSidebar";
 import { WorkspaceView } from "./WorkspaceView";
 
 /** The window: top bar, project sidebar, the active workspace and a status bar. */
-export function AppShell({ state }: { readonly state: ProjectSwitcherState }) {
+interface AppShellProps {
+  readonly state: ProjectSwitcherState;
+  readonly timeline: WorkspaceTimelineState;
+}
+
+export function AppShell({ state, timeline }: AppShellProps) {
   useProjectSwitcher(state);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [runOpen, setRunOpen] = useState(false);
 
   useEffect(() => {
     void state.load();
   }, [state]);
+
+  useEffect(() => {
+    void timeline.startListening();
+    return () => timeline.stop();
+  }, [timeline]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -46,13 +59,14 @@ export function AppShell({ state }: { readonly state: ProjectSwitcherState }) {
       </header>
       <div className="flex min-h-0 flex-1">
         <ProjectSidebar state={state} onAddProject={openAddProject} onSearch={() => setPaletteOpen(true)} />
-        <WorkspaceView state={state} />
+        <WorkspaceView state={state} timeline={timeline} onNewRun={() => setRunOpen(true)} />
       </div>
       <footer className="flex h-6 items-center gap-4 border-t border-line bg-side px-3 text-[11.5px] text-muted">
         <span>{state.projects.length} proyectos</span>
         <span>{workspaceCount} workspaces en el proyecto activo</span>
       </footer>
       <CommandPalette state={state} open={paletteOpen} onOpenChange={setPaletteOpen} onAddProject={openAddProject} />
+      <NewRunDialog state={state} open={runOpen} onOpenChange={setRunOpen} />
       <AddProjectDialog state={state} open={addOpen} onOpenChange={setAddOpen} />
     </div>
   );

@@ -1,3 +1,4 @@
+import type { RunNotice, StartRunRequest } from "../src/model/AgentEvent";
 import type { ProjectBackend } from "../src/backend/ProjectBackend";
 import type { ProjectSummary } from "../src/model/ProjectSummary";
 import type { WorkspaceSummary } from "../src/model/WorkspaceSummary";
@@ -35,7 +36,7 @@ export class InMemoryProjectBackend implements ProjectBackend {
   }
 
   async listWorkspaces(projectIdentifier: string): Promise<WorkspaceSummary[]> {
-    return [{ identifier: `workspace-of-${projectIdentifier}`, directory: `/work/${projectIdentifier}`, branchName: "agents/x" }];
+    return [{ identifier: `workspace-of-${projectIdentifier}`, directory: `/work/${projectIdentifier}`, branchName: `agents/${projectIdentifier}` }];
   }
 
   async loadView(projectIdentifier: string): Promise<string | null> {
@@ -44,5 +45,33 @@ export class InMemoryProjectBackend implements ProjectBackend {
 
   async saveView(projectIdentifier: string, layoutJson: string): Promise<void> {
     this.layouts.set(projectIdentifier, layoutJson);
+  }
+
+  readonly startedRuns: StartRunRequest[] = [];
+  private readonly history = new Map<string, RunNotice[]>();
+  private liveListener: ((notice: RunNotice) => void) | null = null;
+
+  async startRun(request: StartRunRequest): Promise<string[]> {
+    this.startedRuns.push(request);
+    return [`workspace-of-${request.projectIdentifier}`];
+  }
+
+  seedHistory(workspaceIdentifier: string, notices: RunNotice[]): void {
+    this.history.set(workspaceIdentifier, notices);
+  }
+
+  emitLive(notice: RunNotice): void {
+    this.liveListener?.(notice);
+  }
+
+  async listWorkspaceEvents(workspaceIdentifier: string, afterSequence: number): Promise<RunNotice[]> {
+    return (this.history.get(workspaceIdentifier) ?? []).filter((notice) => notice.sequence > afterSequence);
+  }
+
+  async onAgentEvent(listener: (notice: RunNotice) => void): Promise<() => void> {
+    this.liveListener = listener;
+    return () => {
+      this.liveListener = null;
+    };
   }
 }

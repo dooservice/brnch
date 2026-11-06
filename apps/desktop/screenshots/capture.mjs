@@ -24,6 +24,19 @@ const workspacesByProject = {
   p3: [],
 };
 
+const sampleEvents = [
+  { kind: "session_started", session_identifier: "s1", model_name: "claude-sonnet-5-5" },
+  { kind: "assistant_text", text: "Voy a revisar cómo está montado el catálogo y dónde vive el estado de los filtros antes de tocar nada." },
+  { kind: "tool_requested", tool_call_identifier: "t1", tool_name: "Read", input_summary: '{"file_path":"src/catalog/CatalogPage.tsx"}' },
+  { kind: "tool_completed", tool_call_identifier: "t1", failed: false },
+  { kind: "tool_requested", tool_call_identifier: "t2", tool_name: "Edit", input_summary: '{"file_path":"src/catalog/SearchBox.tsx"}' },
+  { kind: "tool_completed", tool_call_identifier: "t2", failed: false },
+  { kind: "tool_requested", tool_call_identifier: "t3", tool_name: "Bash", input_summary: '{"command":"npm test -- search"}' },
+  { kind: "unparsed_output", raw_line: "npm warn config production Use --omit=dev instead." },
+  { kind: "tool_completed", tool_call_identifier: "t3", failed: true },
+  { kind: "run_finished", succeeded: false, summary: "Las pruebas de búsqueda fallan: falta el filtro por categoría.", cost_in_dollars: 0.31, duration_in_milliseconds: 41200 },
+];
+
 const scenarios = [
   { file: "01-empty", projects: [], active: null },
   { file: "02-project-open", projects, active: "p1" },
@@ -32,6 +45,22 @@ const scenarios = [
     projects,
     active: "p1",
     act: async (page) => page.getByRole("button", { name: /agents\/add-search/ }).click(),
+  },
+  {
+    file: "06-agent-timeline",
+    projects,
+    active: "p1",
+    act: async (page) => page.getByRole("button", { name: /agents\/add-search/ }).click(),
+  },
+  {
+    file: "07-new-run",
+    projects,
+    active: "p1",
+    act: async (page) => {
+      await page.getByRole("button", { name: "Nueva corrida" }).click();
+      await page.getByLabel("Tarea").fill("Añade una búsqueda por nombre y categoría al catálogo, con pruebas.");
+      await page.getByRole("button", { name: "Más copias" }).click();
+    },
   },
   {
     file: "04-command-palette",
@@ -53,11 +82,17 @@ const scenarios = [
 
 function fakeBackend(scenario) {
   window.__TAURI_INTERNALS__ = {
+    transformCallback: () => 1,
     invoke: async (command, args) => {
       switch (command) {
         case "list_projects": return scenario.projects;
         case "active_project_identifier": return scenario.active;
         case "list_workspaces": return scenario.workspacesByProject[args.projectIdentifier] ?? [];
+        case "list_workspace_events":
+          return args.workspaceIdentifier === "w1"
+            ? scenario.sampleEvents.map((event, index) => ({ workspaceIdentifier: "w1", sequence: index + 1, eventJson: JSON.stringify(event) }))
+            : [];
+        case "plugin:event|listen": return 1;
         default: return null;
       }
     },
@@ -80,7 +115,7 @@ const { port } = server.address();
 const browser = await chromium.launch();
 for (const scenario of scenarios) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-  await page.addInitScript(fakeBackend, { ...scenario, workspacesByProject });
+  await page.addInitScript(fakeBackend, { ...scenario, workspacesByProject, sampleEvents });
   await page.goto(`http://localhost:${port}/`);
   await page.waitForTimeout(400);
   await scenario.act?.(page);

@@ -1,4 +1,5 @@
 import type { ProjectBackend } from "../backend/ProjectBackend";
+import type { StartRunRequest } from "../model/AgentEvent";
 import type { ProjectSummary } from "../model/ProjectSummary";
 import type { WorkspaceSummary } from "../model/WorkspaceSummary";
 
@@ -68,6 +69,14 @@ export class ProjectSwitcherState {
   async selectWorkspace(projectIdentifier: string, workspaceIdentifier: string): Promise<void> {
     await this.switchTo(projectIdentifier);
     this.selectedWorkspaceIdentifier = workspaceIdentifier;
+    this.announce();
+  }
+
+  /** Starts the agents and shows their new workspaces, selecting the first one. */
+  async startRun(request: StartRunRequest): Promise<void> {
+    const workspaces = await this.backend.startRun(request);
+    await this.loadWorkspacesOfEveryProject();
+    this.selectedWorkspaceIdentifier = workspaces[0] ?? null;
     this.announce();
   }
 

@@ -1,3 +1,4 @@
+import type { RunNotice, StartRunRequest } from "../model/AgentEvent";
 import type { ProjectSummary } from "../model/ProjectSummary";
 import type { WorkspaceSummary } from "../model/WorkspaceSummary";
 
@@ -11,4 +12,8 @@ export interface ProjectBackend {
   listWorkspaces(projectIdentifier: string): Promise<WorkspaceSummary[]>;
   loadView(projectIdentifier: string): Promise<string | null>;
   saveView(projectIdentifier: string, layoutJson: string): Promise<void>;
+  startRun(request: StartRunRequest): Promise<string[]>;
+  listWorkspaceEvents(workspaceIdentifier: string, afterSequence: number): Promise<RunNotice[]>;
+  /** Calls the listener for every new agent event; returns a function that stops listening. */
+  onAgentEvent(listener: (notice: RunNotice) => void): Promise<() => void>;
 }

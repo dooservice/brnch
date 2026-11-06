@@ -13,9 +13,13 @@ interface ProjectSidebarProps {
 export function ProjectSidebar({ state, onAddProject, onSearch }: ProjectSidebarProps) {
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
 
-  const toggle = (identifier: string) => {
+  /** Entering a project always shows its workspaces; clicking the open one folds it. */
+  const choose = (identifier: string, isActive: boolean) => {
     const next = new Set(collapsed);
-    if (!next.delete(identifier)) {
+    if (!isActive) {
+      next.delete(identifier);
+      void state.switchTo(identifier);
+    } else if (!next.delete(identifier)) {
       next.add(identifier);
     }
     setCollapsed(next);
@@ -47,12 +51,7 @@ export function ProjectSidebar({ state, onAddProject, onSearch }: ProjectSidebar
               <button
                 type="button"
                 aria-expanded={!isCollapsed}
-                onClick={() => {
-                  toggle(project.identifier);
-                  if (!isActive) {
-                    void state.switchTo(project.identifier);
-                  }
-                }}
+                onClick={() => choose(project.identifier, isActive)}
                 className="mx-1.5 flex w-[calc(100%-12px)] items-center gap-2 rounded-md px-3 py-1.5 text-left font-medium hover:bg-hover"
               >
                 {isCollapsed ? <ChevronRight size={14} className="text-muted" /> : <ChevronDown size={14} className="text-muted" />}

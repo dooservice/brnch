@@ -1,4 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+
+import type { RunNotice, StartRunRequest } from "../model/AgentEvent";
 
 import type { ProjectSummary } from "../model/ProjectSummary";
 import type { WorkspaceSummary } from "../model/WorkspaceSummary";
@@ -36,5 +39,17 @@ export class TauriProjectBackend implements ProjectBackend {
 
   saveView(projectIdentifier: string, layoutJson: string): Promise<void> {
     return invoke("save_view", { projectIdentifier, layoutJson });
+  }
+
+  startRun(request: StartRunRequest): Promise<string[]> {
+    return invoke("start_run", { request });
+  }
+
+  listWorkspaceEvents(workspaceIdentifier: string, afterSequence: number): Promise<RunNotice[]> {
+    return invoke("list_workspace_events", { workspaceIdentifier, afterSequence });
+  }
+
+  onAgentEvent(listener: (notice: RunNotice) => void): Promise<() => void> {
+    return listen<RunNotice>("agent-event", (event) => listener(event.payload));
   }
 }
