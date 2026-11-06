@@ -37,6 +37,12 @@ jobs:
           GITD_SOCKET: C:\gitd-test\gitd.sock
           GITD_TEST_ROOT: C:/gitd-test/workspaces
         run: cargo test -p brnch-gitd --test gitd_workspace_provider_tests -- --ignored --nocapture
+      - name: Same, with the socket path in forward slashes
+        if: always()
+        env:
+          GITD_SOCKET: C:/gitd-test/gitd.sock
+          GITD_TEST_ROOT: C:/gitd-test/workspaces
+        run: cargo test -p brnch-gitd --test gitd_workspace_provider_tests -- --ignored --nocapture
       - name: What gitd logged
         if: always()
         shell: pwsh
