@@ -104,6 +104,10 @@ export default function CommandPalette() {
                 )}
               </div>
             </div>
+            <div className="flex h-9.5 items-center gap-4 border-t border-line px-4 text-[12px] text-muted">
+              <span className="flex items-center gap-1.5"><Kbd>↑</Kbd><Kbd>↓</Kbd>{t('palette.navigate')}</span>
+              <span className="flex items-center gap-1.5"><Kbd>↵</Kbd>{t('palette.open')}</span>
+            </div>
           </Command>
         </RadixDialog.Content>
       </RadixDialog.Portal>

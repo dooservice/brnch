@@ -6,7 +6,7 @@ import { useDialog } from '@/hooks/use_dialog'
 import { cn } from '@/lib/utils'
 import { useActiveProjectId, useEnterProject } from '@/modules/projects'
 import { useSandboxStatus } from '@/modules/settings'
-import { StatusIcon, groupRuns, useAllWorkspaces } from '@/modules/workspaces'
+import { StatusIcon, groupRuns, useAllWorkspaces, useWorkspaceStatistics } from '@/modules/workspaces'
 import type { Workspace } from '@/modules/workspaces'
 
 /** Every project with its workspaces. One click anywhere changes the whole context. */
@@ -14,6 +14,7 @@ export default function ProjectSidebar() {
   const { t } = useTranslation('shell')
   const navigate = useNavigate()
   const all = useAllWorkspaces()
+  const statistics = useWorkspaceStatistics(all)
   const activeProjectId = useActiveProjectId()
   const enterProject = useEnterProject()
   const palette = useDialog('palette')
@@ -40,7 +41,13 @@ export default function ProjectSidebar() {
     <NavLink key={workspace.identifier} to={`/workspaces/${workspace.identifier}`} className={({ isActive }) => rowClass(isActive, indent)}>
       <StatusIcon status={workspace.status} />
       <span className="flex-1 truncate">{label}</span>
-      <span className="text-[11px] text-muted">{workspace.agentLabel}</span>
+      {workspace.status === 'failed' ? (
+        <span className="text-[11px] text-muted">{t('sidebar.failed')}</span>
+      ) : workspace.status === 'done' && statistics.has(workspace.identifier) ? (
+        <span className="font-mono text-[11px] text-ok">+{statistics.get(workspace.identifier)?.added}</span>
+      ) : (
+        <span className="text-[11px] text-muted">{workspace.agentLabel}</span>
+      )}
     </NavLink>
   )
 

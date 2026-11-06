@@ -1,4 +1,4 @@
-import { CircleCheckIcon, FileTextIcon, TriangleAlertIcon } from 'lucide-react'
+import { CircleCheckIcon, FileTextIcon, InfoIcon, TriangleAlertIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { parseUnifiedDiff } from '@/lib/unified_diff'
@@ -36,6 +36,7 @@ export default function SidePanel({ workspace, projectIdentifier, siblings }: Si
           <button key={file.path} type="button" onClick={() => navigate(`/workspaces/${workspace.identifier}/changes`)} className="flex items-center gap-2 py-0.5 text-left hover:text-ink">
             <FileTextIcon size={14} className="shrink-0 text-muted" />
             <span className="flex-1 truncate font-mono text-[12px]">{file.path}</span>
+            <span className={`inline-flex h-4.5 items-center rounded-full border border-line px-1.5 text-[10.5px] font-medium ${file.status === 'added' ? 'text-ok' : file.status === 'deleted' ? 'text-danger' : 'text-warn'}`}>{t(`panel.fileStatus.${file.status}`)}</span>
           </button>
         ))}
       </section>
@@ -45,11 +46,14 @@ export default function SidePanel({ workspace, projectIdentifier, siblings }: Si
         {canCompare && clashes === null && <p className="text-muted">{t('panel.loading')}</p>}
         {clashes === 0 && <p className="flex items-center gap-2"><CircleCheckIcon size={14} className="text-ok" />{t('panel.noClashes')}</p>}
         {clashes !== null && clashes > 0 && <p className="flex items-center gap-2 text-danger"><TriangleAlertIcon size={14} />{t('panel.clashes', { count: clashes })}</p>}
+        <p className="flex items-center gap-2 text-muted"><InfoIcon size={14} />{t('panel.policyAtPublish')}</p>
       </section>
       <section className="flex flex-col gap-1 px-3.5 py-3">
         <h2 className="font-semibold">{t('panel.session')}</h2>
         <div className={row}><span className="text-muted">{t('panel.agent')}</span><span>{workspace.agentLabel || '—'}</span></div>
         <div className={row}><span className="text-muted">{t('panel.state')}</span><span>{t(`status.${workspace.status}`)}</span></div>
+        {workspace.baseCommit !== null && <div className={row}><span className="text-muted">{t('panel.base')}</span><span className="font-mono">{workspace.baseCommit.slice(0, 7)}</span></div>}
+        {workspace.totalTokens !== null && <div className={row}><span className="text-muted">{t('panel.tokens')}</span><span className="font-mono">{workspace.totalTokens.toLocaleString()}</span></div>}
         {workspace.durationInMilliseconds !== null && <div className={row}><span className="text-muted">{t('panel.duration')}</span><span className="font-mono">{(workspace.durationInMilliseconds / 1000).toFixed(1)} s</span></div>}
         {workspace.costInDollars !== null && <div className={row}><span className="text-muted">{t('panel.cost')}</span><span className="font-mono">{workspace.costInDollars.toFixed(2)} $</span></div>}
       </section>

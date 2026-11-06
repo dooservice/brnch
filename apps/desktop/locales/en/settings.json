@@ -1,5 +1,11 @@
 {
-  "nav": { "label": "Settings", "back": "Back to the app", "general": "General", "agents": "Agents", "security": "Security" },
+  "nav": {
+    "label": "Settings",
+    "back": "Back to the app",
+    "general": "General",
+    "agents": "Agents",
+    "security": "Security"
+  },
   "general": {
     "title": "General",
     "description": "How brnch looks and speaks.",
@@ -15,7 +21,17 @@
     "notInstalled": "Not installed",
     "pendingVerification": "Flags and output format still to be verified",
     "soon": "Soon",
-    "ownKey": "Each agent's login or API key is its own and it needs it to work. brnch protects git credentials, not the agent's."
+    "ownKey": "Each agent's login or API key is its own and it needs it to work. brnch protects git credentials, not the agent's.",
+    "default": "Default",
+    "defaults": "Defaults",
+    "defaultAgent": "Default agent",
+    "defaultAgentHint": "Preselected when you create a run.",
+    "defaultPermission": "Permissions",
+    "defaultPermissionHint": "What an agent may do without asking you.",
+    "permissions": {
+      "edit_files": "Edit files",
+      "plan_only": "Plan only"
+    }
   },
   "security": {
     "title": "Security",
@@ -27,10 +43,40 @@
     "unknown": "The state could not be read.",
     "bySystem": "By system",
     "systems": {
-      "windows": { "name": "Windows", "mechanism": "Dedicated local account", "state": "Not finished" },
-      "linux": { "name": "Linux", "mechanism": "bubblewrap", "state": "Measured in CI" },
-      "macos": { "name": "macOS", "mechanism": "Seatbelt", "state": "Partial" }
+      "windows": {
+        "name": "Windows",
+        "mechanism": "Dedicated local account",
+        "state": "Not finished"
+      },
+      "linux": {
+        "name": "Linux",
+        "mechanism": "bubblewrap",
+        "state": "Measured in CI"
+      },
+      "macos": {
+        "name": "macOS",
+        "mechanism": "Seatbelt",
+        "state": "Partial"
+      }
     },
-    "agentKey": "The agent's own login or API key is out of scope: it needs it to work."
+    "agentKey": "The agent's own login or API key is out of scope: it needs it to work.",
+    "whatAgentSees": "What an agent sees",
+    "items": {
+      "ssh": "Your SSH keys (.ssh)",
+      "gh": "The configuration of gh",
+      "credentials": "The system's credential store",
+      "agent": "The keys of your SSH agent",
+      "variables": "Variables GITHUB_TOKEN, GH_TOKEN, GITLAB_TOKEN, SSH_AUTH_SOCK",
+      "workspace": "The workspace of each task"
+    },
+    "hidden": "Hidden",
+    "visible": "Visible",
+    "removed": "Removed",
+    "allowed": "Allowed",
+    "byConstruction": "This follows from how the agent is started: confined, it only gets the system and its workspace. The tests that measured it ran on test machines, not on yours.",
+    "options": "Options",
+    "neverUnconfined": "Do not run agents without isolation",
+    "neverUnconfinedHint": "If no isolation is available, the agent does not start. It cannot be turned off.",
+    "locked": "Always on"
   }
 }

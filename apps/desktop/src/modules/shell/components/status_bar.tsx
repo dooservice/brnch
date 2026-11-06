@@ -3,6 +3,11 @@ import { useActiveProjectId, useProjects } from '@/modules/projects'
 import { useGitdStatus } from '@/modules/settings'
 import { useAllWorkspaces } from '@/modules/workspaces'
 
+function systemName(): string {
+  const agent = navigator.userAgent
+  return agent.includes('Windows') ? 'Windows' : agent.includes('Mac') ? 'macOS' : agent.includes('Linux') ? 'Linux' : ''
+}
+
 /** The bottom line: is gitd answering, and what is going on in the open project. */
 export default function StatusBar() {
   const { t } = useTranslation('shell')
@@ -21,6 +26,8 @@ export default function StatusBar() {
       </span>
       {project && <span className="font-mono">{project.name}</span>}
       <span>{t('status.running', { count: running })}</span>
+      <span className="flex-1" />
+      <span>{systemName()}</span>
     </footer>
   )
 }

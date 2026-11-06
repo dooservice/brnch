@@ -4,7 +4,7 @@ import { groupRuns } from './group_runs'
 
 const workspace = (identifier: string, runIdentifier: string | null): Workspace => ({
   identifier, directory: '/w', branchName: identifier, title: `Task ${runIdentifier}`, agentLabel: 'Claude Code',
-  runIdentifier, status: 'done', startedAtMilliseconds: null, costInDollars: null, durationInMilliseconds: null,
+  runIdentifier, status: 'done', startedAtMilliseconds: null, costInDollars: null, durationInMilliseconds: null, totalTokens: null, permissionMode: null, baseCommit: null,
 })
 
 describe('groupRuns', () => {

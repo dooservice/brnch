@@ -8,4 +8,5 @@ export interface StartRunInput {
   permissionMode: PermissionMode
   baseBranch: string | null
   copies: number
+  maximumMinutes: number | null
 }

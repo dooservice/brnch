@@ -35,12 +35,19 @@
     "published": "Publicada",
     "refused": "No se publicó",
     "publishedAs": "Publicada como {{name}}",
-    "flow": { "agent": "Agente", "noToken": "sin token", "holdsToken": "guarda el token", "remote": "repositorio remoto" },
+    "flow": {
+      "agent": "Agente",
+      "noToken": "sin token",
+      "holdsToken": "guarda el token",
+      "remote": "repositorio remoto"
+    },
     "checksTitle": "Antes de empujar, gitd comprueba",
     "checks": {
       "prefix": "El nombre de la rama tiene el prefijo obligatorio",
       "protectedPaths": "Sin cambios en rutas protegidas",
       "size": "El tamaño de los archivos está dentro del límite"
-    }
-  }
+    },
+    "policyMet": "Política cumplida"
+  },
+  "clashes": "Choca con otro agente"
 }

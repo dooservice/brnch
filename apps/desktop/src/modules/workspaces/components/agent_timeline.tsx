@@ -1,6 +1,7 @@
-import { BotIcon, CheckIcon, CircleAlertIcon, CircleCheckIcon, CircleXIcon, InfoIcon, Loader2Icon, TerminalIcon, XIcon } from 'lucide-react'
+import { BotIcon, CheckIcon, CircleAlertIcon, CircleCheckIcon, CircleXIcon, FileTextIcon, InfoIcon, Loader2Icon, PencilIcon, SearchIcon, TerminalIcon, XIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { describeTool } from '../lib/describe_tool'
 import { buildTimelineItems } from '../lib/timeline_items'
 import type { TimelineItem } from '../lib/timeline_items'
 import type { TimelineEntry } from '../types/workspace.types'
@@ -37,22 +38,24 @@ function TimelineRow({ item }: { item: TimelineItem }) {
           <p className="pt-0.5 leading-relaxed whitespace-pre-wrap">{item.text}</p>
         </div>
       )
-    case 'tool':
+    case 'tool': {
+      const { verb, target } = describeTool(item.name, item.summary)
       return (
-        <div className="ml-9.5 flex items-center gap-2.5 rounded-md border border-line bg-card px-2.5 py-1.5 text-[12.5px]">
-          <TerminalIcon size={14} className="text-muted" />
-          <span className="text-muted">{item.name}</span>
-          <span className="flex-1 truncate font-mono">{item.summary}</span>
+        <div className={cn('ml-9.5 flex items-center gap-2.5 rounded-md border bg-card px-2.5 py-1.5 text-[12.5px]', item.status === 'running' ? 'border-[#4a3a14]' : 'border-line')}>
+          {verb === 'run' ? <TerminalIcon size={14} className="text-muted" /> : verb === 'read' ? <FileTextIcon size={14} className="text-muted" /> : verb === 'search' ? <SearchIcon size={14} className="text-muted" /> : <PencilIcon size={14} className="text-muted" />}
+          <span className="text-muted">{verb === 'other' ? item.name : t(`timeline.verbs.${verb}`)}</span>
+          <span className="flex-1 truncate font-mono">{target}</span>
           {item.status === 'running' && <Loader2Icon size={14} role="status" aria-label={t('timeline.toolRunning')} className="animate-spin text-warn" />}
           {item.status === 'done' && <CheckIcon size={14} aria-label={t('timeline.toolDone')} className="text-ok" />}
           {item.status === 'failed' && <XIcon size={14} aria-label={t('timeline.toolFailed')} className="text-danger" />}
         </div>
       )
+    }
     case 'unparsed':
       return (
         <div className="ml-9.5 flex items-start gap-2.5 rounded-md border border-dashed border-line px-2.5 py-1.5 text-[12.5px]">
           <InfoIcon size={14} className="mt-0.5 shrink-0 text-muted" />
-          <span className="font-mono break-all text-muted">{item.rawLine}</span>
+          <span className="text-muted"><span className="mr-1.5">{t('timeline.unparsed')}:</span><span className="font-mono break-all">{item.rawLine}</span></span>
         </div>
       )
     case 'finished':

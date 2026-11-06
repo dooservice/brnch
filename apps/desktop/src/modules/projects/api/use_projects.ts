@@ -1,7 +1,7 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { command } from '@/lib/tauri'
-import type { Project, ProjectLayout } from '../types/project.types'
+import type { Project, ProjectLayout, RepositoryInspection } from '../types/project.types'
 
 const projectsQuery = queryOptions({
   queryKey: ['projects'] as const,
@@ -57,14 +57,33 @@ export function useEnterProject() {
   }
 }
 
+interface AddProjectInput {
+  name: string
+  repositoryUrl: string
+  baseBranch: string | null
+  workspacesDirectory: string | null
+  /** Whether to open the project once it is added. */
+  open: boolean
+}
+
 export function useAddProject() {
   const queryClient = useQueryClient()
   const enter = useEnterProject()
   return useMutation({
-    mutationFn: (input: { name: string; repositoryUrl: string }) => command<Project>('add_project', input),
-    onSuccess: async created => {
+    mutationFn: ({ open, ...input }: AddProjectInput) => command<Project>('add_project', input).then(created => ({ created, open })),
+    onSuccess: async ({ created, open }) => {
       await queryClient.invalidateQueries({ queryKey: ['projects'] })
-      await enter(created.identifier)
+      if (open) await enter(created.identifier)
     },
+  })
+}
+
+/** Asks the repository's server whether it answers and which branches it has. */
+export function useRepositoryInspection(location: string) {
+  return useQuery({
+    queryKey: ['repository', location] as const,
+    queryFn: () => command<RepositoryInspection>('inspect_repository', { location }),
+    enabled: location.trim() !== '',
+    staleTime: 60_000,
   })
 }

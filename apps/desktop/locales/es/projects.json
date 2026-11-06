@@ -8,12 +8,35 @@
   },
   "add": {
     "title": "Añadir proyecto",
-    "description": "Cada proyecto guarda su propio contexto: workspaces y lo que tenías abierto.",
-    "name": "Nombre",
+    "description": "Cada proyecto guarda su propio contexto: workspaces, archivos abiertos y terminales.",
+    "source": "Dónde está el proyecto",
+    "sources": {
+      "url": "Desde una URL",
+      "folder": "Carpeta local"
+    },
     "url": "URL del repositorio",
+    "folder": "Carpeta del repositorio",
+    "browse": "Examinar",
+    "pickRepository": "Elige la carpeta del repositorio",
+    "pickWorkspaces": "Elige dónde se crean los workspaces",
+    "checking": "Comprobando el repositorio…",
+    "reachable": "Repositorio accesible · rama principal {{branch}}",
+    "unreachable": "El repositorio no respondió.",
+    "name": "Nombre",
+    "baseBranch": "Rama base",
+    "baseBranchDefault": "La predeterminada del repositorio",
+    "workspaces": "Dónde se crean los workspaces",
+    "workspacesDefault": "La carpeta propia de brnch",
+    "workspacesHint": "Mejor en un Dev Drive (ReFS): gitd clona por bloques y los workspaces cuestan casi nada. En NTFS se copian los archivos.",
+    "credential": "Credencial para publicar",
+    "credentialFor": "Usar la que gitd ya tiene para {{host}}",
+    "credentialDefault": "Usar la que gitd ya tiene",
+    "credentialNote": "El token lo guarda gitd. Los agentes piden publicar y nunca lo reciben.",
+    "openAfter": "Abrir el proyecto al terminar",
     "submit": "Añadir proyecto",
     "errors": {
       "nameRequired": "Escribe un nombre.",
+      "locationRequired": "Escribe dónde está el repositorio.",
       "urlInvalid": "Usa una URL https o ssh, o git@host:ruta."
     }
   }

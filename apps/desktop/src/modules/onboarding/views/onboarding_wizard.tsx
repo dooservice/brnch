@@ -1,4 +1,4 @@
-import { ArrowRightIcon, CheckIcon } from 'lucide-react'
+import { AlertTriangleIcon, ArrowRightIcon, CheckIcon, FolderIcon, KeyRoundIcon, ShieldCheckIcon, UserIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -10,7 +10,9 @@ import { useProjects } from '@/modules/projects'
 import { useAgentInstallations, useGitdStatus, useSandboxStatus } from '@/modules/settings'
 import { markOnboarded } from '../lib/onboarded'
 
-const STEPS = ['gitd', 'isolation', 'agents', 'project'] as const
+const STEPS = ['gitd', 'isolation', 'agents', 'credential', 'project'] as const
+
+const GITD_CREDENTIAL_EXAMPLE = '[[credentials]]\nprefix = "https://github.com/acme/"\ntoken_env = "GITHUB_TOKEN"'
 
 /** The first start: each step shows the real state of this machine and how to fix what is missing. */
 export default function OnboardingWizard() {
@@ -33,6 +35,7 @@ export default function OnboardingWizard() {
     gitd: gitd.isPending ? 'checking' : gitd.data?.connected ? 'ok' : 'problem',
     isolation: sandbox.isPending ? 'checking' : sandbox.data?.available ? 'ok' : 'problem',
     agents: agents.isPending ? 'checking' : claude?.installed ? 'ok' : 'problem',
+    credential: gitd.isPending ? 'checking' : gitd.data?.connected ? 'ok' : 'problem',
     project: projects.length > 0 ? 'ok' : 'problem',
   } as const
 
@@ -61,12 +64,32 @@ export default function OnboardingWizard() {
             {step === 'gitd' && (gitd.data?.message ?? (gitd.data?.connected ? t('gitd.connected') : t('gitd.hint')))}
             {step === 'isolation' && (sandbox.data?.available ? t('isolation.active', { mechanism: sandbox.data.mechanism }) : (sandbox.data?.reason ?? t('isolation.unknown')))}
             {step === 'agents' && (claude?.installed ? t('agents.found', { version: claude.version ?? '' }) : t('agents.missing'))}
+            {step === 'credential' && (gitd.data?.connected ? t('credential.reachable') : t('credential.needsGitd'))}
             {step === 'project' && (projects.length > 0 ? t('project.added', { count: projects.length }) : t('project.none'))}
           </p>
           {step === 'gitd' && <Button variant="outline" loading={gitd.isFetching} onClick={() => void gitd.refetch()}>{t('retry')}</Button>}
           {step === 'agents' && <Button variant="outline" loading={agents.isFetching} onClick={() => void agents.refetch()}>{t('retry')}</Button>}
           {step === 'project' && <Button variant="outline" onClick={() => addProject.show()}>{t('project.add')}</Button>}
+          {step === 'credential' && <Button variant="outline" loading={gitd.isFetching} onClick={() => void gitd.refetch()}>{t('retry')}</Button>}
         </div>
+        {step === 'isolation' && !sandbox.isPending && !sandbox.data?.available && (
+          <>
+            <div className="mt-4 rounded-lg border border-line">
+              <div className="flex items-center justify-between border-b border-line px-4 py-2.5"><span className="flex items-center gap-2 text-muted"><UserIcon size={14} />{t('isolation.account')}</span><span className="font-mono text-[12.5px]">brnchagent</span></div>
+              <div className="flex items-center justify-between border-b border-line px-4 py-2.5"><span className="flex items-center gap-2 text-muted"><KeyRoundIcon size={14} />{t('isolation.password')}</span><span>{t('isolation.passwordValue')}</span></div>
+              <div className="flex items-center justify-between px-4 py-2.5"><span className="flex items-center gap-2 text-muted"><FolderIcon size={14} />{t('isolation.access')}</span><span>{t('isolation.accessValue')}</span></div>
+            </div>
+            <div className="mt-4 flex gap-2.5 rounded-lg border border-[#4a3a14] bg-[#1a150a] px-3.5 py-3 leading-relaxed text-[#e8d9a3]"><AlertTriangleIcon size={14} className="mt-1 shrink-0 text-warn" /><span>{t('isolation.adminWarning')}</span></div>
+            <div className="mt-4 flex items-center justify-end gap-3"><span className="text-[12px] text-muted">{t('isolation.notAvailable')}</span><Button disabled icon={<ShieldCheckIcon size={13} />}>{t('isolation.create')}</Button></div>
+          </>
+        )}
+        {step === 'credential' && (
+          <div className="mt-4">
+            <p className="mb-2 text-[12px] text-muted">{t('credential.example')}</p>
+            <pre className="overflow-x-auto rounded-lg border border-line bg-canvas px-4 py-3 font-mono text-[12px] leading-relaxed">{GITD_CREDENTIAL_EXAMPLE}</pre>
+            <p className="mt-2 text-[12px] text-muted">{t('credential.note')}</p>
+          </div>
+        )}
         <div className="mt-6 flex items-center gap-2.5">
           <Button variant="ghost" className="px-0" onClick={finish}>{t('skip')}</Button>
           <span className="flex-1" />

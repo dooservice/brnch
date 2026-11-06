@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-export type DialogName = 'palette' | 'add-project' | 'new-run' | 'publish'
+export type DialogName = 'palette' | 'add-project' | 'new-run' | 'publish' | 'about'
 
 const PARAMETER = 'dialog'
 

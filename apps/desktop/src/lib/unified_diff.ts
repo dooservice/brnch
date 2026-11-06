@@ -7,8 +7,11 @@ export interface DiffLine {
   text: string
 }
 
+export type FileChangeStatus = 'added' | 'modified' | 'deleted'
+
 export interface DiffFile {
   path: string
+  status: FileChangeStatus
   added: number
   removed: number
   isBinary: boolean
@@ -35,11 +38,19 @@ export function parseUnifiedDiff(diff: string): DiffFile[] {
     if (line.startsWith('diff --git ')) {
       if (current) files.push(current)
       const match = /^diff --git a\/(.+) b\/(.+)$/.exec(line)
-      current = { path: match?.[2] ?? line.slice(11), added: 0, removed: 0, isBinary: false, lines: [] }
+      current = { path: match?.[2] ?? line.slice(11), status: 'modified', added: 0, removed: 0, isBinary: false, lines: [] }
       insideHunk = false
       continue
     }
     if (!current) continue
+    if (!insideHunk && line.startsWith('new file mode')) {
+      current.status = 'added'
+      continue
+    }
+    if (!insideHunk && line.startsWith('deleted file mode')) {
+      current.status = 'deleted'
+      continue
+    }
     if (line.startsWith('Binary files ') || line.startsWith('GIT binary patch')) {
       current.isBinary = true
       continue

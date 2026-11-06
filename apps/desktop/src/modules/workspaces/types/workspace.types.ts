@@ -11,6 +11,17 @@ export interface Workspace {
   startedAtMilliseconds: number | null
   costInDollars: number | null
   durationInMilliseconds: number | null
+  totalTokens: number | null
+  permissionMode: 'edit_files' | 'plan_only' | null
+  baseCommit: string | null
+}
+
+/** How much a workspace changed, for the sidebar and the tab badge. */
+export interface WorkspaceStatistics {
+  workspaceIdentifier: string
+  files: number
+  added: number
+  removed: number
 }
 
 /** One thing an agent did. Mirrors the `AgentEvent` the Rust side writes as JSON. */
@@ -20,7 +31,7 @@ export type AgentEvent =
   | { kind: 'assistant_text'; text: string }
   | { kind: 'tool_requested'; tool_call_identifier: string; tool_name: string; input_summary: string }
   | { kind: 'tool_completed'; tool_call_identifier: string; failed: boolean }
-  | { kind: 'run_finished'; succeeded: boolean; summary: string; cost_in_dollars: number | null; duration_in_milliseconds: number | null }
+  | { kind: 'run_finished'; succeeded: boolean; summary: string; cost_in_dollars: number | null; duration_in_milliseconds: number | null; total_tokens?: number | null }
   | { kind: 'unparsed_output'; raw_line: string }
 
 /** An event with the position it has in its workspace's history. */

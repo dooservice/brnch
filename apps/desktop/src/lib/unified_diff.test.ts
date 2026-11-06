@@ -40,6 +40,14 @@ describe('parseUnifiedDiff', () => {
   })
 })
 
+describe('file status', () => {
+  it('tells new, deleted and changed files apart', () => {
+    const files = parseUnifiedDiff(['diff --git a/n.ts b/n.ts', 'new file mode 100644', '@@ -0,0 +1 @@', '+x', 'diff --git a/d.ts b/d.ts', 'deleted file mode 100644', '@@ -1 +0,0 @@', '-x', 'diff --git a/m.ts b/m.ts', '@@ -1 +1 @@', '-a', '+b'].join('\n'))
+
+    expect(files.map(file => file.status)).toEqual(['added', 'deleted', 'modified'])
+  })
+})
+
 describe('toSplitRows', () => {
   it('faces removed lines with the added ones and leaves the spare side empty', () => {
     const rows = toSplitRows(parseUnifiedDiff(DIFF)[0]!.lines)

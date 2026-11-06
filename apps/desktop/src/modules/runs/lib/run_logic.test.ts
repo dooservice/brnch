@@ -5,7 +5,7 @@ import { deriveRunLabel } from './run_label'
 
 const workspace = (identifier: string, status: Workspace['status'], cost: number | null): Workspace => ({
   identifier, directory: '/w', branchName: identifier, title: 't', agentLabel: 'Claude Code', runIdentifier: 'r',
-  status, startedAtMilliseconds: null, costInDollars: cost, durationInMilliseconds: null,
+  status, startedAtMilliseconds: null, costInDollars: cost, durationInMilliseconds: null, totalTokens: null, permissionMode: null, baseCommit: null,
 })
 
 describe('recommendWorkspace', () => {

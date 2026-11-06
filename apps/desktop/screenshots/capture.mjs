@@ -17,6 +17,7 @@ const projects = [
 const workspace = (identifier, branchName, title, status, runIdentifier, cost) => ({
   identifier, directory: `D:\\brnch\\${branchName}`, branchName, title, agentLabel: "Claude Code", runIdentifier, status,
   startedAtMilliseconds: Date.now() - 6 * 60_000, costInDollars: cost, durationInMilliseconds: cost === null ? null : 41_200,
+  totalTokens: cost === null ? null : 48_210, permissionMode: "edit_files", baseCommit: "3f9a1c2d",
 });
 const workspacesByProject = {
   p1: [
@@ -79,6 +80,15 @@ function fakeBackend(data) {
           return [{ firstWorkspaceIdentifier: "w1", secondWorkspaceIdentifier: "w3", clashingPaths: ["src/Header.tsx", "src/theme/tokens.ts"] }];
         case "publish_workspaces":
           return args.workspaceIdentifiers.map((id) => ({ workspaceIdentifier: id, branchName: "agents/add-search-2", failure: null }));
+        case "inspect_repository":
+          return { accessible: true, defaultBranch: "main", branches: ["develop", "main", "release"], message: null };
+        case "workspace_statistics":
+          return [
+            { workspaceIdentifier: "w2", files: 4, added: 112, removed: 8 },
+            { workspaceIdentifier: "w3", files: 5, added: 143, removed: 21 },
+            { workspaceIdentifier: "w5", files: 6, added: 142, removed: 37 },
+            { workspaceIdentifier: "w1", files: 2, added: 9, removed: 1 },
+          ];
         case "sandbox_status": return { available: true, mechanism: "bubblewrap", reason: null };
         case "detect_agents": return [{ kind: "claude_code", installed: true, version: "2.1.0 (Claude Code)" }];
         case "gitd_status": return { connected: true, message: null };
@@ -97,7 +107,7 @@ const scenarios = [
   {
     file: "05-changes", active: "p1",
     act: async (page) => {
-      await page.getByRole("link", { name: /add-search-2 Claude Code/ }).click();
+      await page.getByRole("link", { name: /add-search-2 \+112/ }).click();
       await page.getByRole("tab", { name: /Cambios/ }).click();
     },
   },
@@ -122,8 +132,8 @@ const scenarios = [
     file: "10-add-project", active: "p1",
     act: async (page) => {
       await page.getByRole("button", { name: "Añadir proyecto" }).first().click();
-      await page.getByLabel("Nombre").fill("docs-site");
       await page.getByLabel("URL del repositorio").fill("https://github.com/acme/docs-site");
+      await page.getByText(/Repositorio accesible/).waitFor();
     },
   },
   { file: "11-settings-agents", active: "p1", act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Agentes" }).click(); } },

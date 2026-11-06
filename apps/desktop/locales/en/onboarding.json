@@ -22,7 +22,15 @@
     "title": "Agent isolation",
     "description": "Agents run confined so they cannot read your keys or your git configuration. Without isolation brnch does not start them.",
     "active": "Agents will run confined with {{mechanism}}.",
-    "unknown": "The isolation state could not be read."
+    "unknown": "The isolation state could not be read.",
+    "account": "Account to be created",
+    "password": "Password",
+    "passwordValue": "Random, kept by brnch for you",
+    "access": "Access granted",
+    "accessValue": "Only the workspaces folder",
+    "adminWarning": "Windows will ask for administrator permission once. If you refuse, brnch will not run agents: it does not start them without isolation.",
+    "notAvailable": "Not available yet: starting agents under this account is still being finished.",
+    "create": "Create the account"
   },
   "agents": {
     "name": "Agents",
@@ -39,5 +47,14 @@
     "added_other": "{{count}} projects added.",
     "none": "No project yet.",
     "add": "Add project"
+  },
+  "credential": {
+    "name": "Publishing",
+    "title": "Credential to publish",
+    "description": "The token that pushes branches lives in gitd, not in brnch and not in the agents. gitd reads it from its own configuration.",
+    "reachable": "gitd answers, so it can hold the credential.",
+    "needsGitd": "gitd must be running to hold the credential.",
+    "example": "Example of gitd's configuration for GitHub:",
+    "note": "The agent only asks to publish; gitd pushes with this token and applies its policy."
   }
 }

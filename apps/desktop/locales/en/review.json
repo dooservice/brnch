@@ -35,12 +35,19 @@
     "published": "Published",
     "refused": "Not published",
     "publishedAs": "Published as {{name}}",
-    "flow": { "agent": "Agent", "noToken": "no token", "holdsToken": "holds the token", "remote": "remote repository" },
+    "flow": {
+      "agent": "Agent",
+      "noToken": "no token",
+      "holdsToken": "holds the token",
+      "remote": "remote repository"
+    },
     "checksTitle": "Before pushing, gitd checks",
     "checks": {
       "prefix": "The branch name has the required prefix",
       "protectedPaths": "No changes in protected paths",
       "size": "File sizes are within the limit"
-    }
-  }
+    },
+    "policyMet": "Policy met"
+  },
+  "clashes": "Clashes with another agent"
 }

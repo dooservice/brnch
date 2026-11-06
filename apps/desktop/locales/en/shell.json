@@ -1,6 +1,10 @@
 {
   "search": "Search projects and workspaces",
-  "window": { "minimize": "Minimize", "maximize": "Maximize", "close": "Close" },
+  "window": {
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "close": "Close"
+  },
   "menu": {
     "file": "File",
     "view": "View",
@@ -8,7 +12,13 @@
     "addProject": "Add project…",
     "settings": "Settings",
     "palette": "Search…",
-    "newRun": "New run…"
+    "newRun": "New run…",
+    "edit": "Edit",
+    "help": "Help",
+    "copy": "Copy",
+    "cut": "Cut",
+    "selectAll": "Select all",
+    "about": "About brnch"
   },
   "sidebar": {
     "projects": "Projects",
@@ -24,7 +34,8 @@
     "sandboxActive": "Isolation active",
     "sandboxInactive": "No isolation: agents will not run",
     "sandboxUnknown": "Checking isolation…",
-    "settings": "Settings"
+    "settings": "Settings",
+    "failed": "failed"
   },
   "status": {
     "gitdChecking": "Checking gitd…",
@@ -50,7 +61,19 @@
     "workspace": "Workspace",
     "nothingSaved": "Nothing saved yet: you will land on the project's start page.",
     "tab": "Tab: {{tab}}",
-    "tabs": { "agent": "Agent", "changes": "Changes", "files": "Files", "terminal": "Terminal" },
-    "contextNote": "What you had open is saved on disk for each project. Switching only loads the destination's; the one you leave stays as it was."
+    "tabs": {
+      "agent": "Agent",
+      "changes": "Changes",
+      "files": "Files",
+      "terminal": "Terminal"
+    },
+    "contextNote": "What you had open is saved on disk for each project. Switching only loads the destination's; the one you leave stays as it was.",
+    "navigate": "navigate",
+    "open": "open"
+  },
+  "about": {
+    "title": "brnch",
+    "version": "Version {{version}}",
+    "body": "Runs several coding agents on the same repository, each in its own gitd workspace, without giving them your git token, and tells you which results merge together."
   }
 }

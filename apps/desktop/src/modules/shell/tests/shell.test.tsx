@@ -30,24 +30,58 @@ describe('shell', () => {
     expect(await screen.findByRole('heading', { name: 'gitd' })).toBeInTheDocument()
   })
 
-  it('adds a project from the dialog, validating the address first', async () => {
+  it('adds a project from the dialog: it checks the repository, fills in what it learns and saves the settings', async () => {
     const user = userEvent.setup()
     window.localStorage.setItem('brnch.onboarded', '1')
     renderApp()
     await user.click(await screen.findByRole('button', { name: 'Añadir proyecto' }))
     const dialog = await screen.findByRole('dialog')
 
-    await user.type(within(dialog).getByLabelText('Nombre'), 'docs-site')
-    await user.type(within(dialog).getByLabelText('URL del repositorio'), 'not a url')
-    await user.click(within(dialog).getByRole('button', { name: 'Añadir proyecto' }))
-    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Usa una URL https o ssh')
-
-    await user.clear(within(dialog).getByLabelText('URL del repositorio'))
     await user.type(within(dialog).getByLabelText('URL del repositorio'), 'https://github.com/acme/docs-site')
+    expect(await within(dialog).findByText('Repositorio accesible · rama principal main')).toBeInTheDocument()
+    expect(within(dialog).getByLabelText('Nombre')).toHaveValue('docs-site')
+    expect(within(dialog).getByLabelText('Rama base')).toHaveValue('main')
+    expect(within(dialog).getByText('Usar la que gitd ya tiene para github.com')).toBeInTheDocument()
+    await user.selectOptions(within(dialog).getByLabelText('Rama base'), 'develop')
+    await user.type(within(dialog).getByLabelText('Dónde se crean los workspaces'), 'D:\\brnch\\docs-site')
     await user.click(within(dialog).getByRole('button', { name: 'Añadir proyecto' }))
 
     await waitFor(() => expect(desktop.projects.map(project => project.name)).toEqual(['docs-site']))
+    expect(desktop.projects[0]).toMatchObject({ baseBranch: 'develop', workspacesDirectory: 'D:\\brnch\\docs-site' })
     expect(await screen.findByRole('button', { name: /docs-site/ })).toBeInTheDocument()
+  })
+
+  it('refuses an address that is not a repository URL and says when the repository does not answer', async () => {
+    const user = userEvent.setup()
+    window.localStorage.setItem('brnch.onboarded', '1')
+    renderApp()
+    await user.click(await screen.findByRole('button', { name: 'Añadir proyecto' }))
+    const dialog = await screen.findByRole('dialog')
+
+    await user.type(within(dialog).getByLabelText('URL del repositorio'), 'not a url')
+    await user.type(within(dialog).getByLabelText('Nombre'), 'docs-site')
+    await user.click(within(dialog).getByRole('button', { name: 'Añadir proyecto' }))
+    expect(await within(dialog).findByText(/Usa una URL https o ssh/)).toBeInTheDocument()
+
+    await user.clear(within(dialog).getByLabelText('URL del repositorio'))
+    await user.type(within(dialog).getByLabelText('URL del repositorio'), 'https://example.com/unreachable')
+    expect(await within(dialog).findByText('repository not found')).toBeInTheDocument()
+  })
+
+  it('does not open the new project when the person unchecks "open when done"', async () => {
+    const user = userEvent.setup()
+    window.localStorage.setItem('brnch.onboarded', '1')
+    renderApp()
+    await user.click(await screen.findByRole('button', { name: 'Añadir proyecto' }))
+    const dialog = await screen.findByRole('dialog')
+    await user.type(within(dialog).getByLabelText('URL del repositorio'), 'https://github.com/acme/quiet')
+    await within(dialog).findByText(/Repositorio accesible/)
+
+    await user.click(within(dialog).getByLabelText('Abrir el proyecto al terminar'))
+    await user.click(within(dialog).getByRole('button', { name: 'Añadir proyecto' }))
+
+    await waitFor(() => expect(desktop.projects).toHaveLength(1))
+    expect(desktop.called('activate_project')).toHaveLength(0)
   })
 
   it('folds the open project when it is clicked again and keeps the others open', async () => {

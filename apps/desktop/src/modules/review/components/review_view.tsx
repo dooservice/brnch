@@ -1,4 +1,4 @@
-import { CheckIcon, FileTextIcon, MessageSquarePlusIcon, SearchIcon, SendIcon } from 'lucide-react'
+import { CheckIcon, FileTextIcon, MessageSquarePlusIcon, SearchIcon, SendIcon, TriangleAlertIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -9,7 +9,7 @@ import { failureText } from '@/lib/tauri'
 import { parseUnifiedDiff, toSplitRows } from '@/lib/unified_diff'
 import type { DiffLine } from '@/lib/unified_diff'
 import { cn } from '@/lib/utils'
-import { useSendFollowUp, useWorkspaceDiff } from '@/modules/workspaces'
+import { useAllWorkspaces, useProjectConflicts, useSendFollowUp, useWorkspaceDiff } from '@/modules/workspaces'
 import type { Workspace } from '@/modules/workspaces'
 import { buildReviewPrompt } from '../lib/review_prompt'
 import { useReviewMarks } from '../lib/review_marks'
@@ -25,6 +25,10 @@ export default function ReviewView({ workspace }: { workspace: Workspace }) {
   const marks = useReviewMarks()
   const diff = useWorkspaceDiff(workspace.identifier, workspace.status)
   const sendFollowUp = useSendFollowUp()
+  const entry = useAllWorkspaces().find(candidate => candidate.workspaces.some(item => item.identifier === workspace.identifier))
+  const fingerprint = entry?.workspaces.map(item => `${item.identifier}:${item.status}`).join(',') ?? ''
+  const conflicts = useProjectConflicts(entry?.project.identifier ?? null, fingerprint, (entry?.workspaces.length ?? 0) >= 2)
+  const clashingPaths = new Set(conflicts.data?.filter(conflict => conflict.firstWorkspaceIdentifier === workspace.identifier || conflict.secondWorkspaceIdentifier === workspace.identifier).flatMap(conflict => conflict.clashingPaths) ?? [])
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
   const [split, setSplit] = useState(false)
@@ -64,6 +68,7 @@ export default function ReviewView({ workspace }: { workspace: Workspace }) {
         <button type="button" aria-current={path === selected.path} onClick={() => setSelectedPath(path)} className={cn('flex min-w-0 flex-1 items-center gap-2 text-left', seen && 'text-muted')}>
           <FileTextIcon size={14} className="shrink-0 text-muted" />
           <span className="flex-1 truncate font-mono text-[12px]">{path}</span>
+          {clashingPaths.has(path) && <TriangleAlertIcon size={13} aria-label={t('clashes')} className="text-danger" />}
           <span className="font-mono text-[11px]"><span className="text-ok">+{added}</span> <span className="text-danger">−{removed}</span></span>
         </button>
       </li>

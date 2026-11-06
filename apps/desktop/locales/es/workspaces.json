@@ -6,14 +6,35 @@
     "failed": "Falló",
     "working_one": "Trabajando · {{count}} min",
     "working_other": "Trabajando · {{count}} min",
-    "reviewReady": "Listo para revisar"
+    "reviewReady": "Listo para revisar",
+    "clashesWith": "Choca con {{name}}"
   },
-  "tabs": { "agent": "Agente", "changes": "Cambios", "files": "Archivos", "terminal": "Terminal" },
-  "actions": { "stop": "Detener", "publish": "Publicar" },
-  "missing": { "title": "No se encuentra el workspace", "description": "Puede que se haya eliminado. Elige otro en la barra lateral." },
+  "tabs": {
+    "agent": "Agente",
+    "changes": "Cambios",
+    "files": "Archivos",
+    "terminal": "Terminal"
+  },
+  "actions": {
+    "stop": "Detener",
+    "publish": "Publicar",
+    "moreOptions": "Más opciones de publicación",
+    "publishBranch": "Publicar esta rama",
+    "compareRun": "Comparar toda la corrida"
+  },
+  "missing": {
+    "title": "No se encuentra el workspace",
+    "description": "Puede que se haya eliminado. Elige otro en la barra lateral."
+  },
   "soon": {
-    "files": { "title": "El editor de archivos aún no está construido", "description": "Abrirá y editará los archivos de este workspace." },
-    "terminal": { "title": "La terminal aún no está construida", "description": "Abrirá una terminal en la carpeta de este workspace." }
+    "files": {
+      "title": "El editor de archivos aún no está construido",
+      "description": "Abrirá y editará los archivos de este workspace."
+    },
+    "terminal": {
+      "title": "La terminal aún no está construida",
+      "description": "Abrirá una terminal en la carpeta de este workspace."
+    }
   },
   "timeline": {
     "label": "Actividad del agente",
@@ -23,7 +44,15 @@
     "toolDone": "Terminó bien",
     "toolFailed": "Falló",
     "finished": "Terminó",
-    "notFinished": "No terminó"
+    "notFinished": "No terminó",
+    "verbs": {
+      "read": "Leyó",
+      "create": "Creó",
+      "edit": "Editó",
+      "run": "Ejecuta",
+      "search": "Buscó"
+    },
+    "unparsed": "Salida no reconocida, guardada tal cual"
   },
   "composer": {
     "label": "Mensaje para el agente",
@@ -32,7 +61,11 @@
     "noRun": "No se ha iniciado ninguna tarea en este workspace.",
     "send": "Enviar",
     "confined": "Confinado",
-    "notConfined": "Sin confinar"
+    "notConfined": "Sin confinar",
+    "modes": {
+      "edit_files": "Editar archivos",
+      "plan_only": "Solo plan"
+    }
   },
   "panel": {
     "label": "Detalles del workspace",
@@ -48,6 +81,14 @@
     "agent": "Agente",
     "state": "Estado",
     "duration": "Duración",
-    "cost": "Coste"
+    "cost": "Coste",
+    "fileStatus": {
+      "added": "N",
+      "modified": "M",
+      "deleted": "D"
+    },
+    "policyAtPublish": "Política de publicación: se comprueba al publicar",
+    "base": "Base",
+    "tokens": "Tokens"
   }
 }

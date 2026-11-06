@@ -1,5 +1,6 @@
 import { BotIcon, CheckIcon, CircleCheckIcon, CircleIcon, CircleXIcon, GlobeIcon, Loader2Icon, LockIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import Badge from '@/components/badge'
 import Button from '@/components/button'
 import Dialog from '@/components/dialog'
 import { useDialog } from '@/hooks/use_dialog'
@@ -63,6 +64,7 @@ export default function PublishDialog() {
                   {outcome?.failure && <p role="alert" className="mt-0.5 text-[12.5px] text-danger">{outcome.failure}</p>}
                   {outcome?.branchName && <p className="mt-0.5 text-[12px] text-muted">{t('publish.publishedAs', { name: outcome.branchName })}</p>}
                 </div>
+                {outcome?.failure === null && <Badge variant="success">{t('publish.policyMet')}</Badge>}
               </li>
             )
           })}

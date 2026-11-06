@@ -8,12 +8,35 @@
   },
   "add": {
     "title": "Add project",
-    "description": "Each project keeps its own context: workspaces and what you had open.",
-    "name": "Name",
+    "description": "Each project keeps its own context: workspaces, open files and terminals.",
+    "source": "Where the project is",
+    "sources": {
+      "url": "From a URL",
+      "folder": "Local folder"
+    },
     "url": "Repository URL",
+    "folder": "Repository folder",
+    "browse": "Browse",
+    "pickRepository": "Choose the repository folder",
+    "pickWorkspaces": "Choose where workspaces are created",
+    "checking": "Checking the repository…",
+    "reachable": "Repository reachable · default branch {{branch}}",
+    "unreachable": "The repository did not answer.",
+    "name": "Name",
+    "baseBranch": "Base branch",
+    "baseBranchDefault": "The repository's default",
+    "workspaces": "Where workspaces are created",
+    "workspacesDefault": "brnch's own folder",
+    "workspacesHint": "Best on a Dev Drive (ReFS): gitd clones by blocks and workspaces cost almost nothing. On NTFS the files are copied.",
+    "credential": "Credential to publish",
+    "credentialFor": "Use the one gitd already has for {{host}}",
+    "credentialDefault": "Use the one gitd already has",
+    "credentialNote": "gitd keeps the token. Agents ask to publish and never receive it.",
+    "openAfter": "Open the project when done",
     "submit": "Add project",
     "errors": {
       "nameRequired": "Write a name.",
+      "locationRequired": "Write where the repository is.",
       "urlInvalid": "Use an https or ssh URL, or git@host:path."
     }
   }

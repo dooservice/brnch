@@ -6,6 +6,7 @@ import { AddProjectDialog, saveProjectLayout, useActivateProject, useActiveProje
 import { PublishDialog } from '@/modules/review'
 import { NewRunDialog } from '@/modules/runs'
 import { useAllWorkspaces } from '@/modules/workspaces'
+import AboutDialog from '../components/about_dialog'
 import CommandPalette from '../components/command_palette'
 import ProjectSidebar from '../components/project_sidebar'
 import StatusBar from '../components/status_bar'
@@ -73,6 +74,7 @@ export default function ShellLayout() {
       <AddProjectDialog />
       <NewRunDialog />
       <PublishDialog />
+      <AboutDialog />
     </div>
   )
 }

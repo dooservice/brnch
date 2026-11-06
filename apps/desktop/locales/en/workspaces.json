@@ -6,14 +6,35 @@
     "failed": "Failed",
     "working_one": "Working · {{count}} min",
     "working_other": "Working · {{count}} min",
-    "reviewReady": "Ready to review"
+    "reviewReady": "Ready to review",
+    "clashesWith": "Clashes with {{name}}"
   },
-  "tabs": { "agent": "Agent", "changes": "Changes", "files": "Files", "terminal": "Terminal" },
-  "actions": { "stop": "Stop", "publish": "Publish" },
-  "missing": { "title": "Workspace not found", "description": "It may have been removed. Pick another one in the sidebar." },
+  "tabs": {
+    "agent": "Agent",
+    "changes": "Changes",
+    "files": "Files",
+    "terminal": "Terminal"
+  },
+  "actions": {
+    "stop": "Stop",
+    "publish": "Publish",
+    "moreOptions": "More publishing options",
+    "publishBranch": "Publish this branch",
+    "compareRun": "Compare the whole run"
+  },
+  "missing": {
+    "title": "Workspace not found",
+    "description": "It may have been removed. Pick another one in the sidebar."
+  },
   "soon": {
-    "files": { "title": "The file editor is not built yet", "description": "It will open and edit the files of this workspace." },
-    "terminal": { "title": "The terminal is not built yet", "description": "It will open a terminal in this workspace's folder." }
+    "files": {
+      "title": "The file editor is not built yet",
+      "description": "It will open and edit the files of this workspace."
+    },
+    "terminal": {
+      "title": "The terminal is not built yet",
+      "description": "It will open a terminal in this workspace's folder."
+    }
   },
   "timeline": {
     "label": "Agent activity",
@@ -23,7 +44,15 @@
     "toolDone": "Finished",
     "toolFailed": "Failed",
     "finished": "Finished",
-    "notFinished": "Did not finish"
+    "notFinished": "Did not finish",
+    "verbs": {
+      "read": "Read",
+      "create": "Created",
+      "edit": "Edited",
+      "run": "Runs",
+      "search": "Searched"
+    },
+    "unparsed": "Output not recognized, kept as is"
   },
   "composer": {
     "label": "Message to the agent",
@@ -32,7 +61,11 @@
     "noRun": "No task has been started in this workspace.",
     "send": "Send",
     "confined": "Confined",
-    "notConfined": "Not confined"
+    "notConfined": "Not confined",
+    "modes": {
+      "edit_files": "Edit files",
+      "plan_only": "Plan only"
+    }
   },
   "panel": {
     "label": "Workspace details",
@@ -48,6 +81,14 @@
     "agent": "Agent",
     "state": "State",
     "duration": "Duration",
-    "cost": "Cost"
+    "cost": "Cost",
+    "fileStatus": {
+      "added": "N",
+      "modified": "M",
+      "deleted": "D"
+    },
+    "policyAtPublish": "Publishing policy: checked when you publish",
+    "base": "Base",
+    "tokens": "Tokens"
   }
 }

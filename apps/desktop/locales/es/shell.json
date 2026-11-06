@@ -1,6 +1,10 @@
 {
   "search": "Buscar proyectos y workspaces",
-  "window": { "minimize": "Minimizar", "maximize": "Maximizar", "close": "Cerrar" },
+  "window": {
+    "minimize": "Minimizar",
+    "maximize": "Maximizar",
+    "close": "Cerrar"
+  },
   "menu": {
     "file": "Archivo",
     "view": "Ver",
@@ -8,7 +12,13 @@
     "addProject": "Añadir proyecto…",
     "settings": "Ajustes",
     "palette": "Buscar…",
-    "newRun": "Nueva corrida…"
+    "newRun": "Nueva corrida…",
+    "edit": "Editar",
+    "help": "Ayuda",
+    "copy": "Copiar",
+    "cut": "Cortar",
+    "selectAll": "Seleccionar todo",
+    "about": "Acerca de brnch"
   },
   "sidebar": {
     "projects": "Proyectos",
@@ -24,7 +34,8 @@
     "sandboxActive": "Aislamiento activo",
     "sandboxInactive": "Sin aislamiento: los agentes no se ejecutarán",
     "sandboxUnknown": "Comprobando el aislamiento…",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "failed": "falló"
   },
   "status": {
     "gitdChecking": "Comprobando gitd…",
@@ -50,7 +61,19 @@
     "workspace": "Workspace",
     "nothingSaved": "Aún no hay nada guardado: entrarás a la página de inicio del proyecto.",
     "tab": "Pestaña: {{tab}}",
-    "tabs": { "agent": "Agente", "changes": "Cambios", "files": "Archivos", "terminal": "Terminal" },
-    "contextNote": "Lo que tenías abierto se guarda en disco por proyecto. Cambiar solo carga el del destino; el que dejas queda como estaba."
+    "tabs": {
+      "agent": "Agente",
+      "changes": "Cambios",
+      "files": "Archivos",
+      "terminal": "Terminal"
+    },
+    "contextNote": "Lo que tenías abierto se guarda en disco por proyecto. Cambiar solo carga el del destino; el que dejas queda como estaba.",
+    "navigate": "navegar",
+    "open": "abrir"
+  },
+  "about": {
+    "title": "brnch",
+    "version": "Versión {{version}}",
+    "body": "Lanza varios agentes de código sobre el mismo repositorio, cada uno en su propio workspace de gitd, sin darles tu token de git, y te dice qué resultados se pueden fundir juntos."
   }
 }

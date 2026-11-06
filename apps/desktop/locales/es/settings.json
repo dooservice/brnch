@@ -1,5 +1,11 @@
 {
-  "nav": { "label": "Ajustes", "back": "Volver a la aplicación", "general": "General", "agents": "Agentes", "security": "Seguridad" },
+  "nav": {
+    "label": "Ajustes",
+    "back": "Volver a la aplicación",
+    "general": "General",
+    "agents": "Agentes",
+    "security": "Seguridad"
+  },
   "general": {
     "title": "General",
     "description": "Cómo se ve y cómo habla brnch.",
@@ -15,7 +21,17 @@
     "notInstalled": "No instalado",
     "pendingVerification": "Banderas y formato de salida por verificar",
     "soon": "Próximamente",
-    "ownKey": "La sesión o la clave de API de cada agente es suya y la necesita para trabajar. brnch protege las credenciales de git, no las del agente."
+    "ownKey": "La sesión o la clave de API de cada agente es suya y la necesita para trabajar. brnch protege las credenciales de git, no las del agente.",
+    "default": "Predeterminado",
+    "defaults": "Valores por defecto",
+    "defaultAgent": "Agente predeterminado",
+    "defaultAgentHint": "Se preselecciona al crear una corrida.",
+    "defaultPermission": "Permisos",
+    "defaultPermissionHint": "Qué puede hacer un agente sin preguntarte.",
+    "permissions": {
+      "edit_files": "Editar archivos",
+      "plan_only": "Solo plan"
+    }
   },
   "security": {
     "title": "Seguridad",
@@ -27,10 +43,40 @@
     "unknown": "No se pudo leer el estado.",
     "bySystem": "Por sistema",
     "systems": {
-      "windows": { "name": "Windows", "mechanism": "Cuenta local aparte", "state": "Sin terminar" },
-      "linux": { "name": "Linux", "mechanism": "bubblewrap", "state": "Medido en CI" },
-      "macos": { "name": "macOS", "mechanism": "Seatbelt", "state": "Parcial" }
+      "windows": {
+        "name": "Windows",
+        "mechanism": "Cuenta local aparte",
+        "state": "Sin terminar"
+      },
+      "linux": {
+        "name": "Linux",
+        "mechanism": "bubblewrap",
+        "state": "Medido en CI"
+      },
+      "macos": {
+        "name": "macOS",
+        "mechanism": "Seatbelt",
+        "state": "Parcial"
+      }
     },
-    "agentKey": "La sesión o la clave de API del propio agente queda fuera de este alcance: la necesita para trabajar."
+    "agentKey": "La sesión o la clave de API del propio agente queda fuera de este alcance: la necesita para trabajar.",
+    "whatAgentSees": "Qué ve un agente",
+    "items": {
+      "ssh": "Tus llaves SSH (.ssh)",
+      "gh": "La configuración de gh",
+      "credentials": "El almacén de credenciales del sistema",
+      "agent": "Las llaves de tu agente SSH",
+      "variables": "Variables GITHUB_TOKEN, GH_TOKEN, GITLAB_TOKEN, SSH_AUTH_SOCK",
+      "workspace": "El workspace de cada tarea"
+    },
+    "hidden": "Oculto",
+    "visible": "Visible",
+    "removed": "Quitadas",
+    "allowed": "Permitido",
+    "byConstruction": "Esto sale de cómo se arranca al agente: confinado, solo recibe el sistema y su workspace. Las pruebas que lo midieron corrieron en equipos de prueba, no en el tuyo.",
+    "options": "Opciones",
+    "neverUnconfined": "No ejecutar agentes sin aislamiento",
+    "neverUnconfinedHint": "Si no hay aislamiento disponible, el agente no arranca. No se puede desactivar.",
+    "locked": "Siempre activo"
   }
 }

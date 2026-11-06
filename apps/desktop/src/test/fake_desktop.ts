@@ -22,6 +22,7 @@ export class FakeDesktop {
   sandbox: SandboxStatus = { available: true, mechanism: 'bubblewrap', reason: null }
   agents: AgentInstallation[] = [{ kind: 'claude_code', installed: true, version: '2.1.0' }]
   gitd: GitdStatus = { connected: true, message: null }
+  statistics: Array<{ workspaceIdentifier: string; files: number; added: number; removed: number }> = []
   publishFailure: string | null = null
   readonly calls: Array<{ name: string; args: Record<string, unknown> | undefined }> = []
   private counter = 0
@@ -33,7 +34,7 @@ export class FakeDesktop {
 
   addProject(name: string): Project {
     this.counter += 1
-    const project = { identifier: `project-${this.counter}`, name, repositoryUrl: `https://example.com/${name}` }
+    const project = { identifier: `project-${this.counter}`, name, repositoryUrl: `https://example.com/${name}`, baseBranch: null, workspacesDirectory: null }
     this.projects.push(project)
     this.workspaces.set(project.identifier, [])
     return project
@@ -53,6 +54,9 @@ export class FakeDesktop {
       startedAtMilliseconds: null,
       costInDollars: seed.costInDollars ?? null,
       durationInMilliseconds: null,
+      totalTokens: null,
+      permissionMode: 'edit_files',
+      baseCommit: null,
     }
     this.workspaces.set(project.identifier, [...(this.workspaces.get(project.identifier) ?? []), workspace])
     return workspace
@@ -75,8 +79,17 @@ export class FakeDesktop {
         return this.active
       case 'add_project': {
         const project = this.addProject(String(args?.name))
+        project.baseBranch = (args?.baseBranch as string | null) ?? null
+        project.workspacesDirectory = (args?.workspacesDirectory as string | null) ?? null
+        project.repositoryUrl = String(args?.repositoryUrl)
         return project
       }
+      case 'inspect_repository':
+        return String(args?.location).includes('unreachable')
+          ? { accessible: false, defaultBranch: null, branches: [], message: 'repository not found' }
+          : { accessible: true, defaultBranch: 'main', branches: ['develop', 'main'], message: null }
+      case 'workspace_statistics':
+        return this.statistics
       case 'activate_project':
         this.active = String(args?.identifier)
         return null

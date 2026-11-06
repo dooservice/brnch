@@ -31,6 +31,7 @@ fn read_only_directories() -> Vec<String> {
 /// When the window cannot start.
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .setup(|application| {
             let directory = application.path().app_data_dir()?;
             std::fs::create_dir_all(&directory)?;

@@ -1,4 +1,4 @@
-import { ArrowUpIcon, BotIcon, ShieldAlertIcon, ShieldCheckIcon } from 'lucide-react'
+import { ArrowUpIcon, BotIcon, PencilIcon, ShieldAlertIcon, ShieldCheckIcon } from 'lucide-react'
 import { useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -43,6 +43,7 @@ export default function Composer({ workspace }: { workspace: Workspace }) {
         {send.isError && <p role="alert" className="mb-2 text-[12.5px] text-danger">{failureText(send.error)}</p>}
         <div className="flex items-center gap-2">
           <Badge><BotIcon size={12} />{workspace.agentLabel || '—'}</Badge>
+          {workspace.permissionMode !== null && <Badge><PencilIcon size={12} />{t(`composer.modes.${workspace.permissionMode}`)}</Badge>}
           {sandbox?.available ? (
             <Badge variant="success"><ShieldCheckIcon size={12} />{t('composer.confined')}</Badge>
           ) : (

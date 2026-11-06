@@ -22,7 +22,15 @@
     "title": "Aislamiento de los agentes",
     "description": "Los agentes se ejecutan confinados para que no puedan leer tus llaves ni tu configuración de git. Sin aislamiento brnch no los arranca.",
     "active": "Los agentes se ejecutarán confinados con {{mechanism}}.",
-    "unknown": "No se pudo leer el estado del aislamiento."
+    "unknown": "No se pudo leer el estado del aislamiento.",
+    "account": "Cuenta que se creará",
+    "password": "Contraseña",
+    "passwordValue": "Aleatoria, guardada por brnch para ti",
+    "access": "Acceso concedido",
+    "accessValue": "Solo la carpeta de workspaces",
+    "adminWarning": "Windows pedirá permiso de administrador una vez. Si lo rechazas, brnch no ejecutará agentes: no los arranca sin aislamiento.",
+    "notAvailable": "Aún no disponible: terminar de arrancar agentes bajo esta cuenta está pendiente.",
+    "create": "Crear la cuenta"
   },
   "agents": {
     "name": "Agentes",
@@ -39,5 +47,14 @@
     "added_other": "{{count}} proyectos añadidos.",
     "none": "Aún no hay ningún proyecto.",
     "add": "Añadir proyecto"
+  },
+  "credential": {
+    "name": "Publicación",
+    "title": "Credencial para publicar",
+    "description": "El token que empuja las ramas vive en gitd, no en brnch ni en los agentes. gitd lo lee de su propia configuración.",
+    "reachable": "gitd responde, así que puede guardar la credencial.",
+    "needsGitd": "gitd tiene que estar en marcha para guardar la credencial.",
+    "example": "Ejemplo de configuración de gitd para GitHub:",
+    "note": "El agente solo pide publicar; gitd empuja con este token y aplica su política."
   }
 }
