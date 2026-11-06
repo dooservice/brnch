@@ -3,6 +3,7 @@
 pub struct BrnchSettings {
     pub branch_prefix: &'static str,
     pub maximum_diff_bytes: i64,
+    pub git_credential_variables: &'static [&'static str],
 }
 
 impl Default for BrnchSettings {
@@ -10,6 +11,12 @@ impl Default for BrnchSettings {
         Self {
             branch_prefix: "agents/",
             maximum_diff_bytes: 1024 * 1024,
+            git_credential_variables: &[
+                "GITHUB_TOKEN",
+                "GH_TOKEN",
+                "GITLAB_TOKEN",
+                "SSH_AUTH_SOCK",
+            ],
         }
     }
 }

@@ -8,10 +8,22 @@ use brnch_core::{BrnchError, BrnchResult};
 use tokio::io::{AsyncBufReadExt, AsyncRead, BufReader};
 use tokio::process::Command;
 
-/// An [`AgentRunner`] that starts the agent as a child process of this one.
-pub struct ProcessAgentRunner;
+/// An [`AgentRunner`] that starts the agent as a child process of this one. It inherits this
+/// process's environment except for the variables named, which hold git credentials.
+pub struct ProcessAgentRunner {
+    removed_variables: Vec<String>,
+}
 
 impl ProcessAgentRunner {
+    pub fn new(removed_variables: &[&str]) -> Self {
+        Self {
+            removed_variables: removed_variables
+                .iter()
+                .map(|variable| (*variable).to_owned())
+                .collect(),
+        }
+    }
+
     async fn forward_lines<Source: AsyncRead + Unpin>(
         source: Source,
         stream: OutputStream,
@@ -36,13 +48,18 @@ impl AgentRunner for ProcessAgentRunner {
         directory: &str,
         listener: &dyn AgentOutputListener,
     ) -> BrnchResult<AgentOutcome> {
-        let mut child = Command::new(&command.program)
+        let mut process = Command::new(&command.program);
+        process
             .args(&command.arguments)
             .current_dir(directory)
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
-            .kill_on_drop(true)
+            .kill_on_drop(true);
+        for variable in &self.removed_variables {
+            process.env_remove(variable);
+        }
+        let mut child = process
             .spawn()
             .map_err(|cause| Self::failure(&command.program, &cause))?;
         let standard_output = child.stdout.take().expect("stdout was requested as a pipe");

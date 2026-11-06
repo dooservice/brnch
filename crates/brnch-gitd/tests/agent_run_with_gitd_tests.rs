@@ -33,7 +33,7 @@ async fn an_agent_works_in_a_gitd_workspace_and_its_change_is_read() {
     let provider = GitdWorkspaceProvider::connect(settings.clone())
         .await
         .expect("a gitd answers on GITD_SOCKET");
-    let runner = ProcessAgentRunner;
+    let runner = ProcessAgentRunner::new(settings.git_credential_variables);
     let listener = CollectingListener::default();
     let root = env::var("GITD_TEST_ROOT").expect("GITD_TEST_ROOT names a root of gitd's");
     let request = AgentRunRequest {

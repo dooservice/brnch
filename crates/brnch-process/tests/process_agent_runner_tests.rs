@@ -29,6 +29,8 @@ impl AgentOutputListener for CollectingListener {
     }
 }
 
+const VARIABLE_PRESENT_IN_EVERY_ENVIRONMENT: &str = "HOME";
+
 fn shell(script: &str) -> AgentCommand {
     AgentCommand {
         program: "sh".to_owned(),
@@ -40,7 +42,7 @@ fn shell(script: &str) -> AgentCommand {
 async fn streams_each_output_channel_and_reports_the_exit_code() {
     let listener = CollectingListener::default();
 
-    let outcome = ProcessAgentRunner
+    let outcome = ProcessAgentRunner::new(&[])
         .run(
             &shell("echo first; echo second; echo problem >&2; exit 3"),
             ".",
@@ -62,7 +64,7 @@ async fn streams_each_output_channel_and_reports_the_exit_code() {
 async fn runs_the_agent_in_the_directory_given() {
     let listener = CollectingListener::default();
 
-    ProcessAgentRunner
+    ProcessAgentRunner::new(&[])
         .run(&shell("pwd"), "/", &listener)
         .await
         .unwrap();
@@ -77,10 +79,29 @@ async fn fails_when_the_program_does_not_exist() {
         arguments: Vec::new(),
     };
 
-    let failure = ProcessAgentRunner
+    let failure = ProcessAgentRunner::new(&[])
         .run(&command, ".", &CollectingListener::default())
         .await
         .unwrap_err();
 
     assert!(matches!(failure, BrnchError::AgentProcess(_)));
+}
+
+#[tokio::test]
+async fn removes_only_the_variables_it_was_told_to() {
+    let script = format!("echo \"${{{VARIABLE_PRESENT_IN_EVERY_ENVIRONMENT}-unset}}\"");
+    let kept = CollectingListener::default();
+    let removed = CollectingListener::default();
+
+    ProcessAgentRunner::new(&[])
+        .run(&shell(&script), ".", &kept)
+        .await
+        .unwrap();
+    ProcessAgentRunner::new(&[VARIABLE_PRESENT_IN_EVERY_ENVIRONMENT])
+        .run(&shell(&script), ".", &removed)
+        .await
+        .unwrap();
+
+    assert_ne!(kept.texts_of(OutputStream::Standard), ["unset"]);
+    assert_eq!(removed.texts_of(OutputStream::Standard), ["unset"]);
 }
