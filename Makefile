@@ -19,20 +19,20 @@ images:
 	docker compose build
 
 test:
-	$(COMPOSE) core cargo test --workspace
+	$(COMPOSE) core cargo test
 
 # Starts gitd in Docker, runs the ignored tests against it, and always stops it afterwards.
 integration:
 	mkdir -p .cache/gitd/state .cache/gitd/run
 	docker compose up --detach --wait gitd
-	$(COMPOSE) integration cargo test --workspace -- --ignored; status=$$?; \
+	$(COMPOSE) integration cargo test -- --ignored; status=$$?; \
 		docker compose down; exit $$status
 
 check:
-	$(COMPOSE) core cargo check --workspace --all-targets
+	$(COMPOSE) core cargo check --all-targets
 
 lint:
-	$(COMPOSE) core sh -c "cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings"
+	$(COMPOSE) core sh -c "cargo fmt --all --check && cargo clippy --all-targets -- -D warnings"
 
 format:
 	$(COMPOSE) core cargo fmt --all

@@ -78,3 +78,63 @@ fn a_failed_result_is_reported_as_not_succeeded() {
         }]
     ));
 }
+
+mod listener {
+    use std::sync::Mutex;
+
+    use brnch_agents::{AgentCatalog, AgentEvent, AgentKind, EventSink, NormalizingListener};
+    use brnch_core::agent::{AgentOutputLine, AgentOutputListener, OutputStream};
+
+    #[derive(Default)]
+    struct CollectingSink {
+        events: Mutex<Vec<AgentEvent>>,
+    }
+
+    impl EventSink for CollectingSink {
+        fn publish(&self, event: AgentEvent) {
+            self.events.lock().unwrap().push(event);
+        }
+    }
+
+    #[test]
+    fn standard_output_is_normalized_and_error_output_is_kept_as_unparsed() {
+        let sink = CollectingSink::default();
+        let listener =
+            NormalizingListener::new(AgentCatalog.normalizer(AgentKind::ClaudeCode), &sink);
+
+        listener.received(AgentOutputLine {
+            stream: OutputStream::Standard,
+            text: r#"{"type":"result","is_error":false,"result":"done"}"#.to_owned(),
+        });
+        listener.received(AgentOutputLine {
+            stream: OutputStream::Error,
+            text: "warning: slow disk".to_owned(),
+        });
+
+        let events = sink.events.lock().unwrap();
+        assert!(matches!(
+            events[0],
+            AgentEvent::RunFinished {
+                succeeded: true,
+                ..
+            }
+        ));
+        assert_eq!(
+            events[1],
+            AgentEvent::UnparsedOutput("warning: slow disk".to_owned())
+        );
+    }
+
+    #[test]
+    fn events_survive_a_round_trip_through_json() {
+        let event = AgentEvent::ToolCompleted {
+            tool_call_identifier: "t1".to_owned(),
+            failed: true,
+        };
+
+        let json = serde_json::to_string(&event).unwrap();
+
+        assert!(json.contains(r#""kind":"tool_completed""#));
+        assert_eq!(serde_json::from_str::<AgentEvent>(&json).unwrap(), event);
+    }
+}

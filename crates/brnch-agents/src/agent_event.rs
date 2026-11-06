@@ -1,5 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 /// Something an agent did, in the same shape for every agent.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
 pub enum AgentEvent {
     SessionStarted {
         session_identifier: String,

@@ -183,6 +183,14 @@ fn builds_the_claude_code_command_with_the_prompt_last() {
     assert_eq!(command.program, "claude");
     assert_eq!(
         command.arguments,
-        ["--print", "--permission-mode", "acceptEdits", "fix it"]
+        [
+            "--print",
+            "--output-format",
+            "stream-json",
+            "--verbose",
+            "--permission-mode",
+            "acceptEdits",
+            "fix it"
+        ]
     );
 }

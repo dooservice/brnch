@@ -21,12 +21,20 @@ impl AgentDefinition {
         }
     }
 
-    /// Claude Code without an interface, allowed to edit files in its workspace.
+    /// Claude Code without an interface, allowed to edit files in its workspace, printing one
+    /// JSON message per line.
     pub fn claude_code() -> Self {
         Self::new(
             "Claude Code",
             "claude",
-            &["--print", "--permission-mode", "acceptEdits"],
+            &[
+                "--print",
+                "--output-format",
+                "stream-json",
+                "--verbose",
+                "--permission-mode",
+                "acceptEdits",
+            ],
         )
     }
 
