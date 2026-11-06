@@ -247,6 +247,7 @@ name = "brnch-sandbox"
 version = "0.1.0"
 dependencies = [
  "brnch-core",
+ "brnch-process",
  "serde",
  "serde_json",
  "tokio",

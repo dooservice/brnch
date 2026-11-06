@@ -321,7 +321,10 @@ async fn a_project_with_its_own_folder_gets_its_workspaces_there_and_a_finished_
         .unwrap();
 
     let workspace = store.find_workspace(&started[0]).unwrap().unwrap();
-    assert_eq!(workspace.directory, "/disk/mine/add-search");
+    assert_eq!(
+        PathBuf::from(&workspace.directory),
+        PathBuf::from("/disk/mine").join("add-search")
+    );
     wait_for_events(&store, &started[0], 3).await;
     for _ in 0..200 {
         if store

@@ -41,7 +41,7 @@ fn a_terminal_runs_what_is_typed_in_the_workspace_folder_and_comes_back_with_its
     let service = TerminalService::new(Arc::clone(&recording) as Arc<dyn TerminalListener>);
 
     let first = service.attach("w1", &directory, 24, 80).unwrap();
-    service.write("w1", b"echo brnch-says-hi; pwd\n").unwrap();
+    service.write("w1", b"echo brnch-says-hi; pwd\r").unwrap();
     wait_for(&recording, "brnch-says-hi");
     wait_for(&recording, directory.file_name().unwrap().to_str().unwrap());
     service.resize("w1", 30, 100).unwrap();

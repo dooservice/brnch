@@ -1,0 +1,60 @@
+name: CI
+
+# Builds and tests brnch on Linux and on Windows, runs the Windows isolation test on a real
+# Windows machine, and leaves the Windows installer as a downloadable artifact.
+on:
+  push:
+    branches: [main, ci-windows]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - run: rustup update stable && rustc --version
+      - run: cargo fmt --all --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm install -g pnpm
+      - working-directory: apps/desktop
+        run: pnpm install --frozen-lockfile && pnpm run check
+
+  windows:
+    timeout-minutes: 60
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - run: rustup update stable
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm install -g pnpm
+      - name: Build the interface the window shows
+        working-directory: apps/desktop
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+      - name: Test every crate and the window's Rust side
+        run: cargo test --workspace
+      - name: Run an agent in the dedicated account, as brnch does
+        run: cargo test -p brnch-sandbox --test windows_isolation_tests -- --ignored --nocapture
+      - name: Build the installer
+        working-directory: apps/desktop
+        run: pnpm tauri build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brnch-windows-installer
+          path: target/release/bundle/nsis/*.exe
+          if-no-files-found: error

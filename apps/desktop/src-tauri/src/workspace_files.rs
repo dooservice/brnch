@@ -149,9 +149,12 @@ impl WorkspaceFiles {
     fn resolve(&self, relative: &str) -> BrnchResult<PathBuf> {
         let requested = Path::new(relative);
         let escapes = requested.is_absolute()
-            || requested
-                .components()
-                .any(|part| matches!(part, Component::ParentDir | Component::Prefix(_)));
+            || requested.components().any(|part| {
+                matches!(
+                    part,
+                    Component::ParentDir | Component::Prefix(_) | Component::RootDir
+                )
+            });
         if escapes {
             return Err(BrnchError::AgentProcess(format!(
                 "{relative:?} is outside the workspace"
