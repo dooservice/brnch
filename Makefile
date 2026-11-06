@@ -4,7 +4,7 @@ export HOST_GID := $(shell id -g)
 
 COMPOSE := docker compose run --rm
 
-.PHONY: help images test integration lint format add check frontend-install frontend-test frontend-build
+.PHONY: help images test integration lint format add check frontend-install frontend-test frontend-build desktop-check
 
 help:
 	@echo "make images                     Build the Docker images"
@@ -50,3 +50,7 @@ frontend-test:
 
 frontend-build:
 	$(COMPOSE) frontend npm run build
+
+# Lints and tests the Tauri shell, which needs WebKit and GTK, in its own image.
+desktop-check:
+	docker compose run --rm desktop sh -c "cargo fmt --all --check && cargo clippy -p brnch-desktop --all-targets -- -D warnings && cargo test -p brnch-desktop"

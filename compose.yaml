@@ -62,3 +62,13 @@ services:
     environment:
       HOME: /workspace/.cache/home
       npm_config_cache: /workspace/.cache/npm
+
+  # The Tauri shell needs WebKit and GTK, so it builds in its own image.
+  desktop:
+    user: *host-user
+    volumes:
+      - .:/workspace
+    environment: *host-environment
+    build:
+      context: .
+      dockerfile: docker/desktop.Dockerfile

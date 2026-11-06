@@ -1,0 +1,23 @@
+[package]
+name = "brnch-desktop"
+description = "The brnch window: a thin Tauri shell over the Rust crates."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+brnch-core = { version = "0.1.0", path = "../../../crates/brnch-core" }
+brnch-store = { version = "0.1.0", path = "../../../crates/brnch-store" }
+serde = { version = "1.0.229", features = ["derive"] }
+tauri = "2.12.5"
+
+[build-dependencies]
+tauri-build = "2.7.4"
+
+[dev-dependencies]
+serde_json = "1.0.154"

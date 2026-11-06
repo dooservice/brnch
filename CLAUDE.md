@@ -8,8 +8,10 @@ to every change.
 - Add dependencies with `make add PACKAGE=<crate> DEPENDENCY=<name>` (`cargo add`), never by
   editing versions by hand.
 - Layout: `crates/brnch-core` (rules, no gitd, no UI), `crates/brnch-gitd` (gitd adapter),
-  `crates/brnch-process` (runs an agent as a process), `apps/desktop` (Tauri shell + Lit
-  interface, not created yet).
+  `crates/brnch-process` (runs an agent as a process), `crates/brnch-agents` (agent output -> common events), `crates/brnch-events` (bounded replay
+  log), `crates/brnch-store` (SQLite projects/views), `crates/brnch-sandbox` (fail-closed
+  confinement), `apps/desktop` (Lit interface; `src-tauri` is the thin Tauri shell, checked with
+  `make desktop-check`; the interface with `make frontend-test` / `make frontend-build`).
 - Before finishing a change: `make format && make lint && make test`. Tests that need a real
   gitd are `#[ignore]` and run with `make integration`.
 - No identifier starts with an underscore, not even unused parameters or test fakes.
