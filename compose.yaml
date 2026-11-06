@@ -51,3 +51,14 @@ services:
     depends_on:
       gitd:
         condition: service_healthy
+
+  # Builds and tests the Lit interface. npm's cache lives in .cache/ like the Rust one.
+  frontend:
+    image: node:24-slim
+    user: *host-user
+    working_dir: /workspace/apps/desktop
+    volumes:
+      - .:/workspace
+    environment:
+      HOME: /workspace/.cache/home
+      npm_config_cache: /workspace/.cache/npm

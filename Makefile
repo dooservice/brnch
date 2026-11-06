@@ -4,7 +4,7 @@ export HOST_GID := $(shell id -g)
 
 COMPOSE := docker compose run --rm
 
-.PHONY: help images test integration lint format add check
+.PHONY: help images test integration lint format add check frontend-install frontend-test frontend-build
 
 help:
 	@echo "make images                     Build the Docker images"
@@ -40,3 +40,13 @@ format:
 add:
 	@test -n "$(PACKAGE)" -a -n "$(DEPENDENCY)" || (echo "Usage: make add PACKAGE=brnch-core DEPENDENCY=thiserror" && exit 1)
 	$(COMPOSE) core cargo add $(DEPENDENCY) --package $(PACKAGE) $(ADD_FLAGS)
+
+frontend-install:
+	mkdir -p apps/desktop .cache/home
+	$(COMPOSE) frontend npm install
+
+frontend-test:
+	$(COMPOSE) frontend npm test
+
+frontend-build:
+	$(COMPOSE) frontend npm run build
