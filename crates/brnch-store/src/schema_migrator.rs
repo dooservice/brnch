@@ -2,7 +2,8 @@ use rusqlite::Connection;
 
 /// Each entry upgrades the database by one version. Never edit an entry that has shipped:
 /// add a new one.
-const MIGRATIONS: &[&str] = &["CREATE TABLE projects (
+const MIGRATIONS: &[&str] = &[
+    "CREATE TABLE projects (
         identifier TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         repository_url TEXT NOT NULL,
@@ -22,7 +23,14 @@ const MIGRATIONS: &[&str] = &["CREATE TABLE projects (
     CREATE TABLE application_session (
         setting_name TEXT PRIMARY KEY,
         setting_value TEXT NOT NULL
-    );"];
+    );",
+    "CREATE TABLE workspace_events (
+        workspace_identifier TEXT NOT NULL REFERENCES workspaces(identifier) ON DELETE CASCADE,
+        sequence INTEGER NOT NULL,
+        event_json TEXT NOT NULL,
+        PRIMARY KEY (workspace_identifier, sequence)
+    );",
+];
 
 pub struct SchemaMigrator;
 

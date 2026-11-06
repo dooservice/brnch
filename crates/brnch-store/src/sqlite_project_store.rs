@@ -3,7 +3,8 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use brnch_core::project::{
-    ProjectId, ProjectRecord, ProjectStore, ProjectView, WorkspaceId, WorkspaceRecord,
+    EventHistoryStore, ProjectId, ProjectRecord, ProjectStore, ProjectView, StoredEvent,
+    WorkspaceId, WorkspaceRecord,
 };
 use brnch_core::{BrnchError, BrnchResult};
 use rusqlite::{Connection, OptionalExtension, params};
@@ -252,6 +253,52 @@ impl ProjectStore for SqliteProjectStore {
             )
             .optional()
             .map(|found| found.map(|value| ProjectId::new(&value)))
+            .map_err(Self::failure)
+    }
+}
+
+impl EventHistoryStore for SqliteProjectStore {
+    fn append_event(&self, workspace: &WorkspaceId, event_json: &str) -> BrnchResult<u64> {
+        let connection = self.connection();
+        let next: i64 = connection
+            .query_row(
+                "SELECT COALESCE(MAX(sequence), 0) + 1 FROM workspace_events
+                 WHERE workspace_identifier = ?1",
+                [workspace.as_str()],
+                |row| row.get(0),
+            )
+            .map_err(Self::failure)?;
+        connection
+            .execute(
+                "INSERT INTO workspace_events (workspace_identifier, sequence, event_json)
+                 VALUES (?1, ?2, ?3)",
+                params![workspace.as_str(), next, event_json],
+            )
+            .map_err(Self::failure)?;
+        Ok(u64::try_from(next).unwrap_or_default())
+    }
+
+    fn list_events(
+        &self,
+        workspace: &WorkspaceId,
+        after_sequence: u64,
+    ) -> BrnchResult<Vec<StoredEvent>> {
+        let after = i64::try_from(after_sequence).unwrap_or(i64::MAX);
+        let connection = self.connection();
+        let mut statement = connection
+            .prepare(
+                "SELECT sequence, event_json FROM workspace_events
+                 WHERE workspace_identifier = ?1 AND sequence > ?2 ORDER BY sequence",
+            )
+            .map_err(Self::failure)?;
+        statement
+            .query_map(params![workspace.as_str(), after], |row| {
+                Ok(StoredEvent {
+                    sequence: u64::try_from(row.get::<_, i64>(0)?).unwrap_or_default(),
+                    event_json: row.get(1)?,
+                })
+            })
+            .and_then(Iterator::collect)
             .map_err(Self::failure)
     }
 }

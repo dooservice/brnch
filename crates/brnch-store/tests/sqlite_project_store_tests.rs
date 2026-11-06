@@ -144,3 +144,67 @@ fn data_survives_closing_and_reopening_the_file() {
     assert_eq!(reopened.list_projects().unwrap(), vec![created]);
     std::fs::remove_dir_all(&directory).unwrap();
 }
+
+mod event_history {
+    use brnch_core::project::{EventHistoryStore, ProjectStore, StoredEvent};
+    use brnch_store::SqliteProjectStore;
+
+    fn store_with_workspace() -> (SqliteProjectStore, brnch_core::project::WorkspaceRecord) {
+        let store = SqliteProjectStore::open_in_memory().unwrap();
+        let project = store.add_project("p", "https://example.com/p").unwrap();
+        let workspace = store
+            .add_workspace(&project.identifier, "/work/a", "agents/a")
+            .unwrap();
+        (store, workspace)
+    }
+
+    #[test]
+    fn events_get_consecutive_positions_and_can_be_read_after_one() {
+        let (store, workspace) = store_with_workspace();
+
+        assert_eq!(
+            store
+                .append_event(&workspace.identifier, "{\"a\":1}")
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            store
+                .append_event(&workspace.identifier, "{\"a\":2}")
+                .unwrap(),
+            2
+        );
+
+        assert_eq!(
+            store.list_events(&workspace.identifier, 1).unwrap(),
+            vec![StoredEvent {
+                sequence: 2,
+                event_json: "{\"a\":2}".to_owned()
+            }]
+        );
+    }
+
+    #[test]
+    fn positions_start_again_for_each_workspace() {
+        let (store, first) = store_with_workspace();
+        let second = store
+            .add_workspace(&first.project_identifier, "/work/b", "agents/b")
+            .unwrap();
+        store.append_event(&first.identifier, "{}").unwrap();
+
+        assert_eq!(store.append_event(&second.identifier, "{}").unwrap(), 1);
+    }
+
+    #[test]
+    fn removing_a_workspace_removes_its_history() {
+        let (store, workspace) = store_with_workspace();
+        store.append_event(&workspace.identifier, "{}").unwrap();
+
+        store.remove_workspace(&workspace.identifier).unwrap();
+
+        assert_eq!(
+            store.list_events(&workspace.identifier, 0).unwrap().len(),
+            0
+        );
+    }
+}
