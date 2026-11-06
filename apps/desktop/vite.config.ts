@@ -8,7 +8,7 @@ import packageJson from './package.json' with { type: 'json' }
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   clearScreen: false,
-  define: { __APP_VERSION__: JSON.stringify(packageJson.version) },
+  define: { APP_VERSION: JSON.stringify(packageJson.version) },
   server: { port: 1420, strictPort: true },
   build: { target: 'es2023' },
   resolve: {

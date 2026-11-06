@@ -13,7 +13,7 @@ export default function AboutDialog() {
       open={dialog.open}
       onOpenChange={open => (open ? dialog.show() : dialog.hide())}
       title={t('about.title')}
-      description={t('about.version', { version: __APP_VERSION__ })}
+      description={t('about.version', { version: APP_VERSION })}
       className="w-120"
       footer={<><span className="flex-1" /><Button onClick={dialog.hide}>{t('close', { ns: 'common' })}</Button></>}
     >

@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { BotIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon, FolderIcon, GitBranchIcon, LockIcon, MinusIcon, PlayIcon, PlusIcon, ShieldAlertIcon, ShieldCheckIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { KeyboardEvent } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import Button from '@/components/button'
@@ -45,18 +45,18 @@ export default function NewRunDialog() {
   const [defaultPermission] = useDefaultPermission()
   const [advanced, setAdvanced] = useState(false)
   const claude = installations?.find(installation => installation.kind === 'claude_code')
-  const { register, handleSubmit, reset, control, watch, setValue, formState: { errors } } = useForm<Values>({
+  const { register, handleSubmit, reset, control, setValue, formState: { errors } } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: { projectIdentifier: '', baseBranch: '', prompt: '', useClaude: true, copies: 1, permissionMode: defaultPermission, maximumMinutes: '' },
   })
-  const projectIdentifier = watch('projectIdentifier')
+  const projectIdentifier = useWatch({ control, name: 'projectIdentifier' })
   const project = projects.find(candidate => candidate.identifier === projectIdentifier)
   const inspection = useRepositoryInspection(project?.repositoryUrl ?? '')
   const branches = inspection.data?.branches ?? []
-  const baseBranch = watch('baseBranch')
+  const baseBranch = useWatch({ control, name: 'baseBranch' })
   const branchOptions = baseBranch !== '' && !branches.includes(baseBranch) ? [baseBranch, ...branches] : branches
-  const copies = watch('copies')
-  const useClaude = watch('useClaude')
+  const copies = useWatch({ control, name: 'copies' })
+  const useClaude = useWatch({ control, name: 'useClaude' })
   const workspaceCount = useClaude ? copies : 0
 
   useEffect(() => {

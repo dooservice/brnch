@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CheckIcon, ChevronDownIcon, CircleCheckIcon, CircleXIcon, FolderIcon, GitBranchIcon, LinkIcon, LockIcon, ShieldCheckIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import Button from '@/components/button'
@@ -55,10 +55,10 @@ export default function AddProjectDialog() {
   const { t } = useTranslation('projects')
   const dialog = useDialog('add-project')
   const add = useAddProject()
-  const { register, handleSubmit, reset, control, watch, setValue, getValues, formState: { errors, dirtyFields } } = useForm<Values>({ resolver: zodResolver(schema), defaultValues: DEFAULTS })
+  const { register, handleSubmit, reset, control, setValue, getValues, formState: { errors, dirtyFields } } = useForm<Values>({ resolver: zodResolver(schema), defaultValues: DEFAULTS })
   const [pickFailure, setPickFailure] = useState<string | null>(null)
-  const source = watch('source')
-  const location = watch('location')
+  const source = useWatch({ control, name: 'source' })
+  const location = useWatch({ control, name: 'location' })
   const settledLocation = useDebouncedValue(location.trim())
   const inspection = useRepositoryInspection(source === 'folder' || isRepositoryUrl(settledLocation) ? settledLocation : '')
   const checking = location.trim() !== '' && (settledLocation !== location.trim() || inspection.isFetching)
@@ -95,7 +95,7 @@ export default function AddProjectDialog() {
     }
   }
   const branches = inspection.data?.branches ?? []
-  const baseBranch = watch('baseBranch')
+  const baseBranch = useWatch({ control, name: 'baseBranch' })
   const options = baseBranch !== '' && !branches.includes(baseBranch) ? [baseBranch, ...branches] : branches
   const locationError = errors.location ? t(`add.errors.${errors.location.message as 'locationRequired'}`) : null
 
