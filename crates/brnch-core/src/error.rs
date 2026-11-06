@@ -9,6 +9,9 @@ pub enum BrnchError {
     #[error("the agent process failed: {0}")]
     AgentProcess(String),
 
+    #[error("no sandbox is available, so the agent was not started: {0}")]
+    SandboxUnavailable(String),
+
     #[error("the project store failed: {0}")]
     Store(String),
 

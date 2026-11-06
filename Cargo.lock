@@ -104,6 +104,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "brnch-sandbox"
+version = "0.1.0"
+dependencies = [
+ "brnch-core",
+ "tokio",
+]
+
+[[package]]
 name = "brnch-store"
 version = "0.1.0"
 dependencies = [

@@ -1,0 +1,17 @@
+[package]
+name = "brnch-sandbox"
+description = "Starts agents where they cannot read the person's keys, and refuses to start them where that cannot be done."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+brnch-core = { version = "0.1.0", path = "../brnch-core" }
+
+[dev-dependencies]
+tokio = { version = "1.54.1", features = ["macros", "rt"] }
