@@ -1,0 +1,42 @@
+# Runs brnch's gitd tests on Windows against a real gitd, the way the app connects to it.
+name: gitd on Windows
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gitd-windows:
+    timeout-minutes: 30
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - run: rustup update stable
+      - name: Start gitd in a terminal, as its Windows guide describes
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force C:\gitd-test | Out-Null
+          Invoke-WebRequest -OutFile C:\gitd-test\gitd.exe https://github.com/dooservice/gitd/releases/download/v0.15.1/gitd-windows-amd64.exe
+          @'
+          socket = "C:/gitd-test/gitd.sock"
+          state = "C:/gitd-test/state"
+          roots = ["C:/gitd-test/workspaces"]
+          '@ | Set-Content -Encoding utf8 C:\gitd-test\gitd.toml
+          Start-Process -FilePath C:\gitd-test\gitd.exe -ArgumentList 'serve','--config','C:\gitd-test\gitd.toml' -RedirectStandardOutput C:\gitd-test\out.log -RedirectStandardError C:\gitd-test\err.log -WindowStyle Hidden
+          for ($i = 0; $i -lt 30 -and -not (Test-Path C:\gitd-test\gitd.sock); $i++) { Start-Sleep -Seconds 1 }
+          $env:GITD_SOCKET = 'C:\gitd-test\gitd.sock'
+          & C:\gitd-test\gitd.exe info
+      - name: Connect to it from Rust, as the app does
+        env:
+          GITD_SOCKET: C:\gitd-test\gitd.sock
+          GITD_TEST_ROOT: C:/gitd-test/workspaces
+        run: cargo test -p brnch-gitd --test gitd_workspace_provider_tests -- --ignored --nocapture
+      - name: What gitd logged
+        if: always()
+        shell: pwsh
+        run: |
+          Get-Content C:\gitd-test\out.log, C:\gitd-test\err.log -ErrorAction SilentlyContinue
