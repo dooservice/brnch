@@ -1,2 +1,5 @@
-export type { AgentInstallation, GitdStatus, SandboxProbeReport, SandboxStatus } from './types/settings.types'
+export type { AgentInstallation, GitCredential, GitdStatus, SandboxProbeReport, SandboxStatus } from './types/settings.types'
 export { useAgentInstallations, useGitdStatus, useProbeSandbox, useSandboxStatus, useSetAgentApiKey, useSetupAgentAccount } from './api/use_system_status'
+export { useAddGitToken, useGitCredentials, useRemoveGitCredential } from './api/use_git_credentials'
+export { classifyGitdFailure } from './lib/gitd_failure'
+export { default as GitCredentialsForm } from './components/git_credentials_form'

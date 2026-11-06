@@ -193,6 +193,39 @@ pub async fn gitd_status(
 }
 
 #[tauri::command]
+pub async fn list_git_credentials(
+    gateway: State<'_, RunGateway>,
+) -> Result<Vec<crate::run_gateway::CredentialSummary>, String> {
+    gateway
+        .list_credentials()
+        .await
+        .map_err(|failure| failure.to_string())
+}
+
+#[tauri::command]
+pub async fn add_git_token(
+    gateway: State<'_, RunGateway>,
+    url_prefix: String,
+    token: String,
+) -> Result<crate::run_gateway::CredentialSummary, String> {
+    gateway
+        .store_token(&url_prefix, &token)
+        .await
+        .map_err(|failure| failure.to_string())
+}
+
+#[tauri::command]
+pub async fn remove_git_credential(
+    gateway: State<'_, RunGateway>,
+    identifier: String,
+) -> Result<(), String> {
+    gateway
+        .forget_credential(&identifier)
+        .await
+        .map_err(|failure| failure.to_string())
+}
+
+#[tauri::command]
 pub async fn inspect_repository(location: String) -> crate::RepositoryInspection {
     crate::RepositoryInspector::inspect(&location).await
 }

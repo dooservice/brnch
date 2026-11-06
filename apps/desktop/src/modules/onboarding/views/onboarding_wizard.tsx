@@ -7,13 +7,11 @@ import Button from '@/components/button'
 import { useDialog } from '@/hooks/use_dialog'
 import { cn } from '@/lib/utils'
 import { useProjects } from '@/modules/projects'
-import { useAgentInstallations, useGitdStatus, useSandboxStatus, useSetupAgentAccount } from '@/modules/settings'
+import { GitCredentialsForm, classifyGitdFailure, useAgentInstallations, useGitCredentials, useGitdStatus, useSandboxStatus, useSetupAgentAccount } from '@/modules/settings'
 import { failureText } from '@/lib/tauri'
 import { markOnboarded } from '../lib/onboarded'
 
 const STEPS = ['gitd', 'isolation', 'agents', 'credential', 'project'] as const
-
-const GITD_CREDENTIAL_EXAMPLE = '[[credentials]]\nprefix = "https://github.com/acme/"\ntoken_env = "GITHUB_TOKEN"'
 
 /** The first start: each step shows the real state of this machine and how to fix what is missing. */
 export default function OnboardingWizard() {
@@ -23,6 +21,8 @@ export default function OnboardingWizard() {
   const [index, setIndex] = useState(0)
   const step = STEPS[index] ?? 'gitd'
   const gitd = useGitdStatus()
+  const savedCredentials = useGitCredentials(gitd.data?.connected === true)
+  const gitdFailure = classifyGitdFailure(gitd.data?.message ?? null)
   const sandbox = useSandboxStatus()
   const agents = useAgentInstallations()
   const { data: projects = [] } = useProjects()
@@ -37,7 +37,7 @@ export default function OnboardingWizard() {
     gitd: gitd.isPending ? 'checking' : gitd.data?.connected ? 'ok' : 'problem',
     isolation: sandbox.isPending ? 'checking' : sandbox.data?.available ? 'ok' : 'problem',
     agents: agents.isPending ? 'checking' : claude?.installed ? 'ok' : 'problem',
-    credential: gitd.isPending ? 'checking' : gitd.data?.connected ? 'ok' : 'problem',
+    credential: gitd.isPending ? 'checking' : (savedCredentials.data?.length ?? 0) > 0 ? 'ok' : 'problem',
     project: projects.length > 0 ? 'ok' : 'problem',
   } as const
 
@@ -63,10 +63,10 @@ export default function OnboardingWizard() {
           {state[step] === 'ok' && <Badge variant="success">{t('ok')}</Badge>}
           {state[step] === 'problem' && <Badge variant="warning">{t('problem')}</Badge>}
           <p className="flex-1 text-muted">
-            {step === 'gitd' && (gitd.data?.message ?? (gitd.data?.connected ? t('gitd.connected') : t('gitd.hint')))}
+            {step === 'gitd' && (gitd.data?.connected ? t('gitd.connected') : gitdFailure === 'access_denied' ? t('gitd.accessDenied') : gitdFailure === 'not_running' ? t('gitd.notRunning') : (gitd.data?.message ?? t('gitd.hint')))}
             {step === 'isolation' && (sandbox.data?.available ? t('isolation.active', { mechanism: sandbox.data.mechanism }) : (sandbox.data?.reason ?? t('isolation.unknown')))}
             {step === 'agents' && (claude?.installed ? t('agents.found', { version: claude.version ?? '' }) : t('agents.missing'))}
-            {step === 'credential' && (gitd.data?.connected ? t('credential.reachable') : t('credential.needsGitd'))}
+            {step === 'credential' && (!gitd.data?.connected ? t('credential.needsGitd') : (savedCredentials.data?.length ?? 0) > 0 ? t('credential.savedCount', { count: savedCredentials.data?.length ?? 0 }) : t('credential.reachable'))}
             {step === 'project' && (projects.length > 0 ? t('project.added', { count: projects.length }) : t('project.none'))}
           </p>
           {step === 'gitd' && <Button variant="outline" loading={gitd.isFetching} onClick={() => void gitd.refetch()}>{t('retry')}</Button>}
@@ -85,12 +85,14 @@ export default function OnboardingWizard() {
             <div className="mt-4 flex items-center justify-end gap-3">{setup.isError && <span role="alert" className="text-[12.5px] text-danger">{failureText(setup.error)}</span>}<Button loading={setup.isPending} onClick={() => setup.mutate()} icon={<ShieldCheckIcon size={13} />}>{t('isolation.create')}</Button></div>
           </>
         )}
-        {step === 'credential' && (
-          <div className="mt-4">
-            <p className="mb-2 text-[12px] text-muted">{t('credential.example')}</p>
-            <pre className="overflow-x-auto rounded-lg border border-line bg-canvas px-4 py-3 font-mono text-[12px] leading-relaxed">{GITD_CREDENTIAL_EXAMPLE}</pre>
-            <p className="mt-2 text-[12px] text-muted">{t('credential.note')}</p>
-          </div>
+        {step === 'gitd' && !gitd.data?.connected && gitd.data?.message && gitdFailure !== 'other' && (
+          <details className="mt-3 text-[12px] text-muted"><summary className="cursor-pointer">{t('gitd.detail')}</summary><p className="mt-1.5 font-mono">{gitd.data.message}</p></details>
+        )}
+        {step === 'credential' && gitd.data?.connected && (
+          <>
+            <GitCredentialsForm />
+            <p className="mt-3 text-[12px] text-muted">{t('credential.note')}</p>
+          </>
         )}
         <div className="mt-6 flex items-center gap-2.5">
           <Button variant="ghost" className="px-0" onClick={finish}>{t('skip')}</Button>

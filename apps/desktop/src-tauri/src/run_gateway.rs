@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use brnch_core::workspace::{CredentialVault, StoredCredential, StoredCredentialKind};
 use brnch_core::{BrnchResult, BrnchSettings};
 use brnch_gitd::GitdWorkspaceProvider;
 use brnch_process::ProcessAgentRunner;
@@ -21,6 +22,7 @@ type RealRunService = RunService<
 >;
 
 struct Connected {
+    credentials: Arc<GitdWorkspaceProvider>,
     runs: RealRunService,
     review: ReviewService<GitdWorkspaceProvider, SqliteProjectStore>,
 }
@@ -30,6 +32,34 @@ struct Connected {
 pub struct GitdStatus {
     pub connected: bool,
     pub message: Option<String>,
+}
+
+/// A credential gitd keeps, as the window shows it: never the secret.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CredentialSummary {
+    pub identifier: String,
+    pub kind: &'static str,
+    pub url_prefix: String,
+    pub acts_as: String,
+}
+
+impl From<StoredCredential> for CredentialSummary {
+    fn from(credential: StoredCredential) -> Self {
+        let kind = match credential.kind {
+            StoredCredentialKind::Token => "token",
+            StoredCredentialKind::SshKey => "ssh_key",
+            StoredCredentialKind::GithubApp => "github_app",
+            StoredCredentialKind::GithubLogin => "github_login",
+            StoredCredentialKind::Other => "other",
+        };
+        Self {
+            identifier: credential.identifier,
+            kind,
+            url_prefix: credential.url_prefix,
+            acts_as: credential.acts_as,
+        }
+    }
 }
 
 /// Connects to gitd the first time a run is asked for, so the window opens even when gitd
@@ -106,6 +136,34 @@ impl RunGateway {
         }
     }
 
+    pub async fn list_credentials(&self) -> BrnchResult<Vec<CredentialSummary>> {
+        let connected = self.connected.get_or_try_init(|| self.connect()).await?;
+        let credentials = connected.credentials.list_credentials().await?;
+        Ok(credentials
+            .into_iter()
+            .map(CredentialSummary::from)
+            .collect())
+    }
+
+    /// Hands a token to gitd, which keeps it; brnch never stores it.
+    pub async fn store_token(
+        &self,
+        url_prefix: &str,
+        token: &str,
+    ) -> BrnchResult<CredentialSummary> {
+        let connected = self.connected.get_or_try_init(|| self.connect()).await?;
+        let stored = connected
+            .credentials
+            .store_token(url_prefix.trim(), token.trim())
+            .await?;
+        Ok(stored.into())
+    }
+
+    pub async fn forget_credential(&self, identifier: &str) -> BrnchResult<()> {
+        let connected = self.connected.get_or_try_init(|| self.connect()).await?;
+        connected.credentials.forget_credential(identifier).await
+    }
+
     /// Measures what a confined agent can reach, with a real process.
     pub async fn probe_sandbox(&self, home: &std::path::Path) -> crate::SandboxProbeReport {
         let process = ProcessAgentRunner::new(BrnchSettings::default().git_credential_variables);
@@ -163,6 +221,7 @@ impl RunGateway {
             &directories,
         );
         Ok(Connected {
+            credentials: Arc::clone(&provider),
             runs: RunService::new(
                 settings,
                 Arc::clone(&provider),

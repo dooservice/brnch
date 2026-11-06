@@ -1,6 +1,6 @@
 use brnch_core::workspace::{
-    AgentWorkspace, ConflictAnalyzer, PublishedBranch, WorkspaceConflict, WorkspaceDiff,
-    WorkspaceProvider, WorkspaceRequest,
+    AgentWorkspace, ConflictAnalyzer, CredentialVault, PublishedBranch, StoredCredential,
+    StoredCredentialKind, WorkspaceConflict, WorkspaceDiff, WorkspaceProvider, WorkspaceRequest,
 };
 use brnch_core::{BrnchResult, BrnchSettings};
 use gitd::proto::side::Of;
@@ -118,5 +118,69 @@ impl GitdWorkspaceProvider {
             Some(Of::Workspace(path) | Of::Branch(path)) => path,
             None => String::new(),
         }
+    }
+}
+
+impl GitdWorkspaceProvider {
+    fn stored(connection: gitd::proto::Connection) -> StoredCredential {
+        use gitd::proto::connection::Kind;
+        let kind = match Kind::try_from(connection.kind) {
+            Ok(Kind::Token) => StoredCredentialKind::Token,
+            Ok(Kind::SshKey) => StoredCredentialKind::SshKey,
+            Ok(Kind::GithubApp) => StoredCredentialKind::GithubApp,
+            Ok(Kind::GithubLogin) => StoredCredentialKind::GithubLogin,
+            _ => StoredCredentialKind::Other,
+        };
+        StoredCredential {
+            identifier: connection.id,
+            kind,
+            url_prefix: connection.url_prefix,
+            acts_as: connection.acts_as,
+        }
+    }
+}
+
+impl CredentialVault for GitdWorkspaceProvider {
+    async fn list_credentials(&self) -> BrnchResult<Vec<StoredCredential>> {
+        let response = self
+            .gitd
+            .connections()
+            .list_connections(gitd::proto::ListConnectionsRequest::default())
+            .await
+            .map_err(|status| GitdFailureTranslator::translate(&gitd::Error::from(status)))?;
+        Ok(response
+            .into_inner()
+            .connections
+            .into_iter()
+            .map(Self::stored)
+            .collect())
+    }
+
+    async fn store_token(&self, url_prefix: &str, token: &str) -> BrnchResult<StoredCredential> {
+        let response = self
+            .gitd
+            .connections()
+            .add_token(gitd::proto::AddTokenRequest {
+                url_prefix: url_prefix.to_owned(),
+                token: token.to_owned(),
+                user: String::new(),
+            })
+            .await
+            .map_err(|status| GitdFailureTranslator::translate(&gitd::Error::from(status)))?;
+        let connection = response.into_inner().connection.ok_or_else(|| {
+            brnch_core::BrnchError::WorkspaceProvider("gitd kept no credential".to_owned())
+        })?;
+        Ok(Self::stored(connection))
+    }
+
+    async fn forget_credential(&self, identifier: &str) -> BrnchResult<()> {
+        self.gitd
+            .connections()
+            .remove_connection(gitd::proto::RemoveConnectionRequest {
+                id: identifier.to_owned(),
+            })
+            .await
+            .map_err(|status| GitdFailureTranslator::translate(&gitd::Error::from(status)))?;
+        Ok(())
     }
 }

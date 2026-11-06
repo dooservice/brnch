@@ -105,7 +105,8 @@ function fakeBackend(data) {
         case "open_terminal": return { terminalIdentifier: "terminal-1", backlogBase64: btoa(unescape(encodeURIComponent(data.terminal))) };
         case "write_terminal": case "resize_terminal": return null;
         case "detect_agents": return [{ kind: "claude_code", installed: true, version: "2.1.0 (Claude Code)" }];
-        case "gitd_status": return { connected: true, message: null };
+        case "gitd_status": return data.gitd ?? { connected: true, message: null };
+        case "list_git_credentials": return data.credentials ?? [];
         case "plugin:event|listen": return 1;
         default: return null;
       }
@@ -159,6 +160,8 @@ const scenarios = [
   { file: "15-terminal", active: "p1", act: async (page) => { await page.getByRole("link", { name: /add-search Claude Code/ }).click(); await page.getByRole("tab", { name: /Terminal/ }).click(); } },
   { file: "16-security-measured", height: 1000, active: "p1", act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Seguridad" }).click(); await page.getByRole("button", { name: "Comprobar ahora" }).click(); } },
   { file: "17-windows-setup", height: 1180, active: "p1", windows: true, sandbox: { available: false, mechanism: "dedicated Windows account", reason: "the agent account is not created yet" }, act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Seguridad" }).click(); } },
+  { file: "19-gitd-access-denied", projects: [], active: null, onboarded: false, gitd: { connected: false, message: "the workspace provider failed: Intento de acceso a un socket no permitido por sus permisos de acceso. (os error 10013) (Unavailable)" } },
+  { file: "20-credential", projects: [], active: null, onboarded: false, credentials: [{ identifier: "c1", kind: "token", urlPrefix: "https://github.com/acme", actsAs: "" }], act: async (page) => { for (let i = 0; i < 3; i++) await page.getByRole("button", { name: /Siguiente/ }).click(); } },
   { file: "13-english", active: "p1", language: "en", act: async (page) => page.getByRole("link", { name: /add-search Claude Code/ }).click() },
 ];
 

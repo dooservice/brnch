@@ -1,6 +1,6 @@
 import type { Project } from '@/modules/projects'
 import type { Workspace, RunNotice } from '@/modules/workspaces'
-import type { AgentInstallation, GitdStatus, SandboxStatus } from '@/modules/settings'
+import type { AgentInstallation, GitCredential, GitdStatus, SandboxStatus } from '@/modules/settings'
 
 interface WorkspaceSeed {
   title?: string
@@ -22,6 +22,7 @@ export class FakeDesktop {
   sandbox: SandboxStatus = { available: true, mechanism: 'bubblewrap', reason: null }
   agents: AgentInstallation[] = [{ kind: 'claude_code', installed: true, version: '2.1.0' }]
   gitd: GitdStatus = { connected: true, message: null }
+  credentials: GitCredential[] = []
   statistics: Array<{ workspaceIdentifier: string; files: number; added: number; removed: number }> = []
   files = new Map<string, string>()
   probeReport: { homeHidden: boolean; workspaceWritable: boolean; failure: string | null } = { homeHidden: true, workspaceWritable: true, failure: null }
@@ -176,6 +177,16 @@ export class FakeDesktop {
         return this.sandbox
       case 'detect_agents':
         return this.agents
+      case 'list_git_credentials':
+        return this.credentials
+      case 'add_git_token': {
+        const credential: GitCredential = { identifier: `c${this.credentials.length + 1}`, kind: 'token', urlPrefix: String(args?.urlPrefix), actsAs: '' }
+        this.credentials = [...this.credentials, credential]
+        return credential
+      }
+      case 'remove_git_credential':
+        this.credentials = this.credentials.filter(credential => credential.identifier !== args?.identifier)
+        return null
       case 'gitd_status':
         return this.gitd
       default:

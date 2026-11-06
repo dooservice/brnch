@@ -93,5 +93,23 @@
       "keySaved": "Saved. New agents will receive it.",
       "keyForgotten": "Forgotten."
     }
+  },
+  "credentials": {
+    "saved": "Saved credentials",
+    "none": "gitd keeps no credential yet.",
+    "kind": {
+      "token": "Token",
+      "ssh_key": "SSH key",
+      "github_app": "GitHub App",
+      "github_login": "GitHub sign-in",
+      "other": "Other"
+    },
+    "forget": "Forget {{prefix}}",
+    "prefix": "For which repositories (it must start with the host)",
+    "token": "Access token",
+    "tokenHint": "On GitHub: Settings › Developer settings › Fine-grained tokens, with read and write on Contents and Pull requests. brnch hands it to gitd once and never sees it again.",
+    "save": "Save in gitd",
+    "savedOk": "Saved in gitd.",
+    "sshNote": "Already using SSH with GitHub? gitd does not use your .ssh folder: it reads the repository over HTTPS with this token, even when it is written as git@github.com:…, and agents never receive it."
   }
 }

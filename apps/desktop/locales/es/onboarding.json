@@ -15,7 +15,10 @@
     "title": "gitd",
     "description": "gitd crea el workspace de cada agente y publica con el token que guarda, así los agentes nunca lo reciben.",
     "connected": "gitd responde.",
-    "hint": "gitd no está en marcha. Arráncalo y comprueba de nuevo."
+    "hint": "gitd no está en marcha. Arráncalo y comprueba de nuevo.",
+    "accessDenied": "Tu usuario aún no tiene permiso para hablar con gitd. Cierra sesión de Windows y vuelve a entrar (o reinicia) y pulsa «Comprobar de nuevo».",
+    "notRunning": "No se encuentra gitd: no está instalado o no está en marcha. Instálalo y arráncalo, y pulsa «Comprobar de nuevo».",
+    "detail": "Detalle técnico"
   },
   "isolation": {
     "name": "Aislamiento",
@@ -50,10 +53,11 @@
   "credential": {
     "name": "Publicación",
     "title": "Credencial para publicar",
-    "description": "El token que empuja las ramas vive en gitd, no en brnch ni en los agentes. gitd lo lee de su propia configuración.",
-    "reachable": "gitd responde, así que puede guardar la credencial.",
+    "description": "El token que empuja las ramas vive en gitd, no en brnch ni en los agentes. Aquí se lo entregas a gitd una vez.",
+    "reachable": "gitd responde. Añade un token para poder publicar.",
     "needsGitd": "gitd tiene que estar en marcha para guardar la credencial.",
-    "example": "Ejemplo de configuración de gitd para GitHub:",
-    "note": "El agente solo pide publicar; gitd empuja con este token y aplica su política."
+    "note": "El agente solo pide publicar; gitd empuja con este token y aplica su política.",
+    "savedCount_one": "gitd guarda {{count}} credencial.",
+    "savedCount_other": "gitd guarda {{count}} credenciales."
   }
 }

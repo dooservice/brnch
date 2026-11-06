@@ -15,7 +15,10 @@
     "title": "gitd",
     "description": "gitd creates each agent's workspace and publishes with the token it holds, so agents never get it.",
     "connected": "gitd answers.",
-    "hint": "gitd is not running. Start it and check again."
+    "hint": "gitd is not running. Start it and check again.",
+    "accessDenied": "Your user does not have permission to talk to gitd yet. Sign out of Windows and back in (or restart), then press “Check again”.",
+    "notRunning": "gitd cannot be found: it is not installed or not running. Install and start it, then press “Check again”.",
+    "detail": "Technical detail"
   },
   "isolation": {
     "name": "Isolation",
@@ -50,10 +53,11 @@
   "credential": {
     "name": "Publishing",
     "title": "Credential to publish",
-    "description": "The token that pushes branches lives in gitd, not in brnch and not in the agents. gitd reads it from its own configuration.",
-    "reachable": "gitd answers, so it can hold the credential.",
+    "description": "The token that pushes branches lives in gitd, not in brnch or the agents. Here you hand it to gitd once.",
+    "reachable": "gitd answers. Add a token so it can publish.",
     "needsGitd": "gitd must be running to hold the credential.",
-    "example": "Example of gitd's configuration for GitHub:",
-    "note": "The agent only asks to publish; gitd pushes with this token and applies its policy."
+    "note": "The agent only asks to publish; gitd pushes with this token and applies its policy.",
+    "savedCount_one": "gitd keeps {{count}} credential.",
+    "savedCount_other": "gitd keeps {{count}} credentials."
   }
 }

@@ -21,3 +21,11 @@ export interface SandboxProbeReport {
   workspaceWritable: boolean
   failure: string | null
 }
+
+/** A credential gitd keeps for publishing; the secret itself never reaches the window. */
+export interface GitCredential {
+  identifier: string
+  kind: 'token' | 'ssh_key' | 'github_app' | 'github_login' | 'other'
+  urlPrefix: string
+  actsAs: string
+}
