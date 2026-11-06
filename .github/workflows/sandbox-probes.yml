@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   linux:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -20,6 +21,7 @@ jobs:
       - run: bash probes/sandbox/linux-bubblewrap.sh
 
   macos:
+    timeout-minutes: 15
     if: github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
     steps:
@@ -32,6 +34,7 @@ jobs:
       - run: bash probes/sandbox/macos-seatbelt.sh
 
   windows:
+    timeout-minutes: 15
     runs-on: windows-2025
     steps:
       - uses: actions/checkout@v7
@@ -45,6 +48,7 @@ jobs:
         run: probes/sandbox/windows-dedicated-user.ps1
 
   publish:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     permissions:
       contents: write

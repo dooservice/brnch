@@ -83,6 +83,13 @@ function Format-ResultTable([System.Collections.IDictionary[]]$columns, [string[
     return $text
 }
 
+function Invoke-WithTimeout([string]$program, [string[]]$arguments) {
+    $emptyInput = New-TemporaryFile
+    $process = Start-Process $program -ArgumentList $arguments -NoNewWindow -PassThru -RedirectStandardInput $emptyInput
+    if (-not $process.WaitForExit(20000)) { $process.Kill() }
+    Remove-Item -LiteralPath $emptyInput -Force -ErrorAction SilentlyContinue
+}
+
 function New-DirectoryTracked([string]$path) {
     if (-not (Test-Path -LiteralPath $path)) {
         New-Item -ItemType Directory -Force $path | Out-Null
@@ -207,8 +214,8 @@ try {
         $sshServiceWasStopped = $true
     }
     if ($sshService) {
-        ssh-keygen.exe -q -t ed25519 -N '""' -f $agentKeyPath
-        ssh-add.exe $agentKeyPath
+        Invoke-WithTimeout 'ssh-keygen.exe' @('-q', '-t', 'ed25519', '-N', '""', '-f', $agentKeyPath)
+        Invoke-WithTimeout 'ssh-add.exe' @($agentKeyPath)
     }
 
     net user $agentAccount $agentPassword /add /y
