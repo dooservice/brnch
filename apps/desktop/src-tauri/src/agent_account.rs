@@ -1,3 +1,4 @@
+use brnch_process::HiddenWindow;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -33,6 +34,7 @@ impl AgentAccount {
             let status = Command::new(&command.program)
                 .args(&command.arguments)
                 .stdin(Stdio::null())
+                .hidden_window()
                 .status()
                 .map_err(|failure| BrnchError::SandboxUnavailable(failure.to_string()))?;
             if !status.success() {
@@ -55,7 +57,10 @@ impl AgentAccount {
         backend.install_scripts()?;
         let (command, variable) = backend.environment_command(api_key.is_none());
         let mut process = Command::new(&command.program);
-        process.args(&command.arguments).stdin(Stdio::null());
+        process
+            .args(&command.arguments)
+            .stdin(Stdio::null())
+            .hidden_window();
         if let Some(key) = api_key {
             let json = serde_json::json!({ API_KEY_VARIABLE: key }).to_string();
             process.env(variable, json);

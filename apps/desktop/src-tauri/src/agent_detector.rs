@@ -1,3 +1,4 @@
+use brnch_process::HiddenWindow;
 use std::time::Duration;
 
 use brnch_agents::AgentKind;
@@ -46,6 +47,7 @@ impl AgentDetector {
                 .args(arguments)
                 .stdin(std::process::Stdio::null())
                 .kill_on_drop(true)
+                .hidden_window()
                 .output(),
         )
         .await

@@ -1,3 +1,4 @@
+use brnch_process::HiddenWindow;
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
@@ -17,8 +18,6 @@ const READY_MARKER: &str = "gitd listening";
 const START_TIMEOUT: Duration = Duration::from_secs(20);
 const POLL_INTERVAL: Duration = Duration::from_millis(100);
 const LOG_TAIL_LINES: usize = 6;
-#[cfg(windows)]
-const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 /// Runs the gitd that ships with brnch as a process of the person's own, so nothing has to be
 /// installed or given administrator rights. Its socket lives in the person's profile, where only
@@ -101,8 +100,7 @@ impl GitdSupervisor {
             .stdout(output)
             .stderr(errors)
             .kill_on_drop(true);
-        #[cfg(windows)]
-        command.creation_flags(CREATE_NO_WINDOW);
+        command.hidden_window();
         let mut child = command
             .spawn()
             .map_err(|error| failure(format!("{}: {error}", self.program.display())))?;

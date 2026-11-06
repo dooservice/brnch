@@ -1,3 +1,4 @@
+use brnch_process::HiddenWindow;
 use std::time::Duration;
 
 use serde::Serialize;
@@ -28,6 +29,7 @@ impl RepositoryInspector {
             .env("GIT_TERMINAL_PROMPT", "0")
             .stdin(std::process::Stdio::null())
             .kill_on_drop(true)
+            .hidden_window()
             .output();
         match tokio::time::timeout(LISTING_TIME, run).await {
             Ok(Ok(output)) if output.status.success() => {
@@ -70,6 +72,7 @@ impl RepositoryInspector {
                 .args(arguments)
                 .stdin(std::process::Stdio::null())
                 .kill_on_drop(true)
+                .hidden_window()
                 .output(),
         )
         .await

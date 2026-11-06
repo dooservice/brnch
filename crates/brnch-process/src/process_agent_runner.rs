@@ -1,15 +1,13 @@
 use std::io;
 use std::process::Stdio;
 
+use crate::HiddenWindow;
 use brnch_core::agent::{
     AgentCommand, AgentOutcome, AgentOutputLine, AgentOutputListener, AgentRunner, OutputStream,
 };
 use brnch_core::{BrnchError, BrnchResult};
 use tokio::io::{AsyncBufReadExt, AsyncRead, BufReader};
 use tokio::process::Command;
-
-#[cfg(windows)]
-const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 /// An [`AgentRunner`] that starts the agent as a child process of this one. It inherits this
 /// process's environment except for the variables named, which hold git credentials.
@@ -59,9 +57,7 @@ impl AgentRunner for ProcessAgentRunner {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .kill_on_drop(true);
-        // A window application must not flash a console window for each agent it starts.
-        #[cfg(windows)]
-        process.creation_flags(CREATE_NO_WINDOW);
+        process.hidden_window();
         for variable in &self.removed_variables {
             process.env_remove(variable);
         }
