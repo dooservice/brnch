@@ -32,6 +32,14 @@ jobs:
           for ($i = 0; $i -lt 30 -and -not (Test-Path C:\gitd-test\gitd.sock); $i++) { Start-Sleep -Seconds 1 }
           $env:GITD_SOCKET = 'C:\gitd-test\gitd.sock'
           & C:\gitd-test\gitd.exe info
+      - name: Is gitd still running here
+        if: always()
+        shell: pwsh
+        run: |
+          Get-Process gitd -ErrorAction SilentlyContinue | Select-Object Id, ProcessName | Format-Table
+          Test-Path C:\gitd-test\gitd.sock
+          $env:GITD_SOCKET = 'C:\gitd-test\gitd.sock'
+          & C:\gitd-test\gitd.exe info
       - name: Connect to it from Rust, as the app does
         env:
           GITD_SOCKET: C:\gitd-test\gitd.sock
