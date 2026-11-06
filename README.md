@@ -6,9 +6,12 @@ gitd publishes for them. Desktop app: Tauri + Rust + React.
 
 ## First run
 
-1. **gitd.** Install and start it, and give it your git credential (see its README). brnch reaches
-   it through `GITD_URL`, then `GITD_SOCKET`, then gitd's default socket. The first-run wizard and
-   the status bar say whether gitd really answers.
+1. **gitd.** On Windows the installer carries gitd and brnch starts it as a process of your own
+   user: no administrator, no service, no sign-out. It needs
+   [Git for Windows](https://git-scm.com/download/win). On Linux and macOS install gitd and run
+   `gitd up`; brnch finds it through `GITD_URL`, then `GITD_SOCKET`, then gitd's default socket.
+   Setting `GITD_URL` or `GITD_SOCKET` on Windows makes brnch use that gitd instead. The first-run
+   wizard and the status bar say whether gitd really answers.
 2. **An agent.** Install Claude Code (`claude` on the `PATH`) and sign in.
 3. **Isolation.** Agents never start without it.
    - Linux: install `bubblewrap` (`bwrap`).
@@ -16,7 +19,10 @@ gitd publishes for them. Desktop app: Tauri + Rust + React.
      under; Windows asks for administrator permission once. That account cannot see your Claude
      login, so give it an API key in the same page (kept protected for you with DPAPI).
    - macOS: no verified isolation yet; agents do not start.
-4. **A project.** Add a repository by URL, or a local folder that has an `origin` (gitd refuses
+4. **A token to publish.** The wizard's step 4 hands a GitHub token to gitd, which keeps it; gitd
+   reads repositories over HTTPS with it even when they are written as `git@github.com:…`, so your
+   `.ssh` folder is not used.
+5. **A project.** Add a repository by URL, or a local folder that has an `origin` (gitd refuses
    paths with no remote). Then start a run.
 
 Settings › Security › *Check now* measures, with a real confined process, whether your home

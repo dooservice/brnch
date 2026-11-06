@@ -91,7 +91,7 @@ impl RunGateway {
         }
     }
 
-    /// Lets the gateway start the gitd that ships with brnch when none it can reach answers.
+    /// Lets the gateway use the gitd that ships with brnch.
     #[must_use]
     pub fn with_gitd_supervisor(mut self, supervisor: GitdSupervisor) -> Self {
         self.gitd_supervisor = Some(supervisor);
@@ -216,20 +216,25 @@ impl RunGateway {
         Ok(connected.review.publish(workspace_identifiers).await)
     }
 
-    /// The gitd the environment names or the system runs; failing that, the one brnch ships.
+    /// The gitd that ships with brnch when there is one, because its folders and its socket are
+    /// the person's own; otherwise the one the environment names or the system runs.
     async fn connect_provider(
         &self,
         settings: &BrnchSettings,
     ) -> BrnchResult<GitdWorkspaceProvider> {
-        let first = match GitdWorkspaceProvider::connect(settings.clone()).await {
-            Ok(provider) => return Ok(provider),
-            Err(failure) => failure,
-        };
         let Some(supervisor) = &self.gitd_supervisor else {
-            return Err(first);
+            return GitdWorkspaceProvider::connect(settings.clone()).await;
         };
-        let socket = supervisor.ensure_running().await?;
-        GitdWorkspaceProvider::connect_at(settings.clone(), &socket).await
+        let shipped = match supervisor.ensure_running().await {
+            Ok(socket) => GitdWorkspaceProvider::connect_at(settings.clone(), &socket).await,
+            Err(failure) => Err(failure),
+        };
+        match shipped {
+            Ok(provider) => Ok(provider),
+            Err(failure) => GitdWorkspaceProvider::connect(settings.clone())
+                .await
+                .map_err(|_| failure),
+        }
     }
 
     async fn connect(&self) -> BrnchResult<Connected> {
