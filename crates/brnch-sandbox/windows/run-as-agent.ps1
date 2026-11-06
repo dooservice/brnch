@@ -9,6 +9,8 @@ param(
     [Parameter(Mandatory)][string]$WorkspaceDirectory
 )
 $ErrorActionPreference = 'Stop'
+# A PowerShell 7 parent leaves its module path behind, and Windows PowerShell cannot load its own modules from it.
+$env:PSModulePath = [Environment]::GetEnvironmentVariable('PSModulePath', 'Machine')
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 $credentialFile = Join-Path $DataDirectory 'agent-account.credential'
 $environmentFile = Join-Path $DataDirectory 'agent-environment.credential'

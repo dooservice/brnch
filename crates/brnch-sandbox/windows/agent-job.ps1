@@ -2,6 +2,8 @@
 # the job file names. Output goes where the starter pointed it, so nothing is relayed here.
 param([Parameter(Mandatory)][string]$JobFile)
 $ErrorActionPreference = 'Stop'
+# A PowerShell 7 parent leaves its module path behind, and Windows PowerShell cannot load its own modules from it.
+$env:PSModulePath = [Environment]::GetEnvironmentVariable('PSModulePath', 'Machine')
 $job = Get-Content -LiteralPath $JobFile -Raw | ConvertFrom-Json
 
 function ConvertTo-CommandLineArgument([string]$text) {

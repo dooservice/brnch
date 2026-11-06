@@ -3,6 +3,8 @@
 # a list of running processes.
 param([Parameter(Mandatory)][string]$DataDirectory, [switch]$Clear)
 $ErrorActionPreference = 'Stop'
+# A PowerShell 7 parent leaves its module path behind, and Windows PowerShell cannot load its own modules from it.
+$env:PSModulePath = [Environment]::GetEnvironmentVariable('PSModulePath', 'Machine')
 $file = Join-Path $DataDirectory 'agent-environment.credential'
 if ($Clear) {
     Remove-Item -LiteralPath $file -Force -ErrorAction SilentlyContinue
