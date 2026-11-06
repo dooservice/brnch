@@ -73,6 +73,7 @@ pub fn run() {
             project_commands::sandbox_status,
             project_commands::detect_agents,
             project_commands::gitd_status,
+            project_commands::probe_sandbox,
             project_commands::setup_agent_account,
             project_commands::set_agent_api_key,
             project_commands::inspect_repository,

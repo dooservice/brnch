@@ -73,10 +73,25 @@
     "visible": "Visible",
     "removed": "Removed",
     "allowed": "Allowed",
-    "byConstruction": "This follows from how the agent is started: confined, it only gets the system and its workspace. The tests that measured it ran on test machines, not on yours.",
     "options": "Options",
     "neverUnconfined": "Do not run agents without isolation",
     "neverUnconfinedHint": "If no isolation is available, the agent does not start. It cannot be turned off.",
-    "locked": "Always on"
+    "locked": "Always on",
+    "check": "Check now",
+    "notChecked": "Not checked",
+    "measuredNote": "\"Check now\" leaves a test file in your home folder, asks a confined process to read it and removes it. It measures this machine, right now.",
+    "measuredWritable": "The confined agent could still write in its workspace.",
+    "measuredNotWritable": "The confined agent could NOT write in its workspace.",
+    "windows": {
+      "setupTitle": "Prepare the isolation",
+      "setupHint": "Creates the local account agents run under. Windows asks for administrator permission once.",
+      "setup": "Prepare",
+      "keyTitle": "API key for the agents",
+      "keyHint": "The agent runs as another account, so it does not see your Claude login. Give it an API key; it is kept protected for you and passed only to the agent.",
+      "keySave": "Save",
+      "keyForget": "Forget",
+      "keySaved": "Saved. New agents will receive it.",
+      "keyForgotten": "Forgotten."
+    }
   }
 }

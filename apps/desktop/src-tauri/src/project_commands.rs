@@ -345,3 +345,16 @@ pub async fn set_agent_api_key(
         .map_err(|failure| failure.to_string())?
         .map_err(|failure| describe(&failure))
 }
+
+#[tauri::command]
+pub async fn probe_sandbox(
+    application: tauri::AppHandle,
+    gateway: State<'_, RunGateway>,
+) -> Result<crate::SandboxProbeReport, String> {
+    use tauri::Manager;
+    let home = application
+        .path()
+        .home_dir()
+        .map_err(|failure| failure.to_string())?;
+    Ok(gateway.probe_sandbox(&home).await)
+}

@@ -73,10 +73,25 @@
     "visible": "Visible",
     "removed": "Quitadas",
     "allowed": "Permitido",
-    "byConstruction": "Esto sale de cómo se arranca al agente: confinado, solo recibe el sistema y su workspace. Las pruebas que lo midieron corrieron en equipos de prueba, no en el tuyo.",
     "options": "Opciones",
     "neverUnconfined": "No ejecutar agentes sin aislamiento",
     "neverUnconfinedHint": "Si no hay aislamiento disponible, el agente no arranca. No se puede desactivar.",
-    "locked": "Siempre activo"
+    "locked": "Siempre activo",
+    "check": "Comprobar ahora",
+    "notChecked": "Sin comprobar",
+    "measuredNote": "«Comprobar ahora» deja un archivo de prueba en tu carpeta personal, pide a un proceso confinado que lo lea y lo borra. Mide este equipo, ahora mismo.",
+    "measuredWritable": "El agente confinado pudo escribir en su workspace.",
+    "measuredNotWritable": "El agente confinado NO pudo escribir en su workspace.",
+    "windows": {
+      "setupTitle": "Preparar el aislamiento",
+      "setupHint": "Crea la cuenta local con la que se ejecutan los agentes. Windows pide permiso de administrador una vez.",
+      "setup": "Preparar",
+      "keyTitle": "Clave de API para los agentes",
+      "keyHint": "El agente se ejecuta con otra cuenta, así que no ve tu sesión de Claude. Dale una clave de API; se guarda protegida para ti y solo se pasa al agente.",
+      "keySave": "Guardar",
+      "keyForget": "Olvidar",
+      "keySaved": "Guardada. Los agentes nuevos la recibirán.",
+      "keyForgotten": "Olvidada."
+    }
   }
 }

@@ -1,12 +1,8 @@
 import { useTranslation } from 'react-i18next'
+import { systemName } from '@/lib/system'
 import { useActiveProjectId, useProjects } from '@/modules/projects'
 import { useGitdStatus } from '@/modules/settings'
 import { useAllWorkspaces } from '@/modules/workspaces'
-
-function systemName(): string {
-  const agent = navigator.userAgent
-  return agent.includes('Windows') ? 'Windows' : agent.includes('Mac') ? 'macOS' : agent.includes('Linux') ? 'Linux' : ''
-}
 
 /** The bottom line: is gitd answering, and what is going on in the open project. */
 export default function StatusBar() {

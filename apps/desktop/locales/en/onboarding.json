@@ -29,7 +29,6 @@
     "access": "Access granted",
     "accessValue": "Only the workspaces folder",
     "adminWarning": "Windows will ask for administrator permission once. If you refuse, brnch will not run agents: it does not start them without isolation.",
-    "notAvailable": "Not available yet: starting agents under this account is still being finished.",
     "create": "Create the account"
   },
   "agents": {

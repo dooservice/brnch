@@ -24,6 +24,8 @@ export class FakeDesktop {
   gitd: GitdStatus = { connected: true, message: null }
   statistics: Array<{ workspaceIdentifier: string; files: number; added: number; removed: number }> = []
   files = new Map<string, string>()
+  probeReport: { homeHidden: boolean; workspaceWritable: boolean; failure: string | null } = { homeHidden: true, workspaceWritable: true, failure: null }
+  setupFailure: string | null = null
   terminalBacklog = ''
   terminalFailure: string | null = null
   publishFailure: string | null = null
@@ -161,6 +163,14 @@ export class FakeDesktop {
         return { terminalIdentifier: 'terminal-1', backlogBase64: this.terminalBacklog }
       case 'write_terminal':
       case 'resize_terminal':
+        return null
+      case 'probe_sandbox':
+        return this.probeReport
+      case 'setup_agent_account':
+        if (this.setupFailure !== null) throw this.setupFailure
+        this.sandbox = { available: true, mechanism: 'dedicated Windows account', reason: null }
+        return this.sandbox
+      case 'set_agent_api_key':
         return null
       case 'sandbox_status':
         return this.sandbox

@@ -7,7 +7,8 @@ import Button from '@/components/button'
 import { useDialog } from '@/hooks/use_dialog'
 import { cn } from '@/lib/utils'
 import { useProjects } from '@/modules/projects'
-import { useAgentInstallations, useGitdStatus, useSandboxStatus } from '@/modules/settings'
+import { useAgentInstallations, useGitdStatus, useSandboxStatus, useSetupAgentAccount } from '@/modules/settings'
+import { failureText } from '@/lib/tauri'
 import { markOnboarded } from '../lib/onboarded'
 
 const STEPS = ['gitd', 'isolation', 'agents', 'credential', 'project'] as const
@@ -25,6 +26,7 @@ export default function OnboardingWizard() {
   const sandbox = useSandboxStatus()
   const agents = useAgentInstallations()
   const { data: projects = [] } = useProjects()
+  const setup = useSetupAgentAccount()
   const claude = agents.data?.find(installation => installation.kind === 'claude_code')
 
   const finish = () => {
@@ -80,7 +82,7 @@ export default function OnboardingWizard() {
               <div className="flex items-center justify-between px-4 py-2.5"><span className="flex items-center gap-2 text-muted"><FolderIcon size={14} />{t('isolation.access')}</span><span>{t('isolation.accessValue')}</span></div>
             </div>
             <div className="mt-4 flex gap-2.5 rounded-lg border border-[#4a3a14] bg-[#1a150a] px-3.5 py-3 leading-relaxed text-[#e8d9a3]"><AlertTriangleIcon size={14} className="mt-1 shrink-0 text-warn" /><span>{t('isolation.adminWarning')}</span></div>
-            <div className="mt-4 flex items-center justify-end gap-3"><span className="text-[12px] text-muted">{t('isolation.notAvailable')}</span><Button disabled icon={<ShieldCheckIcon size={13} />}>{t('isolation.create')}</Button></div>
+            <div className="mt-4 flex items-center justify-end gap-3">{setup.isError && <span role="alert" className="text-[12.5px] text-danger">{failureText(setup.error)}</span>}<Button loading={setup.isPending} onClick={() => setup.mutate()} icon={<ShieldCheckIcon size={13} />}>{t('isolation.create')}</Button></div>
           </>
         )}
         {step === 'credential' && (

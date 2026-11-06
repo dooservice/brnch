@@ -9,6 +9,37 @@ vi.mock('@/lib/tauri', async () => (await import('@/test/fake_tauri_module')).fa
 
 prepareApp()
 
+describe('security measurement', () => {
+  it('says "not checked" until the probe runs, then shows what it measured', async () => {
+    const user = userEvent.setup()
+    renderApp('/settings/security')
+    expect((await screen.findAllByText('Sin comprobar')).length).toBeGreaterThan(0)
+
+    await user.click(await screen.findByRole('button', { name: 'Comprobar ahora' }))
+
+    expect(await screen.findAllByText('Oculto')).toHaveLength(4)
+    expect(screen.getByText('El agente confinado pudo escribir en su workspace.')).toBeInTheDocument()
+    expect(desktop.called('probe_sandbox')).toHaveLength(1)
+  })
+
+  it('reports files that are readable when the probe finds the isolation leaks', async () => {
+    const user = userEvent.setup()
+    desktop.probeReport = { homeHidden: false, workspaceWritable: true, failure: null }
+    renderApp('/settings/security')
+
+    await user.click(await screen.findByRole('button', { name: 'Comprobar ahora' }))
+
+    expect(await screen.findAllByText('Visible')).toHaveLength(4)
+  })
+
+  it('cannot be run without isolation', async () => {
+    desktop.sandbox = { available: false, mechanism: 'none', reason: 'no sandbox' }
+    renderApp('/settings/security')
+
+    expect(await screen.findByRole('button', { name: 'Comprobar ahora' })).toBeDisabled()
+  })
+})
+
 describe('settings', () => {
   it('changes the language of the whole interface and remembers it', async () => {
     const user = userEvent.setup()

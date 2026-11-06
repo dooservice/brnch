@@ -1,6 +1,6 @@
-import { queryOptions, useQuery } from '@tanstack/react-query'
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { command } from '@/lib/tauri'
-import type { AgentInstallation, GitdStatus, SandboxStatus } from '../types/settings.types'
+import type { AgentInstallation, GitdStatus, SandboxProbeReport, SandboxStatus } from '../types/settings.types'
 
 const sandboxQuery = queryOptions({
   queryKey: ['system', 'sandbox'] as const,
@@ -33,4 +33,23 @@ export function useAgentInstallations() {
 /** Whether gitd answers. */
 export function useGitdStatus() {
   return useQuery(gitdQuery)
+}
+
+/** Measures what a confined agent can reach. */
+export function useProbeSandbox() {
+  return useMutation({ mutationFn: () => command<SandboxProbeReport>('probe_sandbox') })
+}
+
+/** Makes the account agents run under on Windows; Windows asks for permission once. */
+export function useSetupAgentAccount() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => command<SandboxStatus>('setup_agent_account'),
+    onSuccess: status => queryClient.setQueryData(['system', 'sandbox'], status),
+  })
+}
+
+/** Keeps, or with null forgets, the API key agents receive. */
+export function useSetAgentApiKey() {
+  return useMutation({ mutationFn: (apiKey: string | null) => command<void>('set_agent_api_key', { apiKey }) })
 }

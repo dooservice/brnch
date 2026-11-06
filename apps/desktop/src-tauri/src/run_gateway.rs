@@ -106,6 +106,17 @@ impl RunGateway {
         }
     }
 
+    /// Measures what a confined agent can reach, with a real process.
+    pub async fn probe_sandbox(&self, home: &std::path::Path) -> crate::SandboxProbeReport {
+        let process = ProcessAgentRunner::new(BrnchSettings::default().git_credential_variables);
+        let runner = SandboxedAgentRunner::new(
+            process,
+            SandboxSelector::for_current_system(&self.agent_data_directory),
+            &[],
+        );
+        crate::SandboxProbe::run(&runner, home).await
+    }
+
     /// Does not need gitd, so the window can show it before anything is connected.
     pub fn sandbox_status(&self) -> SandboxStatus {
         SandboxSelector::for_current_system(&self.agent_data_directory).status()
