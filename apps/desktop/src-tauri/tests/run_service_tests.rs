@@ -1,9 +1,11 @@
-use std::future::ready;
+use std::future::{Future, pending, ready};
 use std::path::PathBuf;
+use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use brnch_agents::AgentKind;
+use brnch_core::agent::PermissionMode;
 use brnch_core::agent::{
     AgentCommand, AgentOutcome, AgentOutputLine, AgentOutputListener, AgentRunner, OutputStream,
 };
@@ -56,17 +58,26 @@ impl WorkspaceProvider for InstantProvider {
 /// Prints what Claude Code prints, or cannot start.
 struct ScriptedClaude {
     starts: bool,
+    hangs: bool,
+    commands: Arc<Mutex<Vec<AgentCommand>>>,
 }
 
+#[allow(refining_impl_trait)]
 impl AgentRunner for ScriptedClaude {
     fn run(
         &self,
-        _command: &AgentCommand,
+        command: &AgentCommand,
         _directory: &str,
         listener: &dyn AgentOutputListener,
-    ) -> impl Future<Output = BrnchResult<AgentOutcome>> + Send {
+    ) -> Pin<Box<dyn Future<Output = BrnchResult<AgentOutcome>> + Send>> {
+        self.commands.lock().unwrap().push(command.clone());
         if !self.starts {
-            return ready(Err(BrnchError::AgentProcess("not installed".to_owned())));
+            return Box::pin(ready(Err(BrnchError::AgentProcess(
+                "not installed".to_owned(),
+            ))));
+        }
+        if self.hangs {
+            return Box::pin(pending());
         }
         for text in [
             r#"{"type":"system","subtype":"init","session_id":"s","model":"m"}"#,
@@ -77,7 +88,7 @@ impl AgentRunner for ScriptedClaude {
                 text: text.to_owned(),
             });
         }
-        ready(Ok(AgentOutcome { exit_code: Some(0) }))
+        Box::pin(ready(Ok(AgentOutcome { exit_code: Some(0) })))
     }
 }
 
@@ -92,21 +103,35 @@ impl RunNotifier for CollectingNotifier {
     }
 }
 
-fn service(
+type TestService = RunService<InstantProvider, ScriptedClaude, SqliteProjectStore>;
+
+fn service(starts: bool) -> (TestService, Arc<SqliteProjectStore>) {
+    let (service, store, _) = service_with(starts, false);
+    (service, store)
+}
+
+fn service_with(
     starts: bool,
+    hangs: bool,
 ) -> (
-    RunService<InstantProvider, ScriptedClaude, SqliteProjectStore>,
+    TestService,
     Arc<SqliteProjectStore>,
+    Arc<Mutex<Vec<AgentCommand>>>,
 ) {
     let store = Arc::new(SqliteProjectStore::open_in_memory().unwrap());
+    let commands = Arc::new(Mutex::new(Vec::new()));
     let service = RunService::new(
         BrnchSettings::default(),
         Arc::new(InstantProvider),
-        ScriptedClaude { starts },
+        ScriptedClaude {
+            starts,
+            hangs,
+            commands: Arc::clone(&commands),
+        },
         Arc::clone(&store),
         PathBuf::from("/work"),
     );
-    (service, store)
+    (service, store, commands)
 }
 
 fn request(project_identifier: &str, copies: u32) -> StartRunRequest {
@@ -115,6 +140,8 @@ fn request(project_identifier: &str, copies: u32) -> StartRunRequest {
         run_label: "Add search".to_owned(),
         prompt: "add a search box".to_owned(),
         agent_kind: AgentKind::ClaudeCode,
+        permission_mode: PermissionMode::EditFiles,
+        base_branch: None,
         copies,
     }
 }
@@ -155,12 +182,13 @@ async fn a_run_records_its_workspaces_and_keeps_and_announces_every_event() {
         .collect();
     assert_eq!(branches, ["agents/add-search", "agents/add-search-2"]);
     for workspace in &started {
-        wait_for_events(&store, workspace, 2).await;
+        wait_for_events(&store, workspace, 3).await;
         let events = store.list_events(workspace, 0).unwrap();
-        assert!(events[0].event_json.contains(r#""kind":"session_started""#));
-        assert!(events[1].event_json.contains(r#""kind":"run_finished""#));
+        assert!(events[0].event_json.contains(r#""kind":"user_message""#));
+        assert!(events[1].event_json.contains(r#""kind":"session_started""#));
+        assert!(events[2].event_json.contains(r#""kind":"run_finished""#));
     }
-    assert_eq!(notifier.notices.lock().unwrap().len(), 4);
+    assert_eq!(notifier.notices.lock().unwrap().len(), 6);
 }
 
 #[tokio::test]
@@ -175,8 +203,8 @@ async fn an_agent_that_cannot_start_leaves_a_failed_run_in_the_history() {
         .start(&request(project.identifier.as_str(), 1), &notifier)
         .unwrap();
 
-    wait_for_events(&store, &started[0], 1).await;
-    let event = &store.list_events(&started[0], 0).unwrap()[0].event_json;
+    wait_for_events(&store, &started[0], 2).await;
+    let event = &store.list_events(&started[0], 0).unwrap()[1].event_json;
     assert!(event.contains(r#""succeeded":false"#));
     assert!(event.contains("not installed"));
 }
@@ -200,4 +228,77 @@ async fn an_unknown_project_or_a_blank_label_starts_nothing() {
         Err(BrnchError::EmptyRunLabel)
     ));
     assert_eq!(store.list_workspaces(&project.identifier).unwrap().len(), 0);
+}
+
+#[tokio::test]
+async fn a_working_agent_can_be_stopped_and_the_history_says_so() {
+    let (service, store, _) = service_with(true, true);
+    let project = store
+        .add_project("web-store", "https://example.com/web")
+        .unwrap();
+    let notifier: Arc<dyn RunNotifier> = Arc::new(CollectingNotifier::default());
+    let started = service
+        .start(&request(project.identifier.as_str(), 1), &notifier)
+        .unwrap();
+    wait_for_events(&store, &started[0], 1).await;
+
+    assert!(service.stop(started[0].as_str(), &notifier));
+
+    let last = store.last_event(&started[0]).unwrap().unwrap().event_json;
+    assert!(last.contains(r#""succeeded":false"#));
+    assert!(last.contains("Detenido"));
+    assert!(!service.stop(started[0].as_str(), &notifier));
+}
+
+#[tokio::test]
+async fn a_follow_up_resumes_the_session_the_agent_started_and_is_refused_while_it_works() {
+    let (service, store, commands) = service_with(true, false);
+    let project = store
+        .add_project("web-store", "https://example.com/web")
+        .unwrap();
+    let notifier: Arc<dyn RunNotifier> = Arc::new(CollectingNotifier::default());
+    let started = service
+        .start(&request(project.identifier.as_str(), 1), &notifier)
+        .unwrap();
+    wait_for_events(&store, &started[0], 3).await;
+    for _ in 0..200 {
+        if service
+            .follow_up(started[0].as_str(), "now add tests", &notifier)
+            .is_ok()
+        {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+
+    wait_for_events(&store, &started[0], 6).await;
+    let resumed = commands.lock().unwrap().last().unwrap().clone();
+    assert!(
+        resumed
+            .arguments
+            .windows(2)
+            .any(|pair| pair == ["--resume", "s"])
+    );
+    assert_eq!(resumed.arguments.last().unwrap(), "now add tests");
+    let events = store.list_events(&started[0], 0).unwrap();
+    assert!(events[3].event_json.contains("now add tests"));
+}
+
+#[tokio::test]
+async fn a_follow_up_needs_a_session_to_continue() {
+    let (service, store, _) = service_with(false, false);
+    let project = store
+        .add_project("web-store", "https://example.com/web")
+        .unwrap();
+    let notifier: Arc<dyn RunNotifier> = Arc::new(CollectingNotifier::default());
+    let started = service
+        .start(&request(project.identifier.as_str(), 1), &notifier)
+        .unwrap();
+    wait_for_events(&store, &started[0], 2).await;
+
+    let result = service.follow_up(started[0].as_str(), "again", &notifier);
+
+    assert!(
+        matches!(result, Err(BrnchError::AgentProcess(message)) if message.contains("no session"))
+    );
 }

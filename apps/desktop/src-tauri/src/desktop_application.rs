@@ -35,6 +35,7 @@ pub fn run() {
             let directory = application.path().app_data_dir()?;
             std::fs::create_dir_all(&directory)?;
             let store = Arc::new(SqliteProjectStore::open(&directory.join(DATABASE_FILE))?);
+            crate::close_interrupted_runs(&*store)?;
             let workspaces_root = std::env::var_os(WORKSPACES_ROOT_VARIABLE)
                 .map_or_else(|| directory.join("workspaces"), PathBuf::from);
             application.manage(RunGateway::new(
@@ -59,6 +60,9 @@ pub fn run() {
             project_commands::read_workspace_diff,
             project_commands::find_project_conflicts,
             project_commands::publish_workspaces,
+            project_commands::stop_run,
+            project_commands::send_follow_up,
+            project_commands::sandbox_status,
         ])
         .run(tauri::generate_context!())
         .expect("the brnch window failed to start");

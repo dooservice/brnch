@@ -1,7 +1,9 @@
 use brnch_core::BrnchResult;
 use std::sync::Arc;
 
-use brnch_core::project::{EventHistoryStore, ProjectId, ProjectStore, ProjectView, WorkspaceId};
+use brnch_core::project::{
+    EventHistoryStore, ProjectId, ProjectStore, ProjectView, RunRecordStore, WorkspaceId,
+};
 
 use crate::{ProjectSummary, WorkspaceSummary};
 
@@ -48,15 +50,6 @@ impl<Store: ProjectStore> ProjectService<Store> {
         self.store.remove_project(&ProjectId::new(identifier))
     }
 
-    pub fn list_workspaces(&self, project_identifier: &str) -> BrnchResult<Vec<WorkspaceSummary>> {
-        Ok(self
-            .store
-            .list_workspaces(&ProjectId::new(project_identifier))?
-            .into_iter()
-            .map(WorkspaceSummary::from)
-            .collect())
-    }
-
     pub fn load_view(&self, project_identifier: &str) -> BrnchResult<Option<String>> {
         Ok(self
             .store
@@ -75,7 +68,23 @@ impl<Store: ProjectStore> ProjectService<Store> {
     }
 }
 
-impl<Store: ProjectStore + EventHistoryStore> ProjectService<Store> {
+impl<Store: ProjectStore + EventHistoryStore + RunRecordStore> ProjectService<Store> {
+    pub fn list_workspaces(&self, project_identifier: &str) -> BrnchResult<Vec<WorkspaceSummary>> {
+        self.store
+            .list_workspaces(&ProjectId::new(project_identifier))?
+            .into_iter()
+            .map(|record| {
+                let details = self.store.find_run(&record.identifier)?;
+                let last_event = self.store.last_event(&record.identifier)?;
+                Ok(WorkspaceSummary::new(
+                    record,
+                    details.as_ref(),
+                    last_event.as_ref(),
+                ))
+            })
+            .collect()
+    }
+
     pub fn list_events(
         &self,
         workspace_identifier: &str,

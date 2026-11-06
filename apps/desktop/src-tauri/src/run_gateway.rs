@@ -4,7 +4,7 @@ use std::sync::Arc;
 use brnch_core::{BrnchResult, BrnchSettings};
 use brnch_gitd::GitdWorkspaceProvider;
 use brnch_process::ProcessAgentRunner;
-use brnch_sandbox::{SandboxSelector, SandboxedAgentRunner};
+use brnch_sandbox::{SandboxSelector, SandboxStatus, SandboxedAgentRunner};
 use brnch_store::SqliteProjectStore;
 use tokio::sync::OnceCell;
 
@@ -58,6 +58,32 @@ impl RunGateway {
             .into_iter()
             .map(|workspace| workspace.as_str().to_owned())
             .collect())
+    }
+
+    pub async fn stop(
+        &self,
+        workspace_identifier: &str,
+        notifier: &Arc<dyn RunNotifier>,
+    ) -> BrnchResult<bool> {
+        let connected = self.connected.get_or_try_init(|| self.connect()).await?;
+        Ok(connected.runs.stop(workspace_identifier, notifier))
+    }
+
+    pub async fn follow_up(
+        &self,
+        workspace_identifier: &str,
+        prompt: &str,
+        notifier: &Arc<dyn RunNotifier>,
+    ) -> BrnchResult<()> {
+        let connected = self.connected.get_or_try_init(|| self.connect()).await?;
+        connected
+            .runs
+            .follow_up(workspace_identifier, prompt, notifier)
+    }
+
+    /// Does not need gitd, so the window can show it before anything is connected.
+    pub fn sandbox_status(&self) -> SandboxStatus {
+        SandboxSelector::for_current_system().status()
     }
 
     pub async fn diff(&self, workspace_identifier: &str) -> BrnchResult<DiffSummary> {

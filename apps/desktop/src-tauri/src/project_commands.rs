@@ -140,3 +140,35 @@ pub async fn publish_workspaces(
         .await
         .map_err(|failure| describe(&failure))
 }
+
+#[tauri::command]
+pub async fn stop_run(
+    application: tauri::AppHandle,
+    gateway: State<'_, RunGateway>,
+    workspace_identifier: String,
+) -> Result<bool, String> {
+    let notifier: Arc<dyn RunNotifier> = Arc::new(TauriRunNotifier { application });
+    gateway
+        .stop(&workspace_identifier, &notifier)
+        .await
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub async fn send_follow_up(
+    application: tauri::AppHandle,
+    gateway: State<'_, RunGateway>,
+    workspace_identifier: String,
+    prompt: String,
+) -> Result<(), String> {
+    let notifier: Arc<dyn RunNotifier> = Arc::new(TauriRunNotifier { application });
+    gateway
+        .follow_up(&workspace_identifier, &prompt, &notifier)
+        .await
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub fn sandbox_status(gateway: State<'_, RunGateway>) -> brnch_sandbox::SandboxStatus {
+    gateway.sandbox_status()
+}
