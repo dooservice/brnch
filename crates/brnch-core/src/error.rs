@@ -9,6 +9,12 @@ pub enum BrnchError {
     #[error("the agent process failed: {0}")]
     AgentProcess(String),
 
+    #[error("the project store failed: {0}")]
+    Store(String),
+
+    #[error("there is no project with identifier {0:?}")]
+    UnknownProject(String),
+
     #[error("a run needs a label")]
     EmptyRunLabel,
 

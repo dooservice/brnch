@@ -1,0 +1,16 @@
+[package]
+name = "brnch-store"
+description = "Remembers projects, workspaces and what was open in each, in a SQLite file."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+brnch-core = { version = "0.1.0", path = "../brnch-core" }
+rusqlite = { version = "0.41.1", features = ["bundled"] }
+uuid = { version = "1.29.0", features = ["v4"] }
