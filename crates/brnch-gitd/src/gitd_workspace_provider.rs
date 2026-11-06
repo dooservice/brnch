@@ -1,8 +1,10 @@
 use brnch_core::workspace::{
-    AgentWorkspace, PublishedBranch, WorkspaceDiff, WorkspaceProvider, WorkspaceRequest,
+    AgentWorkspace, ConflictAnalyzer, PublishedBranch, WorkspaceConflict, WorkspaceDiff,
+    WorkspaceProvider, WorkspaceRequest,
 };
 use brnch_core::{BrnchResult, BrnchSettings};
-use gitd::{DiffOptions, Gitd, Options, PrepareOptions, PublishOptions};
+use gitd::proto::side::Of;
+use gitd::{DiffOptions, Gitd, Options, PrepareOptions, PublishOptions, Side};
 
 use crate::gitd_failure_translator::GitdFailureTranslator;
 
@@ -75,5 +77,41 @@ impl WorkspaceProvider for GitdWorkspaceProvider {
             .remove(&workspace.directory)
             .await
             .map_err(|failure| GitdFailureTranslator::translate(&failure))
+    }
+}
+
+impl ConflictAnalyzer for GitdWorkspaceProvider {
+    async fn find_conflicts(
+        &self,
+        workspaces: &[AgentWorkspace],
+    ) -> BrnchResult<Vec<WorkspaceConflict>> {
+        let sides = workspaces
+            .iter()
+            .map(|workspace| Side {
+                of: Some(Of::Workspace(workspace.directory.clone())),
+            })
+            .collect();
+        let conflicts = self
+            .gitd
+            .conflicts(sides, String::new())
+            .await
+            .map_err(|failure| GitdFailureTranslator::translate(&failure))?;
+        Ok(conflicts
+            .into_iter()
+            .map(|conflict| WorkspaceConflict {
+                first_directory: Self::workspace_path(conflict.first),
+                second_directory: Self::workspace_path(conflict.second),
+                clashing_paths: conflict.paths,
+            })
+            .collect())
+    }
+}
+
+impl GitdWorkspaceProvider {
+    fn workspace_path(side: Option<Side>) -> String {
+        match side.and_then(|side| side.of) {
+            Some(Of::Workspace(path) | Of::Branch(path)) => path,
+            None => String::new(),
+        }
     }
 }
