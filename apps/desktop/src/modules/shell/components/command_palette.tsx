@@ -51,7 +51,7 @@ export default function CommandPalette() {
               <Kbd>Esc</Kbd>
             </div>
             <div className="flex">
-              <Command.List className="h-100 w-140 shrink-0 overflow-y-auto border-r border-line p-1.5">
+              <Command.List className="h-128 w-140 shrink-0 overflow-y-auto border-r border-line p-1.5">
                 <Command.Empty className="px-3 py-6 text-center text-muted">{t('palette.empty')}</Command.Empty>
                 <Command.Group heading={t('palette.workspaces')} className={GROUP_HEADING}>
                   {all.flatMap(({ project, workspaces }) =>

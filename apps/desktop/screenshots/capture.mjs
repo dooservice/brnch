@@ -126,7 +126,7 @@ const scenarios = [
     },
   },
   { file: "06-compare", active: "p1", act: async (page) => page.getByRole("link", { name: /Corrida · Añadir búsqueda/ }).click() },
-  { file: "07-palette", active: "p1", act: async (page) => page.keyboard.press("Control+k") },
+  { file: "07-palette", height: 1000, active: "p1", act: async (page) => page.keyboard.press("Control+k") },
   {
     file: "08-new-run", active: "p1",
     act: async (page) => {
@@ -138,8 +138,11 @@ const scenarios = [
   {
     file: "09-publish", active: "p1",
     act: async (page) => {
-      await page.getByRole("link", { name: /Modo oscuro/ }).click();
-      await page.getByRole("button", { name: "Publicar" }).click();
+      await page.getByRole("link", { name: /Corrida · Añadir búsqueda/ }).click();
+      await page.getByRole("heading", { name: /Corrida: Añadir búsqueda/ }).waitFor();
+      await page.getByLabel("Seleccionar agents/add-search-2").check();
+      await page.getByLabel("Seleccionar agents/add-search-3").check();
+      await page.getByRole("button", { name: /Publicar 2 seleccionados/ }).click();
     },
   },
   {
@@ -151,10 +154,10 @@ const scenarios = [
     },
   },
   { file: "11-settings-agents", active: "p1", act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Agentes" }).click(); } },
-  { file: "12-settings-security", height: 1180, active: "p1", act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Seguridad" }).click(); } },
+  { file: "12-settings-security", height: 1000, active: "p1", act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Seguridad" }).click(); } },
   { file: "14-files", active: "p1", act: async (page) => { await page.getByRole("link", { name: /add-search Claude Code/ }).click(); await page.getByRole("tab", { name: /Archivos/ }).click(); await page.getByText("src", { exact: true }).click(); await page.getByText("catalog", { exact: true }).click(); await page.getByText("SearchBox.tsx").click(); } },
   { file: "15-terminal", active: "p1", act: async (page) => { await page.getByRole("link", { name: /add-search Claude Code/ }).click(); await page.getByRole("tab", { name: /Terminal/ }).click(); } },
-  { file: "16-security-measured", height: 1180, active: "p1", act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Seguridad" }).click(); await page.getByRole("button", { name: "Comprobar ahora" }).click(); } },
+  { file: "16-security-measured", height: 1000, active: "p1", act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Seguridad" }).click(); await page.getByRole("button", { name: "Comprobar ahora" }).click(); } },
   { file: "17-windows-setup", height: 1180, active: "p1", windows: true, sandbox: { available: false, mechanism: "dedicated Windows account", reason: "the agent account is not created yet" }, act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Seguridad" }).click(); } },
   { file: "13-english", active: "p1", language: "en", act: async (page) => page.getByRole("link", { name: /add-search Claude Code/ }).click() },
 ];
