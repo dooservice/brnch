@@ -36,7 +36,7 @@ if ($Phase -eq 'Prepare') {
 if ($Phase -eq 'Create') {
     $secure = Get-Content -LiteralPath $credentialFile | ConvertTo-SecureString
     $password = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure))
-    & net.exe user $Account 2>&1 | Out-Null
+    & cmd.exe /c "net user $Account >nul 2>&1"
     if ($LASTEXITCODE -eq 0) {
         & net.exe user $Account $password | Out-Null
     } else {
