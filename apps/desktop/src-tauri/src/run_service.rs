@@ -11,7 +11,7 @@ use crate::{RunNotifier, StartRunRequest, StoreAndNotifySink};
 
 struct Shared<Provider, Runner, Store> {
     settings: BrnchSettings,
-    provider: Provider,
+    provider: Arc<Provider>,
     runner: Runner,
     store: Arc<Store>,
     workspaces_root: PathBuf,
@@ -39,7 +39,7 @@ where
 {
     pub fn new(
         settings: BrnchSettings,
-        provider: Provider,
+        provider: Arc<Provider>,
         runner: Runner,
         store: Arc<Store>,
         workspaces_root: PathBuf,
@@ -126,7 +126,7 @@ where
             let catalog = AgentCatalog;
             let listener = NormalizingListener::new(catalog.normalizer(kind), &sink);
             let coordinator =
-                AgentRunCoordinator::new(&shared.settings, &shared.provider, &shared.runner);
+                AgentRunCoordinator::new(&shared.settings, &*shared.provider, &shared.runner);
             let result = coordinator
                 .run(&catalog.definition(kind), &run, &listener)
                 .await;

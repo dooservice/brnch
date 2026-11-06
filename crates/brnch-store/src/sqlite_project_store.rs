@@ -182,6 +182,25 @@ impl ProjectStore for SqliteProjectStore {
             .map_err(Self::failure)
     }
 
+    fn find_workspace(&self, workspace: &WorkspaceId) -> BrnchResult<Option<WorkspaceRecord>> {
+        self.connection()
+            .query_row(
+                "SELECT project_identifier, directory, branch_name FROM workspaces
+                 WHERE identifier = ?1",
+                [workspace.as_str()],
+                |row| {
+                    Ok(WorkspaceRecord {
+                        identifier: workspace.clone(),
+                        project_identifier: ProjectId::new(&row.get::<_, String>(0)?),
+                        directory: row.get(1)?,
+                        branch_name: row.get(2)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(Self::failure)
+    }
+
     fn remove_workspace(&self, workspace: &WorkspaceId) -> BrnchResult<()> {
         self.connection()
             .execute(

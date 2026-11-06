@@ -56,6 +56,9 @@ pub fn run() {
             project_commands::save_view,
             project_commands::start_run,
             project_commands::list_workspace_events,
+            project_commands::read_workspace_diff,
+            project_commands::find_project_conflicts,
+            project_commands::publish_workspaces,
         ])
         .run(tauri::generate_context!())
         .expect("the brnch window failed to start");

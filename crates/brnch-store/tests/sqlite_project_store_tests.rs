@@ -208,3 +208,23 @@ mod event_history {
         );
     }
 }
+
+#[test]
+fn a_workspace_can_be_found_by_its_identifier() {
+    let store = store();
+    let project = store.add_project("p", REPOSITORY).unwrap();
+    let created = store
+        .add_workspace(&project.identifier, "/work/a", "agents/a")
+        .unwrap();
+
+    assert_eq!(
+        store.find_workspace(&created.identifier).unwrap(),
+        Some(created)
+    );
+    assert_eq!(
+        store
+            .find_workspace(&brnch_core::project::WorkspaceId::new("nope"))
+            .unwrap(),
+        None
+    );
+}

@@ -107,3 +107,36 @@ pub fn list_workspace_events(
         .list_events(&workspace_identifier, after_sequence)
         .map_err(|failure| describe(&failure))
 }
+
+#[tauri::command]
+pub async fn read_workspace_diff(
+    gateway: State<'_, RunGateway>,
+    workspace_identifier: String,
+) -> Result<crate::DiffSummary, String> {
+    gateway
+        .diff(&workspace_identifier)
+        .await
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub async fn find_project_conflicts(
+    gateway: State<'_, RunGateway>,
+    project_identifier: String,
+) -> Result<Vec<crate::ConflictSummary>, String> {
+    gateway
+        .conflicts(&project_identifier)
+        .await
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub async fn publish_workspaces(
+    gateway: State<'_, RunGateway>,
+    workspace_identifiers: Vec<String>,
+) -> Result<Vec<crate::PublishOutcome>, String> {
+    gateway
+        .publish(&workspace_identifiers)
+        .await
+        .map_err(|failure| describe(&failure))
+}

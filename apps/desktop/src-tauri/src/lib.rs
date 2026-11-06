@@ -4,6 +4,8 @@ mod desktop_application;
 mod project_commands;
 mod project_service;
 mod project_summary;
+mod review_service;
+mod review_summaries;
 mod run_gateway;
 mod run_notice;
 mod run_notifier;
@@ -15,6 +17,8 @@ mod workspace_summary;
 
 pub use project_service::ProjectService;
 pub use project_summary::ProjectSummary;
+pub use review_service::ReviewService;
+pub use review_summaries::{ConflictSummary, DiffSummary, PublishOutcome};
 pub use run_gateway::RunGateway;
 pub use run_notice::RunNotice;
 pub use run_notifier::RunNotifier;

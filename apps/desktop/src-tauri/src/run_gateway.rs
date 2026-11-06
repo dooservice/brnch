@@ -8,7 +8,10 @@ use brnch_sandbox::{SandboxSelector, SandboxedAgentRunner};
 use brnch_store::SqliteProjectStore;
 use tokio::sync::OnceCell;
 
-use crate::{RunNotifier, RunService, StartRunRequest};
+use crate::{
+    ConflictSummary, DiffSummary, PublishOutcome, ReviewService, RunNotifier, RunService,
+    StartRunRequest,
+};
 
 type RealRunService = RunService<
     GitdWorkspaceProvider,
@@ -16,13 +19,18 @@ type RealRunService = RunService<
     SqliteProjectStore,
 >;
 
+struct Connected {
+    runs: RealRunService,
+    review: ReviewService<GitdWorkspaceProvider, SqliteProjectStore>,
+}
+
 /// Connects to gitd the first time a run is asked for, so the window opens even when gitd
 /// is not running yet and the person is told what is missing instead.
 pub struct RunGateway {
     store: Arc<SqliteProjectStore>,
     workspaces_root: PathBuf,
     read_only_directories: Vec<String>,
-    service: OnceCell<RealRunService>,
+    connected: OnceCell<Connected>,
 }
 
 impl RunGateway {
@@ -35,7 +43,7 @@ impl RunGateway {
             store,
             workspaces_root,
             read_only_directories,
-            service: OnceCell::new(),
+            connected: OnceCell::new(),
         }
     }
 
@@ -44,17 +52,35 @@ impl RunGateway {
         request: &StartRunRequest,
         notifier: &Arc<dyn RunNotifier>,
     ) -> BrnchResult<Vec<String>> {
-        let service = self.service.get_or_try_init(|| self.connect()).await?;
-        let started = service.start(request, notifier)?;
+        let connected = self.connected.get_or_try_init(|| self.connect()).await?;
+        let started = connected.runs.start(request, notifier)?;
         Ok(started
             .into_iter()
             .map(|workspace| workspace.as_str().to_owned())
             .collect())
     }
 
-    async fn connect(&self) -> BrnchResult<RealRunService> {
+    pub async fn diff(&self, workspace_identifier: &str) -> BrnchResult<DiffSummary> {
+        let connected = self.connected.get_or_try_init(|| self.connect()).await?;
+        connected.review.diff(workspace_identifier).await
+    }
+
+    pub async fn conflicts(&self, project_identifier: &str) -> BrnchResult<Vec<ConflictSummary>> {
+        let connected = self.connected.get_or_try_init(|| self.connect()).await?;
+        connected.review.conflicts(project_identifier).await
+    }
+
+    pub async fn publish(
+        &self,
+        workspace_identifiers: &[String],
+    ) -> BrnchResult<Vec<PublishOutcome>> {
+        let connected = self.connected.get_or_try_init(|| self.connect()).await?;
+        Ok(connected.review.publish(workspace_identifiers).await)
+    }
+
+    async fn connect(&self) -> BrnchResult<Connected> {
         let settings = BrnchSettings::default();
-        let provider = GitdWorkspaceProvider::connect(settings.clone()).await?;
+        let provider = Arc::new(GitdWorkspaceProvider::connect(settings.clone()).await?);
         let process = ProcessAgentRunner::new(settings.git_credential_variables);
         let directories: Vec<&str> = self
             .read_only_directories
@@ -63,12 +89,15 @@ impl RunGateway {
             .collect();
         let runner =
             SandboxedAgentRunner::new(process, SandboxSelector::for_current_system(), &directories);
-        Ok(RunService::new(
-            settings,
-            provider,
-            runner,
-            Arc::clone(&self.store),
-            self.workspaces_root.clone(),
-        ))
+        Ok(Connected {
+            runs: RunService::new(
+                settings,
+                Arc::clone(&provider),
+                runner,
+                Arc::clone(&self.store),
+                self.workspaces_root.clone(),
+            ),
+            review: ReviewService::new(provider, Arc::clone(&self.store)),
+        })
     }
 }

@@ -18,6 +18,9 @@ pub enum BrnchError {
     #[error("there is no project with identifier {0:?}")]
     UnknownProject(String),
 
+    #[error("there is no workspace with identifier {0:?}")]
+    UnknownWorkspace(String),
+
     #[error("a run needs a label")]
     EmptyRunLabel,
 

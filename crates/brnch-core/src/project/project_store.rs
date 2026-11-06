@@ -19,6 +19,8 @@ pub trait ProjectStore {
 
     fn list_workspaces(&self, project: &ProjectId) -> BrnchResult<Vec<WorkspaceRecord>>;
 
+    fn find_workspace(&self, workspace: &WorkspaceId) -> BrnchResult<Option<WorkspaceRecord>>;
+
     fn remove_workspace(&self, workspace: &WorkspaceId) -> BrnchResult<()>;
 
     fn save_view(&self, project: &ProjectId, view: &ProjectView) -> BrnchResult<()>;

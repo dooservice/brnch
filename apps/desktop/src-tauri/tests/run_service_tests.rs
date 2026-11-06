@@ -101,7 +101,7 @@ fn service(
     let store = Arc::new(SqliteProjectStore::open_in_memory().unwrap());
     let service = RunService::new(
         BrnchSettings::default(),
-        InstantProvider,
+        Arc::new(InstantProvider),
         ScriptedClaude { starts },
         Arc::clone(&store),
         PathBuf::from("/work"),
