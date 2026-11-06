@@ -1,0 +1,19 @@
+[package]
+name = "brnch-gitd"
+description = "Adapter that gives brnch its workspaces through gitd."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+brnch-core = { version = "0.1.0", path = "../brnch-core" }
+gitd-client = "0.15.1"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+brnch-process = { path = "../brnch-process" }
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread"] }
