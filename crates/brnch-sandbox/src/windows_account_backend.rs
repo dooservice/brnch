@@ -81,7 +81,7 @@ impl WindowsAccountBackend {
                     "-NoProfile".to_owned(),
                     "-Command".to_owned(),
                     format!(
-                        "Start-Process {POWERSHELL} -Verb RunAs -Wait -ArgumentList {}",
+                        "Start-Process {POWERSHELL} -Verb RunAs -Wait -WindowStyle Hidden -ArgumentList {}",
                         quoted.join(",")
                     ),
                 ],
@@ -161,7 +161,9 @@ impl SandboxBackend for WindowsAccountBackend {
                 "the account agents run under has not been set up yet".to_owned(),
             ));
         }
+        self.install_scripts()?;
         let jobs = self.data_directory.join(JOBS_DIRECTORY);
+        fs::create_dir_all(&jobs).map_err(Self::failure)?;
         let job_file = jobs.join(format!("{}.json", Uuid::new_v4()));
         let job = Job {
             program: &command.program,

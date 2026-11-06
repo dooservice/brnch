@@ -22,6 +22,10 @@ $job = Get-Content -LiteralPath $JobFile -Raw | ConvertFrom-Json
 $program = (Get-Command $job.program -ErrorAction Stop).Source
 & icacls.exe $WorkspaceDirectory /grant "${Account}:(OI)(CI)M" /T /C /Q | Out-Null
 & icacls.exe (Split-Path -Parent $program) /grant "${Account}:(OI)(CI)RX" /C /Q | Out-Null
+# The account reads these two folders under the person's profile, which no other account can enter by default.
+foreach ($folder in @((Split-Path -Parent $InnerScript), (Split-Path -Parent $JobFile))) {
+    & icacls.exe $folder /grant "${Account}:(OI)(CI)RX" /C /Q | Out-Null
+}
 $environment = @{}
 if (Test-Path -LiteralPath $environmentFile) {
     $protected = Get-Content -LiteralPath $environmentFile | ConvertTo-SecureString
@@ -34,7 +38,7 @@ if (Test-Path -LiteralPath $environmentFile) {
 $standardOutput = "$JobFile.out"
 $standardError = "$JobFile.err"
 foreach ($path in @($standardOutput, $standardError)) { Set-Content -LiteralPath $path -Value '' -NoNewline }
-$process = Start-Process powershell.exe -Credential $credential -LoadUserProfile -WorkingDirectory $WorkspaceDirectory -PassThru `
+$process = Start-Process powershell.exe -Credential $credential -LoadUserProfile -WindowStyle Hidden -WorkingDirectory $WorkspaceDirectory -PassThru `
     -RedirectStandardOutput $standardOutput -RedirectStandardError $standardError `
     -ArgumentList @('-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', "`"$InnerScript`"", '-JobFile', "`"$JobFile`"")
 # Without holding the handle now, ExitCode comes back empty once the process has ended.
