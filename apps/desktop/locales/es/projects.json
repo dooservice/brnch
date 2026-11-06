@@ -38,6 +38,7 @@
       "nameRequired": "Escribe un nombre.",
       "locationRequired": "Escribe dónde está el repositorio.",
       "urlInvalid": "Usa una URL https o ssh, o git@host:ruta."
-    }
+    },
+    "usesOrigin": "Repositorio local · gitd usará su origin: {{url}}"
   }
 }

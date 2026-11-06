@@ -16,4 +16,6 @@ export interface RepositoryInspection {
   defaultBranch: string | null
   branches: string[]
   message: string | null
+  /** For a local folder: the address of its origin, which is what gitd is given. */
+  remoteUrl: string | null
 }

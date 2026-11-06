@@ -89,8 +89,12 @@ export class FakeDesktop {
       }
       case 'inspect_repository':
         return String(args?.location).includes('unreachable')
-          ? { accessible: false, defaultBranch: null, branches: [], message: 'repository not found' }
-          : { accessible: true, defaultBranch: 'main', branches: ['develop', 'main'], message: null }
+          ? { accessible: false, defaultBranch: null, branches: [], message: 'repository not found', remoteUrl: null }
+          : { accessible: true, defaultBranch: 'main', branches: ['develop', 'main'], message: null, remoteUrl: null }
+      case 'inspect_local_repository':
+        return String(args?.folder).includes('norigin')
+          ? { accessible: false, defaultBranch: null, branches: [], message: 'this folder is not a git repository, or it has no origin to publish to', remoteUrl: null }
+          : { accessible: true, defaultBranch: 'trunk', branches: ['trunk'], message: null, remoteUrl: 'https://github.com/acme/local.git' }
       case 'workspace_statistics':
         return this.statistics
       case 'activate_project':

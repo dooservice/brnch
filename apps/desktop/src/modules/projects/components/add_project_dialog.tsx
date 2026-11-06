@@ -60,7 +60,7 @@ export default function AddProjectDialog() {
   const source = useWatch({ control, name: 'source' })
   const location = useWatch({ control, name: 'location' })
   const settledLocation = useDebouncedValue(location.trim())
-  const inspection = useRepositoryInspection(source === 'folder' || isRepositoryUrl(settledLocation) ? settledLocation : '')
+  const inspection = useRepositoryInspection(source === 'folder' || isRepositoryUrl(settledLocation) ? settledLocation : '', source)
   const checking = location.trim() !== '' && (settledLocation !== location.trim() || inspection.isFetching)
   const accessible = !checking && inspection.data?.accessible === true
   const refused = !checking && inspection.data?.accessible === false && settledLocation !== ''
@@ -76,7 +76,7 @@ export default function AddProjectDialog() {
   const submit = handleSubmit(async values => {
     await add.mutateAsync({
       name: values.name,
-      repositoryUrl: values.location,
+      repositoryUrl: values.source === 'folder' ? (inspection.data?.remoteUrl ?? values.location) : values.location,
       baseBranch: values.baseBranch === '' ? null : values.baseBranch,
       workspacesDirectory: values.workspacesDirectory === '' ? null : values.workspacesDirectory,
       open: values.open,
@@ -149,7 +149,7 @@ export default function AddProjectDialog() {
         )}
         {location.trim() !== '' && (
           <p aria-live="polite" className={cn('-mt-2.5 text-[12px]', accessible ? 'text-ok' : refused ? 'text-danger' : 'text-muted')}>
-            {checking ? t('add.checking') : accessible ? t('add.reachable', { branch: inspection.data?.defaultBranch ?? '—' }) : refused ? (inspection.data?.message ?? t('add.unreachable')) : ''}
+            {checking ? t('add.checking') : accessible ? (source === 'folder' ? t('add.usesOrigin', { url: inspection.data?.remoteUrl ?? '' }) : t('add.reachable', { branch: inspection.data?.defaultBranch ?? '—' })) : refused ? (inspection.data?.message ?? t('add.unreachable')) : ''}
           </p>
         )}
         <div className="flex gap-3">

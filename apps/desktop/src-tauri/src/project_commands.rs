@@ -198,6 +198,11 @@ pub async fn inspect_repository(location: String) -> crate::RepositoryInspection
 }
 
 #[tauri::command]
+pub async fn inspect_local_repository(folder: String) -> crate::RepositoryInspection {
+    crate::RepositoryInspector::inspect_local(&folder).await
+}
+
+#[tauri::command]
 pub async fn workspace_statistics(
     gateway: State<'_, RunGateway>,
     project_identifier: String,

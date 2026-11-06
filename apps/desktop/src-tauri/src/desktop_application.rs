@@ -72,6 +72,7 @@ pub fn run() {
             project_commands::detect_agents,
             project_commands::gitd_status,
             project_commands::inspect_repository,
+            project_commands::inspect_local_repository,
             project_commands::workspace_statistics,
             project_commands::list_workspace_files,
             project_commands::read_workspace_file,

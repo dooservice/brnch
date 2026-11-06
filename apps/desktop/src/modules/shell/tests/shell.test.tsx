@@ -51,6 +51,35 @@ describe('shell', () => {
     expect(await screen.findByRole('button', { name: /docs-site/ })).toBeInTheDocument()
   })
 
+  it('adds a local folder through the origin it has, because gitd only accepts addresses', async () => {
+    const user = userEvent.setup()
+    window.localStorage.setItem('brnch.onboarded', '1')
+    renderApp()
+    await user.click(await screen.findByRole('button', { name: 'Añadir proyecto' }))
+    const dialog = await screen.findByRole('dialog')
+    await user.click(within(dialog).getByRole('radio', { name: 'Carpeta local' }))
+
+    await user.type(within(dialog).getByLabelText('Carpeta del repositorio'), 'D:\\code\\local')
+    expect(await within(dialog).findByText(/gitd usará su origin: https:\/\/github.com\/acme\/local.git/)).toBeInTheDocument()
+    await user.click(within(dialog).getByRole('button', { name: 'Añadir proyecto' }))
+
+    await waitFor(() => expect(desktop.projects).toHaveLength(1))
+    expect(desktop.projects[0]).toMatchObject({ name: 'local', repositoryUrl: 'https://github.com/acme/local.git' })
+  })
+
+  it('refuses a local folder that has no origin', async () => {
+    const user = userEvent.setup()
+    window.localStorage.setItem('brnch.onboarded', '1')
+    renderApp()
+    await user.click(await screen.findByRole('button', { name: 'Añadir proyecto' }))
+    const dialog = await screen.findByRole('dialog')
+    await user.click(within(dialog).getByRole('radio', { name: 'Carpeta local' }))
+
+    await user.type(within(dialog).getByLabelText('Carpeta del repositorio'), 'D:\\code\\norigin')
+
+    expect(await within(dialog).findByText(/no origin|sin origin|has no origin/)).toBeInTheDocument()
+  })
+
   it('refuses an address that is not a repository URL and says when the repository does not answer', async () => {
     const user = userEvent.setup()
     window.localStorage.setItem('brnch.onboarded', '1')

@@ -79,10 +79,10 @@ export function useAddProject() {
 }
 
 /** Asks the repository's server whether it answers and which branches it has. */
-export function useRepositoryInspection(location: string) {
+export function useRepositoryInspection(location: string, source: 'url' | 'folder' = 'url') {
   return useQuery({
-    queryKey: ['repository', location] as const,
-    queryFn: () => command<RepositoryInspection>('inspect_repository', { location }),
+    queryKey: ['repository', source, location] as const,
+    queryFn: () => (source === 'folder' ? command<RepositoryInspection>('inspect_local_repository', { folder: location }) : command<RepositoryInspection>('inspect_repository', { location })),
     enabled: location.trim() !== '',
     staleTime: 60_000,
   })
