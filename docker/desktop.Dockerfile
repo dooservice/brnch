@@ -9,4 +9,6 @@ RUN rustup component add clippy rustfmt \
         xvfb xauth imagemagick x11-utils dbus-x11 libgl1-mesa-dri \
     && rm -rf /var/lib/apt/lists/*
 
+COPY --from=ghcr.io/dooservice/gitd:0.15.1 /usr/local/bin/gitd /usr/local/bin/gitd
+
 WORKDIR /workspace

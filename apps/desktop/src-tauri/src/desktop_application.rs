@@ -9,6 +9,7 @@ use crate::{ProjectService, RunGateway};
 
 const DATABASE_FILE: &str = "brnch.sqlite3";
 const WORKSPACES_ROOT_VARIABLE: &str = "BRNCH_WORKSPACES_ROOT";
+const GITD_PROGRAM_VARIABLE: &str = "BRNCH_GITD_PROGRAM";
 const READ_ONLY_VARIABLE: &str = "BRNCH_SANDBOX_READ_ONLY";
 
 /// Folders the confined agent may read but not change, such as gitd's pool and the folder
@@ -21,6 +22,36 @@ fn read_only_directories() -> Vec<String> {
                 .collect()
         })
         .unwrap_or_default()
+}
+
+/// The gitd that ships with brnch, unless the person points gitd somewhere themselves.
+fn bundled_gitd(
+    application: &tauri::App,
+    directory: &std::path::Path,
+    roots: Vec<PathBuf>,
+) -> Option<crate::GitdSupervisor> {
+    if ["GITD_URL", "GITD_SOCKET"]
+        .iter()
+        .any(|name| std::env::var_os(name).is_some())
+    {
+        return None;
+    }
+    let program = std::env::var_os(GITD_PROGRAM_VARIABLE)
+        .map(PathBuf::from)
+        .or_else(|| {
+            let name = if cfg!(windows) {
+                "resources/gitd.exe"
+            } else {
+                "resources/gitd"
+            };
+            application
+                .path()
+                .resolve(name, tauri::path::BaseDirectory::Resource)
+                .ok()
+        })?;
+    program
+        .is_file()
+        .then(|| crate::GitdSupervisor::new(program, directory.join("gitd"), roots))
 }
 
 /// Opens the window. Failing to open the store stops the application with a clear message
@@ -39,12 +70,18 @@ pub fn run() {
             crate::close_interrupted_runs(&*store)?;
             let workspaces_root = std::env::var_os(WORKSPACES_ROOT_VARIABLE)
                 .map_or_else(|| directory.join("workspaces"), PathBuf::from);
-            application.manage(RunGateway::new(
+            let mut roots = vec![workspaces_root.clone()];
+            roots.extend(application.path().home_dir().ok());
+            let mut gateway = RunGateway::new(
                 Arc::clone(&store),
                 workspaces_root,
                 read_only_directories(),
                 directory.clone(),
-            ));
+            );
+            if let Some(supervisor) = bundled_gitd(application, &directory, roots) {
+                gateway = gateway.with_gitd_supervisor(supervisor);
+            }
+            application.manage(gateway);
             application.manage(crate::TerminalService::new(Arc::new(
                 crate::TauriTerminalListener {
                     application: application.handle().clone(),

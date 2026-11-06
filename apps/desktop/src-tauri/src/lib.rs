@@ -3,6 +3,7 @@
 mod agent_account;
 mod agent_detector;
 mod desktop_application;
+mod gitd_supervisor;
 mod interrupted_runs;
 mod project_commands;
 mod project_service;
@@ -25,6 +26,7 @@ mod workspace_files;
 mod workspace_statistics;
 mod workspace_summary;
 
+pub use gitd_supervisor::GitdSupervisor;
 pub use project_service::ProjectService;
 pub use project_summary::ProjectSummary;
 pub use repository_inspector::{RepositoryInspection, RepositoryInspector};

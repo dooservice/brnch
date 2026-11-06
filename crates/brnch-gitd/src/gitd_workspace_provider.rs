@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use brnch_core::workspace::{
     AgentWorkspace, ConflictAnalyzer, CredentialVault, PublishedBranch, StoredCredential,
     StoredCredentialKind, WorkspaceConflict, WorkspaceDiff, WorkspaceProvider, WorkspaceRequest,
@@ -17,7 +19,16 @@ pub struct GitdWorkspaceProvider {
 
 impl GitdWorkspaceProvider {
     pub async fn connect(settings: BrnchSettings) -> BrnchResult<Self> {
-        let gitd = Gitd::connect(Options::new())
+        Self::connect_with(settings, Options::new()).await
+    }
+
+    /// Connects to the gitd that listens on `socket`, ignoring the environment.
+    pub async fn connect_at(settings: BrnchSettings, socket: &Path) -> BrnchResult<Self> {
+        Self::connect_with(settings, Options::new().socket(socket)).await
+    }
+
+    async fn connect_with(settings: BrnchSettings, options: Options) -> BrnchResult<Self> {
+        let gitd = Gitd::connect(options)
             .await
             .map_err(|failure| GitdFailureTranslator::translate(&failure))?;
         // The channel connects lazily, so only a real call shows whether gitd answers.

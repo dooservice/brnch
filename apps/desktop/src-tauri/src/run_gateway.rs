@@ -9,6 +9,7 @@ use brnch_sandbox::{SandboxSelector, SandboxStatus, SandboxedAgentRunner};
 use brnch_store::SqliteProjectStore;
 use tokio::sync::OnceCell;
 
+use crate::GitdSupervisor;
 use crate::WorkspaceStatistics;
 use crate::{
     ConflictSummary, DiffSummary, PublishOutcome, ReviewService, RunNotifier, RunService,
@@ -69,6 +70,7 @@ pub struct RunGateway {
     workspaces_root: PathBuf,
     read_only_directories: Vec<String>,
     agent_data_directory: PathBuf,
+    gitd_supervisor: Option<GitdSupervisor>,
     connected: OnceCell<Connected>,
 }
 
@@ -84,8 +86,16 @@ impl RunGateway {
             workspaces_root,
             read_only_directories,
             agent_data_directory,
+            gitd_supervisor: None,
             connected: OnceCell::new(),
         }
+    }
+
+    /// Lets the gateway start the gitd that ships with brnch when none it can reach answers.
+    #[must_use]
+    pub fn with_gitd_supervisor(mut self, supervisor: GitdSupervisor) -> Self {
+        self.gitd_supervisor = Some(supervisor);
+        self
     }
 
     pub async fn start(
@@ -206,9 +216,25 @@ impl RunGateway {
         Ok(connected.review.publish(workspace_identifiers).await)
     }
 
+    /// The gitd the environment names or the system runs; failing that, the one brnch ships.
+    async fn connect_provider(
+        &self,
+        settings: &BrnchSettings,
+    ) -> BrnchResult<GitdWorkspaceProvider> {
+        let first = match GitdWorkspaceProvider::connect(settings.clone()).await {
+            Ok(provider) => return Ok(provider),
+            Err(failure) => failure,
+        };
+        let Some(supervisor) = &self.gitd_supervisor else {
+            return Err(first);
+        };
+        let socket = supervisor.ensure_running().await?;
+        GitdWorkspaceProvider::connect_at(settings.clone(), &socket).await
+    }
+
     async fn connect(&self) -> BrnchResult<Connected> {
         let settings = BrnchSettings::default();
-        let provider = Arc::new(GitdWorkspaceProvider::connect(settings.clone()).await?);
+        let provider = Arc::new(self.connect_provider(&settings).await?);
         let process = ProcessAgentRunner::new(settings.git_credential_variables);
         let directories: Vec<&str> = self
             .read_only_directories
