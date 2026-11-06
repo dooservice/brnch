@@ -78,6 +78,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "brnch-events"
+version = "0.1.0"
+dependencies = [
+ "tokio",
+]
+
+[[package]]
 name = "brnch-gitd"
 version = "0.1.0"
 dependencies = [
