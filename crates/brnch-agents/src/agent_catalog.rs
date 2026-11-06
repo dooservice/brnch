@@ -1,4 +1,4 @@
-use brnch_core::agent::AgentDefinition;
+use brnch_core::agent::{AgentDefinition, PermissionMode};
 
 use crate::{AgentKind, ClaudeCodeNormalizer, OutputNormalizer};
 
@@ -7,9 +7,9 @@ use crate::{AgentKind, ClaudeCodeNormalizer, OutputNormalizer};
 pub struct AgentCatalog;
 
 impl AgentCatalog {
-    pub fn definition(&self, kind: AgentKind) -> AgentDefinition {
+    pub fn definition(&self, kind: AgentKind, mode: PermissionMode) -> AgentDefinition {
         match kind {
-            AgentKind::ClaudeCode => AgentDefinition::claude_code(),
+            AgentKind::ClaudeCode => AgentDefinition::claude_code(mode),
         }
     }
 

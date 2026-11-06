@@ -41,6 +41,7 @@ where
                 repository_url: request.repository_url.clone(),
                 directory: request.workspace_directory.clone(),
                 branch_name: branch_name.clone(),
+                base_branch: request.base_branch.clone(),
             })
             .await?;
         let command = agent.command_for(&request.prompt);

@@ -1,4 +1,4 @@
-use super::AgentCommand;
+use super::{AgentCommand, PermissionMode};
 
 /// An agent brnch knows how to start: its name, its program, and the arguments that come
 /// before the prompt.
@@ -21,9 +21,12 @@ impl AgentDefinition {
         }
     }
 
-    /// Claude Code without an interface, allowed to edit files in its workspace, printing one
-    /// JSON message per line.
-    pub fn claude_code() -> Self {
+    /// Claude Code without an interface, printing one JSON message per line.
+    pub fn claude_code(mode: PermissionMode) -> Self {
+        let permission = match mode {
+            PermissionMode::EditFiles => "acceptEdits",
+            PermissionMode::PlanOnly => "plan",
+        };
         Self::new(
             "Claude Code",
             "claude",
@@ -33,7 +36,7 @@ impl AgentDefinition {
                 "stream-json",
                 "--verbose",
                 "--permission-mode",
-                "acceptEdits",
+                permission,
             ],
         )
     }
@@ -44,6 +47,18 @@ impl AgentDefinition {
 
     pub fn command_for(&self, prompt: &str) -> AgentCommand {
         let mut arguments = self.leading_arguments.clone();
+        arguments.push(prompt.to_owned());
+        AgentCommand {
+            program: self.program.clone(),
+            arguments,
+        }
+    }
+
+    /// Continues an earlier session of the agent with a new message.
+    pub fn command_for_resume(&self, prompt: &str, session_identifier: &str) -> AgentCommand {
+        let mut arguments = self.leading_arguments.clone();
+        arguments.push("--resume".to_owned());
+        arguments.push(session_identifier.to_owned());
         arguments.push(prompt.to_owned());
         AgentCommand {
             program: self.program.clone(),

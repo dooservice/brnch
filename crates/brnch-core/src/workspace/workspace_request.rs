@@ -5,4 +5,6 @@ pub struct WorkspaceRequest {
     pub repository_url: String,
     pub directory: String,
     pub branch_name: String,
+    /// The branch to start from; the repository's default when `None`.
+    pub base_branch: Option<String>,
 }

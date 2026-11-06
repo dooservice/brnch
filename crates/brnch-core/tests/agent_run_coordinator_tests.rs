@@ -3,7 +3,7 @@ use std::sync::Mutex;
 
 use brnch_core::agent::{
     AgentCommand, AgentDefinition, AgentOutcome, AgentOutputLine, AgentOutputListener,
-    AgentRunCoordinator, AgentRunRequest, AgentRunner, OutputStream,
+    AgentRunCoordinator, AgentRunRequest, AgentRunner, OutputStream, PermissionMode,
 };
 use brnch_core::workspace::{
     AgentWorkspace, PublishedBranch, WorkspaceDiff, WorkspaceProvider, WorkspaceRequest,
@@ -106,6 +106,7 @@ fn request() -> AgentRunRequest {
         workspace_directory: "/work/agent-1".to_owned(),
         run_label: "Fix login".to_owned(),
         prompt: "make the login work".to_owned(),
+        base_branch: None,
     }
 }
 
@@ -178,7 +179,7 @@ async fn refuses_a_blank_label_before_making_any_workspace() {
 
 #[test]
 fn builds_the_claude_code_command_with_the_prompt_last() {
-    let command = AgentDefinition::claude_code().command_for("fix it");
+    let command = AgentDefinition::claude_code(PermissionMode::EditFiles).command_for("fix it");
 
     assert_eq!(command.program, "claude");
     assert_eq!(
@@ -193,4 +194,25 @@ fn builds_the_claude_code_command_with_the_prompt_last() {
             "fix it"
         ]
     );
+}
+
+#[test]
+fn plan_only_mode_and_resuming_a_session_change_the_claude_command() {
+    let definition = AgentDefinition::claude_code(PermissionMode::PlanOnly);
+
+    let command = definition.command_for_resume("also add tests", "session-9");
+
+    assert!(
+        command
+            .arguments
+            .windows(2)
+            .any(|pair| pair == ["--permission-mode", "plan"])
+    );
+    assert!(
+        command
+            .arguments
+            .windows(2)
+            .any(|pair| pair == ["--resume", "session-9"])
+    );
+    assert_eq!(command.arguments.last().unwrap(), "also add tests");
 }

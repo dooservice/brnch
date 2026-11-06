@@ -5,4 +5,5 @@ pub struct AgentRunRequest {
     pub workspace_directory: String,
     pub run_label: String,
     pub prompt: String,
+    pub base_branch: Option<String>,
 }

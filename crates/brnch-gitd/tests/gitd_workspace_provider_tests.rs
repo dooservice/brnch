@@ -38,6 +38,7 @@ impl IntegrationSubject {
                 repository_url,
                 directory: format!("{root}/brnch-{}", std::process::id()),
                 branch_name,
+                base_branch: None,
             },
         }
     }

@@ -28,6 +28,7 @@ impl WorkspaceProvider for GitdWorkspaceProvider {
     async fn prepare(&self, request: &WorkspaceRequest) -> BrnchResult<AgentWorkspace> {
         let options = PrepareOptions {
             new_branch: Some(request.branch_name.clone()),
+            branch: request.base_branch.clone(),
             ..PrepareOptions::default()
         };
         let prepared = self

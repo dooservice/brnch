@@ -114,6 +114,7 @@ fn item<'item>(
             workspace_directory: directory.to_owned(),
             run_label: label.to_owned(),
             prompt: "work".to_owned(),
+            base_branch: None,
         },
         listener,
     }

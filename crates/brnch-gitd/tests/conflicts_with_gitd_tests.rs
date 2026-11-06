@@ -58,6 +58,7 @@ async fn prepare(provider: &GitdWorkspaceProvider, name: &str) -> AgentWorkspace
             repository_url,
             directory: format!("{root}/brnch-conflict-{name}-{}", std::process::id()),
             branch_name: format!("agents/conflict-{name}"),
+            base_branch: None,
         })
         .await
         .expect("gitd prepares the workspace")

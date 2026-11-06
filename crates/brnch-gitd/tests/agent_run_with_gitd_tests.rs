@@ -42,6 +42,7 @@ async fn an_agent_works_in_a_gitd_workspace_and_its_change_is_read() {
         workspace_directory: format!("{root}/brnch-run-{}", std::process::id()),
         run_label: "write a note".to_owned(),
         prompt: AGENT_SCRIPT.to_owned(),
+        base_branch: None,
     };
     let shell_agent = AgentDefinition::new("Shell", "sh", &["-c"]);
 

@@ -13,6 +13,7 @@ mod agent_run_report;
 mod agent_run_request;
 mod agent_runner;
 mod output_stream;
+mod permission_mode;
 
 pub use agent_batch_coordinator::AgentBatchCoordinator;
 pub use agent_batch_item::AgentBatchItem;
@@ -27,3 +28,4 @@ pub use agent_run_report::AgentRunReport;
 pub use agent_run_request::AgentRunRequest;
 pub use agent_runner::AgentRunner;
 pub use output_stream::OutputStream;
+pub use permission_mode::PermissionMode;

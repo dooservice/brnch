@@ -191,6 +191,7 @@ name = "brnch-core"
 version = "0.1.0"
 dependencies = [
  "futures-util",
+ "serde",
  "thiserror 2.0.21",
  "tokio",
 ]
