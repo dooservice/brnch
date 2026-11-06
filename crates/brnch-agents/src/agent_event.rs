@@ -1,0 +1,26 @@
+/// Something an agent did, in the same shape for every agent.
+#[derive(Debug, Clone, PartialEq)]
+pub enum AgentEvent {
+    SessionStarted {
+        session_identifier: String,
+        model_name: String,
+    },
+    AssistantText(String),
+    ToolRequested {
+        tool_call_identifier: String,
+        tool_name: String,
+        input_summary: String,
+    },
+    ToolCompleted {
+        tool_call_identifier: String,
+        failed: bool,
+    },
+    RunFinished {
+        succeeded: bool,
+        summary: String,
+        cost_in_dollars: Option<f64>,
+        duration_in_milliseconds: Option<u64>,
+    },
+    /// A line the normalizer did not understand. Kept so a format change is visible, not lost.
+    UnparsedOutput(String),
+}

@@ -1,6 +1,7 @@
 [workspace]
 resolver = "3"
-members = ["crates/brnch-core", "crates/brnch-gitd", "crates/brnch-process"]
+members = ["crates/brnch-core", "crates/brnch-gitd",
+    "crates/brnch-agents", "crates/brnch-process"]
 
 [workspace.package]
 version = "0.1.0"
