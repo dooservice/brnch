@@ -3,6 +3,8 @@ name: gitd on Windows
 
 on:
   workflow_dispatch:
+  push:
+    branches: [gitd-windows]
 
 permissions:
   contents: read
@@ -20,7 +22,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force C:\gitd-test | Out-Null
-          Invoke-WebRequest -OutFile C:\gitd-test\gitd.exe https://github.com/dooservice/gitd/releases/download/v0.15.1/gitd-windows-amd64.exe
+          Invoke-WebRequest -OutFile C:\gitd-test\gitd.exe https://github.com/dooservice/gitd/releases/download/0.15.1/gitd-windows-amd64.exe
           @'
           socket = "C:/gitd-test/gitd.sock"
           state = "C:/gitd-test/state"
