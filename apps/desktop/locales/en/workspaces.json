@@ -1,0 +1,53 @@
+{
+  "status": {
+    "idle": "No task yet",
+    "running": "Working",
+    "done": "Ready to review",
+    "failed": "Failed",
+    "working_one": "Working · {{count}} min",
+    "working_other": "Working · {{count}} min",
+    "reviewReady": "Ready to review"
+  },
+  "tabs": { "agent": "Agent", "changes": "Changes", "files": "Files", "terminal": "Terminal" },
+  "actions": { "stop": "Stop", "publish": "Publish" },
+  "missing": { "title": "Workspace not found", "description": "It may have been removed. Pick another one in the sidebar." },
+  "soon": {
+    "files": { "title": "The file editor is not built yet", "description": "It will open and edit the files of this workspace." },
+    "terminal": { "title": "The terminal is not built yet", "description": "It will open a terminal in this workspace's folder." }
+  },
+  "timeline": {
+    "label": "Agent activity",
+    "empty": "The agent has not said anything yet. Its activity will appear here.",
+    "session": "Session started · model {{model}}",
+    "toolRunning": "Running",
+    "toolDone": "Finished",
+    "toolFailed": "Failed",
+    "finished": "Finished",
+    "notFinished": "Did not finish"
+  },
+  "composer": {
+    "label": "Message to the agent",
+    "placeholder": "Write a message to continue with this agent…",
+    "working": "The agent is working…",
+    "noRun": "No task has been started in this workspace.",
+    "send": "Send",
+    "confined": "Confined",
+    "notConfined": "Not confined"
+  },
+  "panel": {
+    "label": "Workspace details",
+    "changes": "Changes",
+    "loading": "Loading…",
+    "noChanges": "No files changed yet.",
+    "gitdChecks": "gitd checks",
+    "aloneNoCompare": "Comparison needs at least two workspaces.",
+    "noClashes": "No clashes with other agents",
+    "clashes_one": "Clashes with {{count}} other agent",
+    "clashes_other": "Clashes with {{count}} other agents",
+    "session": "Session",
+    "agent": "Agent",
+    "state": "State",
+    "duration": "Duration",
+    "cost": "Cost"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "home": {
+    "noProjectsTitle": "Añade tu primer proyecto",
+    "noProjectsDescription": "Un proyecto es un repositorio. brnch guarda lo que tenías abierto en cada uno.",
+    "addFirst": "Añadir proyecto",
+    "chooseTitle": "Elige un workspace",
+    "chooseDescription": "Elige uno en la barra lateral, o lanza una corrida para que los agentes trabajen en una tarea."
+  },
+  "add": {
+    "title": "Añadir proyecto",
+    "description": "Cada proyecto guarda su propio contexto: workspaces y lo que tenías abierto.",
+    "name": "Nombre",
+    "url": "URL del repositorio",
+    "submit": "Añadir proyecto",
+    "errors": {
+      "nameRequired": "Escribe un nombre.",
+      "urlInvalid": "Usa una URL https o ssh, o git@host:ruta."
+    }
+  }
+}

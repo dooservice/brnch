@@ -24,6 +24,13 @@ struct Connected {
     review: ReviewService<GitdWorkspaceProvider, SqliteProjectStore>,
 }
 
+/// The answer to "is gitd there?".
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct GitdStatus {
+    pub connected: bool,
+    pub message: Option<String>,
+}
+
 /// Connects to gitd the first time a run is asked for, so the window opens even when gitd
 /// is not running yet and the person is told what is missing instead.
 pub struct RunGateway {
@@ -79,6 +86,20 @@ impl RunGateway {
         connected
             .runs
             .follow_up(workspace_identifier, prompt, notifier)
+    }
+
+    /// Whether gitd answers. A failure is a normal answer here, not an error: the window shows it.
+    pub async fn gitd_status(&self) -> GitdStatus {
+        match self.connected.get_or_try_init(|| self.connect()).await {
+            Ok(_) => GitdStatus {
+                connected: true,
+                message: None,
+            },
+            Err(failure) => GitdStatus {
+                connected: false,
+                message: Some(failure.to_string()),
+            },
+        }
     }
 
     /// Does not need gitd, so the window can show it before anything is connected.

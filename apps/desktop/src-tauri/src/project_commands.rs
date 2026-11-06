@@ -172,3 +172,15 @@ pub async fn send_follow_up(
 pub fn sandbox_status(gateway: State<'_, RunGateway>) -> brnch_sandbox::SandboxStatus {
     gateway.sandbox_status()
 }
+
+#[tauri::command]
+pub async fn detect_agents() -> Vec<crate::AgentInstallation> {
+    crate::AgentDetector::detect_all().await
+}
+
+#[tauri::command]
+pub async fn gitd_status(
+    gateway: State<'_, RunGateway>,
+) -> Result<crate::run_gateway::GitdStatus, String> {
+    Ok(gateway.gitd_status().await)
+}

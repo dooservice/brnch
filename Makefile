@@ -4,7 +4,7 @@ export HOST_GID := $(shell id -g)
 
 COMPOSE := docker compose run --rm
 
-.PHONY: help images test integration lint format add check frontend-install frontend-add frontend-test frontend-build desktop-check screenshots
+.PHONY: help images test integration lint format add check frontend-install frontend-add frontend-check frontend-test frontend-build desktop-check screenshots
 
 help:
 	@echo "make images                     Build the Docker images"
@@ -49,6 +49,9 @@ frontend-install:
 frontend-add:
 	@test -n "$(PACKAGE)" || (echo "Usage: make frontend-add PACKAGE=lucide-react [FLAGS=-D]" && exit 1)
 	$(COMPOSE) frontend pnpm add $(FLAGS) $(PACKAGE)
+
+frontend-check:
+	$(COMPOSE) frontend pnpm run check
 
 frontend-test:
 	$(COMPOSE) frontend pnpm test

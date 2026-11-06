@@ -1,0 +1,43 @@
+{
+  "steps": "Pasos de configuración",
+  "stepOf": "Paso {{current}} de {{total}}",
+  "checking": "Comprobando…",
+  "ok": "Listo",
+  "problem": "Necesita atención",
+  "retry": "Comprobar de nuevo",
+  "skip": "Omitir por ahora",
+  "back": "Atrás",
+  "next": "Siguiente",
+  "finish": "Terminar",
+  "later": "Puedes repetir cualquiera de estos pasos desde Ajustes.",
+  "gitd": {
+    "name": "gitd",
+    "title": "gitd",
+    "description": "gitd crea el workspace de cada agente y publica con el token que guarda, así los agentes nunca lo reciben.",
+    "connected": "gitd responde.",
+    "hint": "gitd no está en marcha. Arráncalo y comprueba de nuevo."
+  },
+  "isolation": {
+    "name": "Aislamiento",
+    "title": "Aislamiento de los agentes",
+    "description": "Los agentes se ejecutan confinados para que no puedan leer tus llaves ni tu configuración de git. Sin aislamiento brnch no los arranca.",
+    "active": "Los agentes se ejecutarán confinados con {{mechanism}}.",
+    "unknown": "No se pudo leer el estado del aislamiento."
+  },
+  "agents": {
+    "name": "Agentes",
+    "title": "Agentes instalados",
+    "description": "brnch busca los agentes en este equipo.",
+    "found": "Se encontró Claude Code {{version}}",
+    "missing": "No se encontró Claude Code. Instálalo y comprueba de nuevo."
+  },
+  "project": {
+    "name": "Proyecto",
+    "title": "Tu primer proyecto",
+    "description": "Un proyecto es un repositorio. Añade uno para empezar a trabajar con agentes.",
+    "added_one": "{{count}} proyecto añadido.",
+    "added_other": "{{count}} proyectos añadidos.",
+    "none": "Aún no hay ningún proyecto.",
+    "add": "Añadir proyecto"
+  }
+}

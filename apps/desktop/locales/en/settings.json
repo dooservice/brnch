@@ -1,0 +1,36 @@
+{
+  "nav": { "label": "Settings", "back": "Back to the app", "general": "General", "agents": "Agents", "security": "Security" },
+  "general": {
+    "title": "General",
+    "description": "How brnch looks and speaks.",
+    "language": "Language",
+    "languageHint": "It changes right away and is remembered."
+  },
+  "agents": {
+    "title": "Agents",
+    "description": "brnch looks for each agent on this machine and checks it with its own command.",
+    "detectAgain": "Detect again",
+    "checking": "Checking…",
+    "installed": "Installed",
+    "notInstalled": "Not installed",
+    "pendingVerification": "Flags and output format still to be verified",
+    "soon": "Soon",
+    "ownKey": "Each agent's login or API key is its own and it needs it to work. brnch protects git credentials, not the agent's."
+  },
+  "security": {
+    "title": "Security",
+    "description": "Agents do not need your git token to publish. Here you see whether they can be confined.",
+    "active": "Isolation active · {{mechanism}}",
+    "activeHint": "Agents start confined. If isolation stopped being available, they would not run.",
+    "checking": "Checking the isolation…",
+    "inactive": "No isolation available: agents will not run",
+    "unknown": "The state could not be read.",
+    "bySystem": "By system",
+    "systems": {
+      "windows": { "name": "Windows", "mechanism": "Dedicated local account", "state": "Not finished" },
+      "linux": { "name": "Linux", "mechanism": "bubblewrap", "state": "Measured in CI" },
+      "macos": { "name": "macOS", "mechanism": "Seatbelt", "state": "Partial" }
+    },
+    "agentKey": "The agent's own login or API key is out of scope: it needs it to work."
+  }
+}

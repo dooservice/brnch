@@ -1,5 +1,6 @@
 //! The brnch window: a thin Tauri shell. Every rule lives in the crates it calls.
 
+mod agent_detector;
 mod desktop_application;
 mod interrupted_runs;
 mod project_commands;
@@ -7,7 +8,7 @@ mod project_service;
 mod project_summary;
 mod review_service;
 mod review_summaries;
-mod run_gateway;
+pub(crate) mod run_gateway;
 mod run_notice;
 mod run_notifier;
 mod run_service;
@@ -29,5 +30,6 @@ pub use store_and_notify_sink::StoreAndNotifySink;
 pub use tauri_run_notifier::TauriRunNotifier;
 pub use workspace_summary::{WorkspaceStatus, WorkspaceSummary};
 
+pub use agent_detector::{AgentDetector, AgentInstallation};
 pub use desktop_application::run;
 pub use interrupted_runs::close_interrupted_runs;

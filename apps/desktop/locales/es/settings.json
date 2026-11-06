@@ -1,0 +1,36 @@
+{
+  "nav": { "label": "Ajustes", "back": "Volver a la aplicación", "general": "General", "agents": "Agentes", "security": "Seguridad" },
+  "general": {
+    "title": "General",
+    "description": "Cómo se ve y cómo habla brnch.",
+    "language": "Idioma",
+    "languageHint": "Cambia al instante y se recuerda."
+  },
+  "agents": {
+    "title": "Agentes",
+    "description": "brnch busca cada agente en este equipo y lo comprueba con su propio comando.",
+    "detectAgain": "Volver a detectar",
+    "checking": "Comprobando…",
+    "installed": "Instalado",
+    "notInstalled": "No instalado",
+    "pendingVerification": "Banderas y formato de salida por verificar",
+    "soon": "Próximamente",
+    "ownKey": "La sesión o la clave de API de cada agente es suya y la necesita para trabajar. brnch protege las credenciales de git, no las del agente."
+  },
+  "security": {
+    "title": "Seguridad",
+    "description": "Los agentes no necesitan tu token de git para publicar. Aquí ves si se pueden confinar.",
+    "active": "Aislamiento activo · {{mechanism}}",
+    "activeHint": "Los agentes arrancan confinados. Si el aislamiento dejara de estar disponible, no se ejecutarían.",
+    "checking": "Comprobando el aislamiento…",
+    "inactive": "Sin aislamiento disponible: los agentes no se ejecutarán",
+    "unknown": "No se pudo leer el estado.",
+    "bySystem": "Por sistema",
+    "systems": {
+      "windows": { "name": "Windows", "mechanism": "Cuenta local aparte", "state": "Sin terminar" },
+      "linux": { "name": "Linux", "mechanism": "bubblewrap", "state": "Medido en CI" },
+      "macos": { "name": "macOS", "mechanism": "Seatbelt", "state": "Parcial" }
+    },
+    "agentKey": "La sesión o la clave de API del propio agente queda fuera de este alcance: la necesita para trabajar."
+  }
+}

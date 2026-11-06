@@ -1,0 +1,5 @@
+export type { IModule, ModuleManifest, RouteDefinition, SlotEntry, InheritPosition, Registry } from './types'
+export { moduleRegistry, ModuleRegistry } from './module_registry'
+export { routerRegistry, RouterRegistry } from './router_registry'
+export { componentRegistry, ComponentRegistry } from './component_registry'
+export { Slot } from './view/slot'

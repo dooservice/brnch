@@ -1,0 +1,53 @@
+{
+  "status": {
+    "idle": "Sin tarea",
+    "running": "Trabajando",
+    "done": "Listo para revisar",
+    "failed": "Falló",
+    "working_one": "Trabajando · {{count}} min",
+    "working_other": "Trabajando · {{count}} min",
+    "reviewReady": "Listo para revisar"
+  },
+  "tabs": { "agent": "Agente", "changes": "Cambios", "files": "Archivos", "terminal": "Terminal" },
+  "actions": { "stop": "Detener", "publish": "Publicar" },
+  "missing": { "title": "No se encuentra el workspace", "description": "Puede que se haya eliminado. Elige otro en la barra lateral." },
+  "soon": {
+    "files": { "title": "El editor de archivos aún no está construido", "description": "Abrirá y editará los archivos de este workspace." },
+    "terminal": { "title": "La terminal aún no está construida", "description": "Abrirá una terminal en la carpeta de este workspace." }
+  },
+  "timeline": {
+    "label": "Actividad del agente",
+    "empty": "El agente aún no ha dicho nada. Su actividad aparecerá aquí.",
+    "session": "Sesión iniciada · modelo {{model}}",
+    "toolRunning": "En curso",
+    "toolDone": "Terminó bien",
+    "toolFailed": "Falló",
+    "finished": "Terminó",
+    "notFinished": "No terminó"
+  },
+  "composer": {
+    "label": "Mensaje para el agente",
+    "placeholder": "Escribe un mensaje para continuar con este agente…",
+    "working": "El agente está trabajando…",
+    "noRun": "No se ha iniciado ninguna tarea en este workspace.",
+    "send": "Enviar",
+    "confined": "Confinado",
+    "notConfined": "Sin confinar"
+  },
+  "panel": {
+    "label": "Detalles del workspace",
+    "changes": "Cambios",
+    "loading": "Cargando…",
+    "noChanges": "Aún no ha cambiado ningún archivo.",
+    "gitdChecks": "Comprobaciones de gitd",
+    "aloneNoCompare": "Comparar necesita al menos dos workspaces.",
+    "noClashes": "Sin choques con otros agentes",
+    "clashes_one": "Choca con {{count}} otro agente",
+    "clashes_other": "Choca con {{count}} otros agentes",
+    "session": "Sesión",
+    "agent": "Agente",
+    "state": "Estado",
+    "duration": "Duración",
+    "cost": "Coste"
+  }
+}

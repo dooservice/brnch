@@ -31,3 +31,33 @@ body {
   font-family: var(--font-sans);
   font-size: 13px;
 }
+
+@layer components {
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-red {
+    @apply inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-3 font-medium outline-none transition-colors disabled:pointer-events-none disabled:opacity-40;
+  }
+  .btn-primary {
+    @apply bg-ink text-canvas hover:bg-white;
+  }
+  .btn-secondary {
+    @apply border border-line text-ink hover:bg-hover;
+  }
+  .btn-ghost {
+    @apply text-muted hover:text-ink;
+  }
+  .btn-red {
+    @apply bg-danger text-white hover:opacity-90;
+  }
+  .field {
+    @apply h-8.5 w-full rounded-md border border-line bg-canvas px-2.5 outline-none focus:border-[#55555f] aria-invalid:border-danger;
+  }
+  .overlay {
+    @apply fixed inset-0 bg-black/65;
+  }
+  .modal {
+    @apply fixed left-1/2 top-20 -translate-x-1/2 rounded-xl border border-[#33333b] bg-card shadow-2xl;
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "home": {
+    "noProjectsTitle": "Add your first project",
+    "noProjectsDescription": "A project is a repository. brnch keeps what you had open in each one.",
+    "addFirst": "Add project",
+    "chooseTitle": "Choose a workspace",
+    "chooseDescription": "Pick one in the sidebar, or start a run to have agents work on a task."
+  },
+  "add": {
+    "title": "Add project",
+    "description": "Each project keeps its own context: workspaces and what you had open.",
+    "name": "Name",
+    "url": "Repository URL",
+    "submit": "Add project",
+    "errors": {
+      "nameRequired": "Write a name.",
+      "urlInvalid": "Use an https or ssh URL, or git@host:path."
+    }
+  }
+}

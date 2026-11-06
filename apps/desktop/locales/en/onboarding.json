@@ -1,0 +1,43 @@
+{
+  "steps": "Setup steps",
+  "stepOf": "Step {{current}} of {{total}}",
+  "checking": "Checking…",
+  "ok": "Ready",
+  "problem": "Needs attention",
+  "retry": "Check again",
+  "skip": "Skip for now",
+  "back": "Back",
+  "next": "Next",
+  "finish": "Finish",
+  "later": "You can repeat any of these steps from Settings.",
+  "gitd": {
+    "name": "gitd",
+    "title": "gitd",
+    "description": "gitd creates each agent's workspace and publishes with the token it holds, so agents never get it.",
+    "connected": "gitd answers.",
+    "hint": "gitd is not running. Start it and check again."
+  },
+  "isolation": {
+    "name": "Isolation",
+    "title": "Agent isolation",
+    "description": "Agents run confined so they cannot read your keys or your git configuration. Without isolation brnch does not start them.",
+    "active": "Agents will run confined with {{mechanism}}.",
+    "unknown": "The isolation state could not be read."
+  },
+  "agents": {
+    "name": "Agents",
+    "title": "Installed agents",
+    "description": "brnch looks for the agents on this machine.",
+    "found": "Claude Code found {{version}}",
+    "missing": "Claude Code was not found. Install it and check again."
+  },
+  "project": {
+    "name": "Project",
+    "title": "Your first project",
+    "description": "A project is a repository. Add one to start working with agents.",
+    "added_one": "{{count}} project added.",
+    "added_other": "{{count}} projects added.",
+    "none": "No project yet.",
+    "add": "Add project"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "search": "Search projects and workspaces",
+  "window": { "minimize": "Minimize", "maximize": "Maximize", "close": "Close" },
+  "menu": {
+    "file": "File",
+    "view": "View",
+    "agents": "Agents",
+    "addProject": "Add project…",
+    "settings": "Settings",
+    "palette": "Search…",
+    "newRun": "New run…"
+  },
+  "sidebar": {
+    "projects": "Projects",
+    "search": "Search",
+    "addProject": "Add project",
+    "empty": "No projects yet. Add the first one with the + button.",
+    "newRun": "New run",
+    "runGroup": "Run · {{title}}",
+    "agentCount_one": "{{count}} agent",
+    "agentCount_other": "{{count}} agents",
+    "working_one": "{{count}} agent working",
+    "working_other": "{{count}} agents working",
+    "sandboxActive": "Isolation active",
+    "sandboxInactive": "No isolation: agents will not run",
+    "sandboxUnknown": "Checking isolation…",
+    "settings": "Settings"
+  },
+  "status": {
+    "gitdChecking": "Checking gitd…",
+    "gitdConnected": "gitd connected",
+    "gitdDown": "gitd not available",
+    "running_one": "{{count}} agent running",
+    "running_other": "{{count}} agents running"
+  },
+  "palette": {
+    "label": "Command palette",
+    "hint": "Type to filter and press Enter to open.",
+    "placeholder": "Search projects and workspaces",
+    "empty": "No results.",
+    "workspaces": "Workspaces",
+    "projects": "Projects",
+    "actions": "Actions",
+    "workspaceCount_one": "{{count}} workspace",
+    "workspaceCount_other": "{{count}} workspaces",
+    "newRun": "New run",
+    "addProject": "Add project…",
+    "settings": "Open settings",
+    "restores": "On entering you return to",
+    "workspace": "Workspace",
+    "nothingSaved": "Nothing saved yet: you will land on the project's start page.",
+    "tab": "Tab: {{tab}}",
+    "tabs": { "agent": "Agent", "changes": "Changes", "files": "Files", "terminal": "Terminal" },
+    "contextNote": "What you had open is saved on disk for each project. Switching only loads the destination's; the one you leave stays as it was."
+  }
+}

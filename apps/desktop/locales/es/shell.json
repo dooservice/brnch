@@ -1,0 +1,56 @@
+{
+  "search": "Buscar proyectos y workspaces",
+  "window": { "minimize": "Minimizar", "maximize": "Maximizar", "close": "Cerrar" },
+  "menu": {
+    "file": "Archivo",
+    "view": "Ver",
+    "agents": "Agentes",
+    "addProject": "Añadir proyecto…",
+    "settings": "Ajustes",
+    "palette": "Buscar…",
+    "newRun": "Nueva corrida…"
+  },
+  "sidebar": {
+    "projects": "Proyectos",
+    "search": "Buscar",
+    "addProject": "Añadir proyecto",
+    "empty": "Aún no hay proyectos. Añade el primero con el botón +.",
+    "newRun": "Nueva corrida",
+    "runGroup": "Corrida · {{title}}",
+    "agentCount_one": "{{count}} agente",
+    "agentCount_other": "{{count}} agentes",
+    "working_one": "{{count}} agente trabajando",
+    "working_other": "{{count}} agentes trabajando",
+    "sandboxActive": "Aislamiento activo",
+    "sandboxInactive": "Sin aislamiento: los agentes no se ejecutarán",
+    "sandboxUnknown": "Comprobando el aislamiento…",
+    "settings": "Ajustes"
+  },
+  "status": {
+    "gitdChecking": "Comprobando gitd…",
+    "gitdConnected": "gitd conectado",
+    "gitdDown": "gitd no disponible",
+    "running_one": "{{count}} agente en ejecución",
+    "running_other": "{{count}} agentes en ejecución"
+  },
+  "palette": {
+    "label": "Paleta de comandos",
+    "hint": "Escribe para filtrar y pulsa Enter para abrir.",
+    "placeholder": "Buscar proyectos y workspaces",
+    "empty": "Sin resultados.",
+    "workspaces": "Workspaces",
+    "projects": "Proyectos",
+    "actions": "Acciones",
+    "workspaceCount_one": "{{count}} workspace",
+    "workspaceCount_other": "{{count}} workspaces",
+    "newRun": "Nueva corrida",
+    "addProject": "Añadir proyecto…",
+    "settings": "Abrir ajustes",
+    "restores": "Al entrar vuelves a",
+    "workspace": "Workspace",
+    "nothingSaved": "Aún no hay nada guardado: entrarás a la página de inicio del proyecto.",
+    "tab": "Pestaña: {{tab}}",
+    "tabs": { "agent": "Agente", "changes": "Cambios", "files": "Archivos", "terminal": "Terminal" },
+    "contextNote": "Lo que tenías abierto se guarda en disco por proyecto. Cambiar solo carga el del destino; el que dejas queda como estaba."
+  }
+}
