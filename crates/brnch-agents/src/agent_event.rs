@@ -4,6 +4,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum AgentEvent {
+    /// What the person asked, recorded when a run or a follow-up starts.
+    UserMessage {
+        text: String,
+    },
     SessionStarted {
         session_identifier: String,
         model_name: String,

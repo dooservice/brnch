@@ -12,4 +12,7 @@ pub trait EventHistoryStore {
         workspace: &WorkspaceId,
         after_sequence: u64,
     ) -> BrnchResult<Vec<StoredEvent>>;
+
+    /// The newest event of the workspace, if it has any.
+    fn last_event(&self, workspace: &WorkspaceId) -> BrnchResult<Option<StoredEvent>>;
 }

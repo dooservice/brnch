@@ -228,3 +228,82 @@ fn a_workspace_can_be_found_by_its_identifier() {
         None
     );
 }
+
+mod run_records {
+    use brnch_core::project::{
+        EventHistoryStore, ProjectStore, RunRecordStore, WorkspaceRunDetails,
+    };
+    use brnch_store::SqliteProjectStore;
+
+    fn details(title: &str) -> WorkspaceRunDetails {
+        WorkspaceRunDetails {
+            run_identifier: "run-1".to_owned(),
+            agent_kind: "claude_code".to_owned(),
+            title: title.to_owned(),
+            prompt: "do the thing".to_owned(),
+            started_at_milliseconds: 1_000,
+        }
+    }
+
+    #[test]
+    fn a_workspace_remembers_its_task_and_the_newest_event() {
+        let store = SqliteProjectStore::open_in_memory().unwrap();
+        let project = store.add_project("p", "https://example.com/p").unwrap();
+        let workspace = store
+            .add_workspace(&project.identifier, "/w", "agents/a")
+            .unwrap();
+
+        store
+            .record_run(&workspace.identifier, &details("First"))
+            .unwrap();
+        store
+            .append_event(&workspace.identifier, "{\"n\":1}")
+            .unwrap();
+        store
+            .append_event(&workspace.identifier, "{\"n\":2}")
+            .unwrap();
+
+        assert_eq!(
+            store.find_run(&workspace.identifier).unwrap(),
+            Some(details("First"))
+        );
+        assert_eq!(
+            store
+                .last_event(&workspace.identifier)
+                .unwrap()
+                .unwrap()
+                .sequence,
+            2
+        );
+        assert_eq!(
+            store.workspaces_with_runs().unwrap(),
+            vec![workspace.identifier]
+        );
+    }
+
+    #[test]
+    fn recording_again_replaces_the_task_and_a_workspace_without_events_has_no_last_event() {
+        let store = SqliteProjectStore::open_in_memory().unwrap();
+        let project = store.add_project("p", "https://example.com/p").unwrap();
+        let workspace = store
+            .add_workspace(&project.identifier, "/w", "agents/a")
+            .unwrap();
+        store
+            .record_run(&workspace.identifier, &details("First"))
+            .unwrap();
+
+        store
+            .record_run(&workspace.identifier, &details("Second"))
+            .unwrap();
+
+        assert_eq!(
+            store
+                .find_run(&workspace.identifier)
+                .unwrap()
+                .unwrap()
+                .title,
+            "Second"
+        );
+        assert_eq!(store.last_event(&workspace.identifier).unwrap(), None);
+    }
+}

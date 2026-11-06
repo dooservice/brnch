@@ -134,6 +134,9 @@ mod listener {
     #[test]
     fn every_kind_of_event_can_be_written_as_json_and_read_back() {
         let events = vec![
+            AgentEvent::UserMessage {
+                text: "do it".to_owned(),
+            },
             AgentEvent::SessionStarted {
                 session_identifier: "s".to_owned(),
                 model_name: "m".to_owned(),

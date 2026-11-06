@@ -3,8 +3,8 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use brnch_core::project::{
-    EventHistoryStore, ProjectId, ProjectRecord, ProjectStore, ProjectView, StoredEvent,
-    WorkspaceId, WorkspaceRecord,
+    EventHistoryStore, ProjectId, ProjectRecord, ProjectStore, ProjectView, RunRecordStore,
+    StoredEvent, WorkspaceId, WorkspaceRecord, WorkspaceRunDetails,
 };
 use brnch_core::{BrnchError, BrnchResult};
 use rusqlite::{Connection, OptionalExtension, params};
@@ -297,6 +297,23 @@ impl EventHistoryStore for SqliteProjectStore {
         Ok(u64::try_from(next).unwrap_or_default())
     }
 
+    fn last_event(&self, workspace: &WorkspaceId) -> BrnchResult<Option<StoredEvent>> {
+        self.connection()
+            .query_row(
+                "SELECT sequence, event_json FROM workspace_events
+                 WHERE workspace_identifier = ?1 ORDER BY sequence DESC LIMIT 1",
+                [workspace.as_str()],
+                |row| {
+                    Ok(StoredEvent {
+                        sequence: u64::try_from(row.get::<_, i64>(0)?).unwrap_or_default(),
+                        event_json: row.get(1)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(Self::failure)
+    }
+
     fn list_events(
         &self,
         workspace: &WorkspaceId,
@@ -317,6 +334,68 @@ impl EventHistoryStore for SqliteProjectStore {
                     event_json: row.get(1)?,
                 })
             })
+            .and_then(Iterator::collect)
+            .map_err(Self::failure)
+    }
+}
+
+impl RunRecordStore for SqliteProjectStore {
+    fn record_run(
+        &self,
+        workspace: &WorkspaceId,
+        details: &WorkspaceRunDetails,
+    ) -> BrnchResult<()> {
+        self.connection()
+            .execute(
+                "INSERT INTO workspace_runs
+                    (workspace_identifier, run_identifier, agent_kind, title, prompt, started_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+                 ON CONFLICT(workspace_identifier) DO UPDATE SET
+                    run_identifier = excluded.run_identifier,
+                    agent_kind = excluded.agent_kind,
+                    title = excluded.title,
+                    prompt = excluded.prompt,
+                    started_at = excluded.started_at",
+                params![
+                    workspace.as_str(),
+                    details.run_identifier,
+                    details.agent_kind,
+                    details.title,
+                    details.prompt,
+                    details.started_at_milliseconds
+                ],
+            )
+            .map_err(Self::failure)?;
+        Ok(())
+    }
+
+    fn find_run(&self, workspace: &WorkspaceId) -> BrnchResult<Option<WorkspaceRunDetails>> {
+        self.connection()
+            .query_row(
+                "SELECT run_identifier, agent_kind, title, prompt, started_at
+                 FROM workspace_runs WHERE workspace_identifier = ?1",
+                [workspace.as_str()],
+                |row| {
+                    Ok(WorkspaceRunDetails {
+                        run_identifier: row.get(0)?,
+                        agent_kind: row.get(1)?,
+                        title: row.get(2)?,
+                        prompt: row.get(3)?,
+                        started_at_milliseconds: row.get(4)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(Self::failure)
+    }
+
+    fn workspaces_with_runs(&self) -> BrnchResult<Vec<WorkspaceId>> {
+        let connection = self.connection();
+        let mut statement = connection
+            .prepare("SELECT workspace_identifier FROM workspace_runs ORDER BY started_at")
+            .map_err(Self::failure)?;
+        statement
+            .query_map([], |row| Ok(WorkspaceId::new(&row.get::<_, String>(0)?)))
             .and_then(Iterator::collect)
             .map_err(Self::failure)
     }
