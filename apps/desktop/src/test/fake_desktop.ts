@@ -23,6 +23,8 @@ export class FakeDesktop {
   agents: AgentInstallation[] = [{ kind: 'claude_code', installed: true, version: '2.1.0' }]
   gitd: GitdStatus = { connected: true, message: null }
   statistics: Array<{ workspaceIdentifier: string; files: number; added: number; removed: number }> = []
+  terminalBacklog = ''
+  terminalFailure: string | null = null
   publishFailure: string | null = null
   readonly calls: Array<{ name: string; args: Record<string, unknown> | undefined }> = []
   private counter = 0
@@ -125,6 +127,12 @@ export class FakeDesktop {
       case 'stop_run':
       case 'send_follow_up':
         return name === 'stop_run' ? true : null
+      case 'open_terminal':
+        if (this.terminalFailure !== null) throw this.terminalFailure
+        return { terminalIdentifier: 'terminal-1', backlogBase64: this.terminalBacklog }
+      case 'write_terminal':
+      case 'resize_terminal':
+        return null
       case 'sandbox_status':
         return this.sandbox
       case 'detect_agents':

@@ -44,6 +44,11 @@ pub fn run() {
                 workspaces_root,
                 read_only_directories(),
             ));
+            application.manage(crate::TerminalService::new(Arc::new(
+                crate::TauriTerminalListener {
+                    application: application.handle().clone(),
+                },
+            )));
             application.manage(ProjectService::new(store));
             Ok(())
         })
@@ -68,6 +73,10 @@ pub fn run() {
             project_commands::gitd_status,
             project_commands::inspect_repository,
             project_commands::workspace_statistics,
+            project_commands::open_terminal,
+            project_commands::write_terminal,
+            project_commands::resize_terminal,
+            project_commands::close_terminal,
         ])
         .run(tauri::generate_context!())
         .expect("the brnch window failed to start");

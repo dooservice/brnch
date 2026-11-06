@@ -74,14 +74,6 @@ describe('workspace agent tab', () => {
     expect(screen.queryByText('Confinado')).not.toBeInTheDocument()
   })
 
-  it('says that the editor and terminal are not built yet', async () => {
-    const web = desktop.addProject('web-store')
-    const workspace = desktop.addWorkspace(web)
-    renderApp(`/workspaces/${workspace.identifier}/terminal`)
-
-    expect(await screen.findByText('La terminal aún no está construida')).toBeInTheDocument()
-  })
-
   it('tells when the workspace does not exist', async () => {
     desktop.addProject('web-store')
     renderApp('/workspaces/nope')

@@ -207,3 +207,51 @@ pub async fn workspace_statistics(
         .await
         .map_err(|failure| describe(&failure))
 }
+
+#[tauri::command]
+pub fn open_terminal(
+    service: Service,
+    terminals: State<'_, crate::TerminalService>,
+    workspace_identifier: String,
+    rows: u16,
+    columns: u16,
+) -> Result<crate::TerminalAttachment, String> {
+    let directory = service
+        .workspace_directory(&workspace_identifier)
+        .map_err(|failure| describe(&failure))?;
+    terminals
+        .attach(&workspace_identifier, &directory, rows, columns)
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub fn write_terminal(
+    terminals: State<'_, crate::TerminalService>,
+    workspace_identifier: String,
+    data_base64: String,
+) -> Result<(), String> {
+    use base64::Engine as _;
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(data_base64)
+        .map_err(|failure| failure.to_string())?;
+    terminals
+        .write(&workspace_identifier, &bytes)
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub fn resize_terminal(
+    terminals: State<'_, crate::TerminalService>,
+    workspace_identifier: String,
+    rows: u16,
+    columns: u16,
+) -> Result<(), String> {
+    terminals
+        .resize(&workspace_identifier, rows, columns)
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub fn close_terminal(terminals: State<'_, crate::TerminalService>, workspace_identifier: String) {
+    terminals.close(&workspace_identifier);
+}

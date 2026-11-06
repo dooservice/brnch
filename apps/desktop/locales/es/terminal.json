@@ -1,0 +1,4 @@
+{
+  "label": "Terminal del workspace",
+  "failed": "No se pudo abrir la terminal: {{reason}}"
+}

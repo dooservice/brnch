@@ -90,6 +90,19 @@ impl<Store: ProjectStore> ProjectService<Store> {
 }
 
 impl<Store: ProjectStore + EventHistoryStore + RunRecordStore> ProjectService<Store> {
+    /// The folder of a workspace, where its terminal and its files live.
+    pub fn workspace_directory(
+        &self,
+        workspace_identifier: &str,
+    ) -> BrnchResult<std::path::PathBuf> {
+        self.store
+            .find_workspace(&WorkspaceId::new(workspace_identifier))?
+            .map(|record| std::path::PathBuf::from(record.directory))
+            .ok_or_else(|| {
+                brnch_core::BrnchError::UnknownWorkspace(workspace_identifier.to_owned())
+            })
+    }
+
     pub fn list_workspaces(&self, project_identifier: &str) -> BrnchResult<Vec<WorkspaceSummary>> {
         self.store
             .list_workspaces(&ProjectId::new(project_identifier))?
