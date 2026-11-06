@@ -18,7 +18,9 @@ impl AgentOutputListener for NormalizingListener<'_> {
     fn received(&self, line: AgentOutputLine) {
         let events = match line.stream {
             OutputStream::Standard => self.normalizer.normalize_line(&line.text),
-            OutputStream::Error => vec![AgentEvent::UnparsedOutput(line.text)],
+            OutputStream::Error => vec![AgentEvent::UnparsedOutput {
+                raw_line: line.text,
+            }],
         };
         for event in events {
             self.sink.publish(event);

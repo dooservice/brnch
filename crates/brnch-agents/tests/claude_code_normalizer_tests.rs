@@ -16,7 +16,9 @@ fn a_recorded_run_becomes_the_expected_events_in_order() {
             session_identifier: "sess-1".to_owned(),
             model_name: "claude-sonnet-5-5".to_owned(),
         },
-        AgentEvent::AssistantText("I will edit the file.".to_owned()),
+        AgentEvent::AssistantText {
+            text: "I will edit the file.".to_owned(),
+        },
         AgentEvent::ToolRequested {
             tool_call_identifier: "toolu_1".to_owned(),
             tool_name: "Edit".to_owned(),
@@ -47,9 +49,9 @@ fn a_line_that_is_not_json_is_kept_as_unparsed_output() {
 
     assert_eq!(
         events,
-        vec![AgentEvent::UnparsedOutput(
-            "Error: not logged in".to_owned()
-        )]
+        vec![AgentEvent::UnparsedOutput {
+            raw_line: "Error: not logged in".to_owned()
+        }]
     );
 }
 
@@ -59,7 +61,9 @@ fn an_unknown_message_type_is_kept_as_unparsed_output() {
 
     assert_eq!(
         ClaudeCodeNormalizer.normalize_line(line),
-        vec![AgentEvent::UnparsedOutput(line.to_owned())]
+        vec![AgentEvent::UnparsedOutput {
+            raw_line: line.to_owned()
+        }]
     );
 }
 
@@ -121,8 +125,46 @@ mod listener {
         ));
         assert_eq!(
             events[1],
-            AgentEvent::UnparsedOutput("warning: slow disk".to_owned())
+            AgentEvent::UnparsedOutput {
+                raw_line: "warning: slow disk".to_owned()
+            }
         );
+    }
+
+    #[test]
+    fn every_kind_of_event_can_be_written_as_json_and_read_back() {
+        let events = vec![
+            AgentEvent::SessionStarted {
+                session_identifier: "s".to_owned(),
+                model_name: "m".to_owned(),
+            },
+            AgentEvent::AssistantText {
+                text: "hello".to_owned(),
+            },
+            AgentEvent::ToolRequested {
+                tool_call_identifier: "t".to_owned(),
+                tool_name: "Edit".to_owned(),
+                input_summary: "{}".to_owned(),
+            },
+            AgentEvent::ToolCompleted {
+                tool_call_identifier: "t".to_owned(),
+                failed: false,
+            },
+            AgentEvent::RunFinished {
+                succeeded: true,
+                summary: "ok".to_owned(),
+                cost_in_dollars: Some(0.1),
+                duration_in_milliseconds: Some(5),
+            },
+            AgentEvent::UnparsedOutput {
+                raw_line: "??".to_owned(),
+            },
+        ];
+
+        for event in events {
+            let json = serde_json::to_string(&event).expect("every variant serializes");
+            assert_eq!(serde_json::from_str::<AgentEvent>(&json).unwrap(), event);
+        }
     }
 
     #[test]

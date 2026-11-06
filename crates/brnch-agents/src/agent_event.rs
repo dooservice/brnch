@@ -8,7 +8,9 @@ pub enum AgentEvent {
         session_identifier: String,
         model_name: String,
     },
-    AssistantText(String),
+    AssistantText {
+        text: String,
+    },
     ToolRequested {
         tool_call_identifier: String,
         tool_name: String,
@@ -25,5 +27,7 @@ pub enum AgentEvent {
         duration_in_milliseconds: Option<u64>,
     },
     /// A line the normalizer did not understand. Kept so a format change is visible, not lost.
-    UnparsedOutput(String),
+    UnparsedOutput {
+        raw_line: String,
+    },
 }

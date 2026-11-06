@@ -11,7 +11,9 @@ pub struct ClaudeCodeNormalizer;
 impl OutputNormalizer for ClaudeCodeNormalizer {
     fn normalize_line(&self, line: &str) -> Vec<AgentEvent> {
         let Ok(message) = serde_json::from_str::<Value>(line) else {
-            return vec![AgentEvent::UnparsedOutput(line.to_owned())];
+            return vec![AgentEvent::UnparsedOutput {
+                raw_line: line.to_owned(),
+            }];
         };
         let events = match message["type"].as_str() {
             Some("system") => Self::session_events(&message),
@@ -21,7 +23,9 @@ impl OutputNormalizer for ClaudeCodeNormalizer {
             _ => Vec::new(),
         };
         if events.is_empty() && !Self::is_known_without_events(&message) {
-            return vec![AgentEvent::UnparsedOutput(line.to_owned())];
+            return vec![AgentEvent::UnparsedOutput {
+                raw_line: line.to_owned(),
+            }];
         }
         events
     }
@@ -56,7 +60,9 @@ impl ClaudeCodeNormalizer {
 
     fn assistant_block_event(block: &Value) -> Option<AgentEvent> {
         match block["type"].as_str()? {
-            "text" => Some(AgentEvent::AssistantText(Self::text_of(&block["text"]))),
+            "text" => Some(AgentEvent::AssistantText {
+                text: Self::text_of(&block["text"]),
+            }),
             "tool_use" => Some(AgentEvent::ToolRequested {
                 tool_call_identifier: Self::text_of(&block["id"]),
                 tool_name: Self::text_of(&block["name"]),
