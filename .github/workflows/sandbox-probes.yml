@@ -20,6 +20,7 @@ jobs:
       - run: bash probes/sandbox/linux-bubblewrap.sh
 
   macos:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7

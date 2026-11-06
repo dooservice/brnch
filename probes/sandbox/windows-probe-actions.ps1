@@ -5,6 +5,9 @@ param(
     [string]$Workspace,
     [string]$Pool,
     [string]$UserToolPath,
+    [string]$SshCanaryName = 'id_test',
+    [string]$GhCanaryName = 'hosts.yml',
+    [string]$ToolList = '',
     [string]$OutputFile
 )
 
@@ -14,14 +17,17 @@ function Add-Result([string]$label, [string]$result, [string]$detail) {
     $script:lines += "$label|$result|$detail"
 }
 
+function Limit-Text([string]$text) {
+    if ($text.Length -gt 60) { return $text.Substring(0, 60) }
+    return $text
+}
+
 function Test-ReadAccess([string]$label, [string]$path) {
     try {
         $null = Get-Content -LiteralPath $path -ErrorAction Stop
         Add-Result $label 'accesible' ''
     } catch {
-        $message = $_.Exception.Message
-        if ($message.Length -gt 60) { $message = $message.Substring(0, 60) }
-        Add-Result $label 'bloqueado' $message
+        Add-Result $label 'bloqueado' (Limit-Text $_.Exception.Message)
     }
 }
 
@@ -30,14 +36,12 @@ function Test-Command([string]$label, [scriptblock]$command) {
         $null = & $command 2>&1
         if ($LASTEXITCODE -eq 0) { Add-Result $label 'funciona' '' } else { Add-Result $label 'falla' "código $LASTEXITCODE" }
     } catch {
-        $message = $_.Exception.Message
-        if ($message.Length -gt 60) { $message = $message.Substring(0, 60) }
-        Add-Result $label 'falla' $message
+        Add-Result $label 'falla' (Limit-Text $_.Exception.Message)
     }
 }
 
-Test-ReadAccess 'leer %USERPROFILE%\.ssh\id_test' (Join-Path $RealProfile '.ssh\id_test')
-Test-ReadAccess 'leer gh hosts.yml en AppData' (Join-Path $RealAppData 'GitHub CLI\hosts.yml')
+Test-ReadAccess 'leer la llave de prueba en .ssh' (Join-Path $RealProfile ".ssh\$SshCanaryName")
+Test-ReadAccess 'leer la configuración de gh de prueba' (Join-Path $RealAppData "GitHub CLI\$GhCanaryName")
 
 $credentialList = (cmdkey /list 2>&1 | Out-String)
 if ($credentialList -match 'brnch-canary') {
@@ -62,12 +66,17 @@ try {
     Set-Content -LiteralPath (Join-Path $Workspace 'written-by-probe.txt') -Value 'ok' -ErrorAction Stop
     Add-Result 'escribir en el workspace' 'funciona' ''
 } catch {
-    Add-Result 'escribir en el workspace' 'falla' $_.Exception.Message
+    Add-Result 'escribir en el workspace' 'falla' (Limit-Text $_.Exception.Message)
 }
 Test-ReadAccess 'leer el pool' (Join-Path $Pool 'object.txt')
 Test-Command 'git --version' { git --version }
 Test-Command 'node -v' { node -v }
 Test-Command 'git ls-remote por HTTPS' { git ls-remote https://github.com/dooservice/gitd HEAD }
 Test-Command 'herramienta instalada en el perfil del usuario' { & $UserToolPath }
+
+foreach ($entry in ($ToolList -split ';' | Where-Object { $_ })) {
+    $toolName, $toolPath = $entry -split '=', 2
+    Test-Command "tu herramienta real: $toolName" { & $toolPath --version }
+}
 
 Set-Content -LiteralPath $OutputFile -Value $script:lines
