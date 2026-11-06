@@ -7,34 +7,57 @@ import { chromium } from "playwright-core";
 
 const DIST = join(import.meta.dirname, "..", "dist");
 const OUTPUT = import.meta.dirname;
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css" };
+const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2" };
 
 const projects = [
   { identifier: "p1", name: "web-store", repositoryUrl: "https://github.com/acme/web-store" },
   { identifier: "p2", name: "billing-api", repositoryUrl: "https://github.com/acme/billing-api" },
   { identifier: "p3", name: "mobile-app", repositoryUrl: "https://github.com/acme/mobile-app" },
 ];
-const workspaces = [
-  { identifier: "w1", directory: "/work/web-store/fix-login", branchName: "agents/fix-login" },
-  { identifier: "w2", directory: "/work/web-store/add-search", branchName: "agents/add-search" },
-  { identifier: "w3", directory: "/work/web-store/dark-mode", branchName: "agents/dark-mode" },
-];
+const workspacesByProject = {
+  p1: [
+    { identifier: "w1", directory: "D:\\brnch\\web-store\\add-search", branchName: "agents/add-search" },
+    { identifier: "w2", directory: "D:\\brnch\\web-store\\fix-login", branchName: "agents/fix-login" },
+    { identifier: "w3", directory: "D:\\brnch\\web-store\\dark-mode", branchName: "agents/dark-mode" },
+  ],
+  p2: [{ identifier: "w4", directory: "D:\\brnch\\billing-api\\invoice-pdf", branchName: "agents/invoice-pdf" }],
+  p3: [],
+};
 
 const scenarios = [
   { file: "01-empty", projects: [], active: null },
-  { file: "02-projects-none-open", projects, active: null },
-  { file: "03-project-with-workspaces", projects, active: "p1", workspaces },
-  { file: "04-adding-a-project", projects, active: "p1", workspaces, fill: true },
+  { file: "02-project-open", projects, active: "p1" },
+  {
+    file: "03-workspace-selected",
+    projects,
+    active: "p1",
+    act: async (page) => page.getByRole("button", { name: /agents\/add-search/ }).click(),
+  },
+  {
+    file: "04-command-palette",
+    projects,
+    active: "p1",
+    act: async (page) => page.keyboard.press("Control+k"),
+  },
+  {
+    file: "05-add-project",
+    projects,
+    active: "p1",
+    act: async (page) => {
+      await page.getByRole("button", { name: "Añadir proyecto" }).click();
+      await page.getByLabel("Nombre").fill("docs-site");
+      await page.getByLabel("URL del repositorio").fill("https://github.com/acme/docs-site");
+    },
+  },
 ];
 
 function fakeBackend(scenario) {
-  const data = { ...scenario, workspaces: scenario.workspaces ?? [] };
   window.__TAURI_INTERNALS__ = {
-    invoke: async (command) => {
+    invoke: async (command, args) => {
       switch (command) {
-        case "list_projects": return data.projects;
-        case "active_project_identifier": return data.active;
-        case "list_workspaces": return data.workspaces;
+        case "list_projects": return scenario.projects;
+        case "active_project_identifier": return scenario.active;
+        case "list_workspaces": return scenario.workspacesByProject[args.projectIdentifier] ?? [];
         default: return null;
       }
     },
@@ -57,13 +80,11 @@ const { port } = server.address();
 const browser = await chromium.launch();
 for (const scenario of scenarios) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-  await page.addInitScript(fakeBackend, scenario);
+  await page.addInitScript(fakeBackend, { ...scenario, workspacesByProject });
   await page.goto(`http://localhost:${port}/`);
+  await page.waitForTimeout(400);
+  await scenario.act?.(page);
   await page.waitForTimeout(300);
-  if (scenario.fill) {
-    await page.locator("input[name=name]").fill("docs-site");
-    await page.locator("input[name=repositoryUrl]").fill("https://github.com/acme/docs-site");
-  }
   await page.screenshot({ path: join(OUTPUT, `${scenario.file}.png`) });
   await page.close();
 }

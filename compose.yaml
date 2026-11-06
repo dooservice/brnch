@@ -52,16 +52,18 @@ services:
       gitd:
         condition: service_healthy
 
-  # Builds and tests the Lit interface. npm's cache lives in .cache/ like the Rust one.
+  # Builds and tests the React interface with pnpm. Its store lives in .cache/ like the Rust one.
   frontend:
-    image: node:24-slim
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
     user: *host-user
     working_dir: /workspace/apps/desktop
     volumes:
       - .:/workspace
     environment:
       HOME: /workspace/.cache/home
-      npm_config_cache: /workspace/.cache/npm
+      npm_config_store_dir: /workspace/.cache/pnpm-store
 
   # The Tauri shell needs WebKit and GTK, so it builds in its own image.
   desktop:
@@ -82,4 +84,3 @@ services:
       - .:/workspace
     environment:
       HOME: /workspace/.cache/home
-      npm_config_cache: /workspace/.cache/npm

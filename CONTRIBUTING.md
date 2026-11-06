@@ -34,7 +34,7 @@ runs in Docker through the Makefile.
   (`brnch-gitd`) implement the core's traits; the interface only draws what the core decides.
 - Code and comments in English. Visible text comes from locale files, never joined strings.
 - Every rule comes with a test that hardcodes its expected values.
-- Interface: TypeScript with Lit; one component per file, named after what it shows.
+- Interface: TypeScript with React; one component per file, named after what it shows.
 
 ## Commits
 

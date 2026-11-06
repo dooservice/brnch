@@ -4,7 +4,7 @@ export HOST_GID := $(shell id -g)
 
 COMPOSE := docker compose run --rm
 
-.PHONY: help images test integration lint format add check frontend-install frontend-test frontend-build desktop-check screenshots
+.PHONY: help images test integration lint format add check frontend-install frontend-add frontend-test frontend-build desktop-check screenshots
 
 help:
 	@echo "make images                     Build the Docker images"
@@ -43,13 +43,18 @@ add:
 
 frontend-install:
 	mkdir -p apps/desktop .cache/home
-	$(COMPOSE) frontend npm install
+	$(COMPOSE) frontend pnpm install
+
+# Add an interface library with: make frontend-add PACKAGE=lucide-react [FLAGS=-D]
+frontend-add:
+	@test -n "$(PACKAGE)" || (echo "Usage: make frontend-add PACKAGE=lucide-react [FLAGS=-D]" && exit 1)
+	$(COMPOSE) frontend pnpm add $(FLAGS) $(PACKAGE)
 
 frontend-test:
-	$(COMPOSE) frontend npm test
+	$(COMPOSE) frontend pnpm test
 
 frontend-build:
-	$(COMPOSE) frontend npm run build
+	$(COMPOSE) frontend pnpm run build
 
 # Lints and tests the Tauri shell, which needs WebKit and GTK, in its own image.
 desktop-check:
@@ -57,4 +62,4 @@ desktop-check:
 
 # Builds the interface and saves a picture of each state in apps/desktop/screenshots.
 screenshots: frontend-build
-	$(COMPOSE) screenshots sh -c "npm install --no-save playwright-core@1.65.0 && node screenshots/capture.mjs"
+	$(COMPOSE) screenshots node screenshots/capture.mjs
