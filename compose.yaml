@@ -1,0 +1,53 @@
+# Every build and test runs in Docker as the host user, so generated files stay yours.
+# Caches live in `.cache/` and build output in `target/`, both ignored by git.
+# Use the Makefile (`make test`, `make lint`…), which passes HOST_UID and HOST_GID.
+x-host-environment: &host-environment
+  HOME: /workspace/.cache/home
+  CARGO_HOME: /workspace/.cache/cargo
+  CARGO_TARGET_DIR: /workspace/target
+  CARGO_TERM_COLOR: never
+
+x-host-user: &host-user "${HOST_UID:-1000}:${HOST_GID:-1000}"
+
+services:
+  core:
+    user: *host-user
+    volumes:
+      - .:/workspace
+    environment: *host-environment
+    build:
+      context: .
+      dockerfile: docker/core.Dockerfile
+
+  # A real gitd, run as the host user so the integration tests can write in its workspaces.
+  # The version matches the gitd-client crate.
+  gitd:
+    image: ghcr.io/dooservice/gitd:0.15.1
+    user: *host-user
+    command: ["serve"]
+    environment:
+      HOME: /var/lib/gitd
+    volumes:
+      - ./.cache/gitd/state:/var/lib/gitd
+      - ./.cache/gitd/run:/run/gitd
+    healthcheck:
+      test: ["CMD", "gitd", "info"]
+      interval: 1s
+      retries: 30
+
+  integration:
+    user: *host-user
+    volumes:
+      - .:/workspace
+      - ./.cache/gitd/state:/var/lib/gitd
+      - ./.cache/gitd/run:/run/gitd
+    environment:
+      <<: *host-environment
+      GITD_SOCKET: /run/gitd/gitd.sock
+      GITD_TEST_ROOT: /var/lib/gitd/workspaces
+    build:
+      context: .
+      dockerfile: docker/core.Dockerfile
+    depends_on:
+      gitd:
+        condition: service_healthy
