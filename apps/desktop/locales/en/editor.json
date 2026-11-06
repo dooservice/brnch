@@ -1,0 +1,18 @@
+{
+  "goToFile": "Go to file",
+  "results": "Matching files",
+  "noFiles": "No file matches.",
+  "nothingOpen": "Open a file from the tree on the left.",
+  "loading": "Opening the file…",
+  "binary": "Binary file: it cannot be edited here.",
+  "tooLarge": "The file is too large to edit here.",
+  "editorOf": "Editor of {{path}}",
+  "unsaved": "Unsaved changes",
+  "closeFile": "Close {{path}}",
+  "cursor": "Ln {{line}}, Col {{column}}",
+  "plainText": "Plain text",
+  "searchLabel": "Search in the workspace",
+  "searchTitle": "Search in the project",
+  "searchCount_one": "{{count}} result in {{files}} files",
+  "searchCount_other": "{{count}} results in {{files}} files"
+}

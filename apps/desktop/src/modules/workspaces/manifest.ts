@@ -6,6 +6,5 @@ export const manifest: ModuleManifest = {
   depends: ['projects'],
   routes: [
     { path: '/workspaces/:workspaceId', page: () => import('./views/workspace_agent') },
-    { path: '/workspaces/:workspaceId/files', page: () => import('./views/workspace_soon') },
   ],
 }

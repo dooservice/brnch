@@ -19,6 +19,7 @@ mod tauri_run_notifier;
 mod tauri_terminal_listener;
 mod terminal_output;
 mod terminal_service;
+mod workspace_files;
 mod workspace_statistics;
 mod workspace_summary;
 
@@ -37,6 +38,7 @@ pub use tauri_run_notifier::TauriRunNotifier;
 pub use tauri_terminal_listener::TauriTerminalListener;
 pub use terminal_output::{TerminalListener, TerminalOutput};
 pub use terminal_service::{TerminalAttachment, TerminalService};
+pub use workspace_files::{FileContent, FileEntry, TextMatch, WorkspaceFiles};
 pub use workspace_statistics::WorkspaceStatistics;
 pub use workspace_summary::{WorkspaceStatus, WorkspaceSummary};
 

@@ -1,0 +1,18 @@
+{
+  "goToFile": "Ir a archivo",
+  "results": "Archivos que coinciden",
+  "noFiles": "Ningún archivo coincide.",
+  "nothingOpen": "Abre un archivo del árbol de la izquierda.",
+  "loading": "Abriendo el archivo…",
+  "binary": "Archivo binario: no se puede editar aquí.",
+  "tooLarge": "El archivo es demasiado grande para editarlo aquí.",
+  "editorOf": "Editor de {{path}}",
+  "unsaved": "Cambios sin guardar",
+  "closeFile": "Cerrar {{path}}",
+  "cursor": "Ln {{line}}, Col {{column}}",
+  "plainText": "Texto plano",
+  "searchLabel": "Buscar en el workspace",
+  "searchTitle": "Buscar en el proyecto",
+  "searchCount_one": "{{count}} resultado en {{files}} archivos",
+  "searchCount_other": "{{count}} resultados en {{files}} archivos"
+}

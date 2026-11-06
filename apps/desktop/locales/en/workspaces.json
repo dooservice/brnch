@@ -26,16 +26,6 @@
     "title": "Workspace not found",
     "description": "It may have been removed. Pick another one in the sidebar."
   },
-  "soon": {
-    "files": {
-      "title": "The file editor is not built yet",
-      "description": "It will open and edit the files of this workspace."
-    },
-    "terminal": {
-      "title": "The terminal is not built yet",
-      "description": "It will open a terminal in this workspace's folder."
-    }
-  },
   "timeline": {
     "label": "Agent activity",
     "empty": "The agent has not said anything yet. Its activity will appear here.",

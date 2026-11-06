@@ -255,3 +255,65 @@ pub fn resize_terminal(
 pub fn close_terminal(terminals: State<'_, crate::TerminalService>, workspace_identifier: String) {
     terminals.close(&workspace_identifier);
 }
+
+fn files_of(
+    service: &Service,
+    workspace_identifier: &str,
+) -> Result<crate::WorkspaceFiles, String> {
+    service
+        .workspace_directory(workspace_identifier)
+        .map(|directory| crate::WorkspaceFiles::new(&directory))
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub fn list_workspace_files(
+    service: Service,
+    workspace_identifier: String,
+    relative_path: String,
+) -> Result<Vec<crate::FileEntry>, String> {
+    files_of(&service, &workspace_identifier)?
+        .list(&relative_path)
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub fn read_workspace_file(
+    service: Service,
+    workspace_identifier: String,
+    relative_path: String,
+) -> Result<crate::FileContent, String> {
+    files_of(&service, &workspace_identifier)?
+        .read(&relative_path)
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub fn write_workspace_file(
+    service: Service,
+    workspace_identifier: String,
+    relative_path: String,
+    content: String,
+) -> Result<(), String> {
+    files_of(&service, &workspace_identifier)?
+        .write(&relative_path, &content)
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub fn find_workspace_files(
+    service: Service,
+    workspace_identifier: String,
+    query: String,
+) -> Result<Vec<String>, String> {
+    Ok(files_of(&service, &workspace_identifier)?.find_files(&query))
+}
+
+#[tauri::command]
+pub fn find_workspace_text(
+    service: Service,
+    workspace_identifier: String,
+    query: String,
+) -> Result<Vec<crate::TextMatch>, String> {
+    Ok(files_of(&service, &workspace_identifier)?.find_text(&query))
+}

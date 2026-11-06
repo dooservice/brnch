@@ -26,16 +26,6 @@
     "title": "No se encuentra el workspace",
     "description": "Puede que se haya eliminado. Elige otro en la barra lateral."
   },
-  "soon": {
-    "files": {
-      "title": "El editor de archivos aún no está construido",
-      "description": "Abrirá y editará los archivos de este workspace."
-    },
-    "terminal": {
-      "title": "La terminal aún no está construida",
-      "description": "Abrirá una terminal en la carpeta de este workspace."
-    }
-  },
   "timeline": {
     "label": "Actividad del agente",
     "empty": "El agente aún no ha dicho nada. Su actividad aparecerá aquí.",

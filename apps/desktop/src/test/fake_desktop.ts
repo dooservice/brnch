@@ -23,6 +23,7 @@ export class FakeDesktop {
   agents: AgentInstallation[] = [{ kind: 'claude_code', installed: true, version: '2.1.0' }]
   gitd: GitdStatus = { connected: true, message: null }
   statistics: Array<{ workspaceIdentifier: string; files: number; added: number; removed: number }> = []
+  files = new Map<string, string>()
   terminalBacklog = ''
   terminalFailure: string | null = null
   publishFailure: string | null = null
@@ -127,6 +128,30 @@ export class FakeDesktop {
       case 'stop_run':
       case 'send_follow_up':
         return name === 'stop_run' ? true : null
+      case 'list_workspace_files': {
+        const folder = String(args?.relativePath)
+        const prefix = folder === '' ? '' : `${folder}/`
+        const names = new Map<string, boolean>()
+        for (const path of this.files.keys()) {
+          if (!path.startsWith(prefix)) continue
+          const rest = path.slice(prefix.length)
+          const [first, ...others] = rest.split('/')
+          if (first !== undefined) names.set(first, others.length > 0 || names.get(first) === true)
+        }
+        return [...names.entries()].sort(([a, aDir], [b, bDir]) => Number(bDir) - Number(aDir) || a.localeCompare(b)).map(([name, isDirectory]) => ({ name, relativePath: `${prefix}${name}`, isDirectory }))
+      }
+      case 'read_workspace_file': {
+        const content = this.files.get(String(args?.relativePath))
+        if (content === undefined) throw 'no such file'
+        return { content, isBinary: content === '\u0000binary', isTooLarge: false }
+      }
+      case 'write_workspace_file':
+        this.files.set(String(args?.relativePath), String(args?.content))
+        return null
+      case 'find_workspace_files':
+        return [...this.files.keys()].filter(path => path.toLowerCase().includes(String(args?.query).toLowerCase()))
+      case 'find_workspace_text':
+        return [...this.files.entries()].flatMap(([path, content]) => content.split('\n').flatMap((text, index) => (text.toLowerCase().includes(String(args?.query).toLowerCase()) ? [{ relativePath: path, line: index + 1, text }] : [])))
       case 'open_terminal':
         if (this.terminalFailure !== null) throw this.terminalFailure
         return { terminalIdentifier: 'terminal-1', backlogBase64: this.terminalBacklog }
