@@ -6,7 +6,7 @@ $ErrorActionPreference = 'Continue'
 
 $summaryFile = $env:GITHUB_STEP_SUMMARY
 $agentAccount = 'brnchagent'
-$agentPassword = 'Pr0be-' + [guid]::NewGuid().ToString('N')
+$agentPassword = 'Pr0be!' + [guid]::NewGuid().ToString('N').Substring(0, 8)
 $probeRoot = 'C:\brnch-probe'
 $workspace = Join-Path $probeRoot 'workspace'
 $pool = Join-Path $probeRoot 'pool'
@@ -23,7 +23,7 @@ New-Item -ItemType Directory -Force "$env:APPDATA\GitHub CLI" | Out-Null
 'canary-gh-token' | Set-Content "$env:APPDATA\GitHub CLI\hosts.yml"
 cmdkey /generic:brnch-canary /user:probe /pass:SECRET-CREDENTIAL-VALUE | Out-Null
 
-net user $agentAccount $agentPassword /add | Out-Null
+net user $agentAccount $agentPassword /add /y
 icacls $probeRoot /grant "${agentAccount}:(RX)" | Out-Null
 icacls $installedProbeScript /grant "${agentAccount}:(R)" | Out-Null
 icacls $workspace /grant "${agentAccount}:(OI)(CI)M" | Out-Null

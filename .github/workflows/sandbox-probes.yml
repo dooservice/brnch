@@ -20,6 +20,9 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
       - run: bash probes/sandbox/macos-seatbelt.sh
 
   windows:

@@ -42,15 +42,19 @@ func main() {
 }
 GO
 if command -v go > /dev/null; then
-  (cd "$work_directory" && go mod init probe > /dev/null 2>&1 && go build -o fetcher . 2>/dev/null)
+  (cd "$work_directory" && go mod init probe && go build -o fetcher .) > "$work_directory/go-build.log" 2>&1 || cat "$work_directory/go-build.log"
+else
+  echo "go no está instalado en este runner"
 fi
 
 files_only_rules="(version 1)
 (allow default)
 (deny file-read* (subpath \"$real_home/.ssh\") (subpath \"$real_home/.config/gh\") (literal \"$real_home/.git-credentials\"))"
 security_service_rules='(deny mach-lookup (global-name "com.apple.SecurityServer") (global-name "com.apple.securityd.xpc") (global-name "com.apple.secd"))'
+agent_socket_real="$(python3 -c 'import os; print(os.path.realpath(os.environ["SSH_AUTH_SOCK"]))')"
 strict_extra_rules="(deny file-read* (subpath \"$real_home/Library/Keychains\") (subpath \"/Library/Keychains\"))
-(deny network-outbound (remote unix-socket))"
+(deny network-outbound (remote unix-socket (path-literal \"$agent_socket_real\")))
+(deny network-outbound (remote unix-socket (regex #\"^/private/tmp/com\\.apple\\.launchd\\.[^/]+/Listeners\$\")))"
 
 printf '%s\n' "$files_only_rules" > "$work_directory/files-only.sb"
 printf '%s\n%s\n' "$files_only_rules" "$security_service_rules" > "$work_directory/no-security-service.sb"
