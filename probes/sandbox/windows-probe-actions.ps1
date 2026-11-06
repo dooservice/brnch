@@ -56,10 +56,12 @@ try {
 } catch {
     $sshAddCode = 2
 }
-if ($sshAddCode -eq 2) {
-    Add-Result 'agente OpenSSH (ssh-add -l)' 'bloqueado' 'no conecta'
+if ($sshAddCode -eq 0) {
+    Add-Result 'agente OpenSSH: ver las llaves del usuario' 'accesible' 'lista llaves'
+} elseif ($sshAddCode -eq 1) {
+    Add-Result 'agente OpenSSH: ver las llaves del usuario' 'bloqueado' 'conecta pero no ve llaves'
 } else {
-    Add-Result 'agente OpenSSH (ssh-add -l)' 'accesible' "código $sshAddCode"
+    Add-Result 'agente OpenSSH: ver las llaves del usuario' 'bloqueado' 'no conecta'
 }
 
 try {

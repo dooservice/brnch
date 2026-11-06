@@ -143,6 +143,10 @@ function Invoke-Scenario([string]$scenarioName, [string]$probeRoot, [bool]$withE
 }
 
 function Remove-Everything {
+    if ($agentKeyPath -and (Test-Path -LiteralPath $agentKeyPath)) {
+        ssh-add.exe -d $agentKeyPath 2>&1 | Out-Null
+        Remove-Item -LiteralPath $agentKeyPath, "$agentKeyPath.pub" -Force -ErrorAction SilentlyContinue
+    }
     net user $agentAccount /delete 2>&1 | Out-Null
     cmdkey /delete:brnch-canary 2>&1 | Out-Null
     Remove-Item -LiteralPath $sshCanaryPath, $ghCanaryPath -Force -ErrorAction SilentlyContinue
@@ -185,6 +189,7 @@ No lee ni modifica tus llaves ni tus credenciales reales.
 }
 
 $sshServiceWasStopped = $false
+$agentKeyPath = ''
 try {
     New-DirectoryTracked $sshDirectory
     'canary-ssh-key' | Set-Content $sshCanaryPath
@@ -194,11 +199,16 @@ try {
     New-Item -ItemType Directory -Force $userToolDirectory | Out-Null
     Copy-Item "$env:SystemRoot\System32\whoami.exe" $userToolPath
 
+    $agentKeyPath = Join-Path $env:TEMP 'brnch-canary-agent-key'
     $sshService = Get-Service ssh-agent -ErrorAction SilentlyContinue
     if ($sshService -and $sshService.Status -ne 'Running') {
         Set-Service ssh-agent -StartupType Manual -ErrorAction SilentlyContinue
         Start-Service ssh-agent -ErrorAction SilentlyContinue
         $sshServiceWasStopped = $true
+    }
+    if ($sshService) {
+        ssh-keygen.exe -q -t ed25519 -N '""' -f $agentKeyPath
+        ssh-add.exe $agentKeyPath
     }
 
     net user $agentAccount $agentPassword /add /y
