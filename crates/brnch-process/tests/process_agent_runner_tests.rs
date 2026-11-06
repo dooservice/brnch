@@ -60,6 +60,7 @@ async fn streams_each_output_channel_and_reports_the_exit_code() {
     assert_eq!(listener.texts_of(OutputStream::Error), ["problem"]);
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn runs_the_agent_in_the_directory_given() {
     let listener = CollectingListener::default();
@@ -87,6 +88,7 @@ async fn fails_when_the_program_does_not_exist() {
     assert!(matches!(failure, BrnchError::AgentProcess(_)));
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn removes_only_the_variables_it_was_told_to() {
     let script = format!("echo \"${{{VARIABLE_PRESENT_IN_EVERY_ENVIRONMENT}-unset}}\"");
