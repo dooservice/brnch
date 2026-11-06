@@ -1,4 +1,5 @@
 import type { RunNotice, StartRunRequest } from "../src/model/AgentEvent";
+import type { ConflictSummary, DiffSummary, PublishOutcome } from "../src/model/Review";
 import type { ProjectBackend } from "../src/backend/ProjectBackend";
 import type { ProjectSummary } from "../src/model/ProjectSummary";
 import type { WorkspaceSummary } from "../src/model/WorkspaceSummary";
@@ -73,5 +74,27 @@ export class InMemoryProjectBackend implements ProjectBackend {
     return () => {
       this.liveListener = null;
     };
+  }
+
+  diffs = new Map<string, DiffSummary>();
+  conflicts: ConflictSummary[] = [];
+  readonly publishedBatches: string[][] = [];
+  publishFailure: string | null = null;
+
+  async readWorkspaceDiff(workspaceIdentifier: string): Promise<DiffSummary> {
+    return this.diffs.get(workspaceIdentifier) ?? { unifiedDiff: "", wasTruncated: false };
+  }
+
+  async findProjectConflicts(): Promise<ConflictSummary[]> {
+    return this.conflicts;
+  }
+
+  async publishWorkspaces(workspaceIdentifiers: string[]): Promise<PublishOutcome[]> {
+    this.publishedBatches.push(workspaceIdentifiers);
+    return workspaceIdentifiers.map((workspaceIdentifier) => ({
+      workspaceIdentifier,
+      branchName: this.publishFailure === null ? `agents/${workspaceIdentifier}` : null,
+      failure: this.publishFailure,
+    }));
   }
 }

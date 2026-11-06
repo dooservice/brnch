@@ -3,24 +3,30 @@ import { useEffect, useState } from "react";
 
 import type { ProjectSwitcherState } from "../state/ProjectSwitcherState";
 import { useProjectSwitcher } from "../state/useProjectSwitcher";
+import type { ReviewState } from "../state/ReviewState";
 import type { WorkspaceTimelineState } from "../state/WorkspaceTimelineState";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { CommandPalette } from "./CommandPalette";
+import { ConflictsDialog } from "./ConflictsDialog";
 import { NewRunDialog } from "./NewRunDialog";
 import { ProjectSidebar } from "./ProjectSidebar";
+import { PublishDialog } from "./PublishDialog";
 import { WorkspaceView } from "./WorkspaceView";
 
 /** The window: top bar, project sidebar, the active workspace and a status bar. */
 interface AppShellProps {
   readonly state: ProjectSwitcherState;
   readonly timeline: WorkspaceTimelineState;
+  readonly review: ReviewState;
 }
 
-export function AppShell({ state, timeline }: AppShellProps) {
+export function AppShell({ state, timeline, review }: AppShellProps) {
   useProjectSwitcher(state);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [runOpen, setRunOpen] = useState(false);
+  const [conflictsOpen, setConflictsOpen] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
 
   useEffect(() => {
     void state.load();
@@ -59,13 +65,15 @@ export function AppShell({ state, timeline }: AppShellProps) {
       </header>
       <div className="flex min-h-0 flex-1">
         <ProjectSidebar state={state} onAddProject={openAddProject} onSearch={() => setPaletteOpen(true)} />
-        <WorkspaceView state={state} timeline={timeline} onNewRun={() => setRunOpen(true)} />
+        <WorkspaceView state={state} timeline={timeline} review={review} onNewRun={() => setRunOpen(true)} onCheckConflicts={() => setConflictsOpen(true)} onPublish={() => setPublishOpen(true)} />
       </div>
       <footer className="flex h-6 items-center gap-4 border-t border-line bg-side px-3 text-[11.5px] text-muted">
         <span>{state.projects.length} proyectos</span>
         <span>{workspaceCount} workspaces en el proyecto activo</span>
       </footer>
       <CommandPalette state={state} open={paletteOpen} onOpenChange={setPaletteOpen} onAddProject={openAddProject} />
+      <ConflictsDialog state={state} review={review} open={conflictsOpen} onOpenChange={setConflictsOpen} />
+      <PublishDialog review={review} open={publishOpen} onOpenChange={setPublishOpen} workspaces={state.selectedWorkspace ? [{ identifier: state.selectedWorkspace.identifier, branchName: state.selectedWorkspace.branchName }] : []} />
       <NewRunDialog state={state} open={runOpen} onOpenChange={setRunOpen} />
       <AddProjectDialog state={state} open={addOpen} onOpenChange={setAddOpen} />
     </div>

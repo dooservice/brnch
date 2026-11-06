@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 import type { RunNotice, StartRunRequest } from "../model/AgentEvent";
+import type { ConflictSummary, DiffSummary, PublishOutcome } from "../model/Review";
 
 import type { ProjectSummary } from "../model/ProjectSummary";
 import type { WorkspaceSummary } from "../model/WorkspaceSummary";
@@ -39,6 +40,18 @@ export class TauriProjectBackend implements ProjectBackend {
 
   saveView(projectIdentifier: string, layoutJson: string): Promise<void> {
     return invoke("save_view", { projectIdentifier, layoutJson });
+  }
+
+  readWorkspaceDiff(workspaceIdentifier: string): Promise<DiffSummary> {
+    return invoke("read_workspace_diff", { workspaceIdentifier });
+  }
+
+  findProjectConflicts(projectIdentifier: string): Promise<ConflictSummary[]> {
+    return invoke("find_project_conflicts", { projectIdentifier });
+  }
+
+  publishWorkspaces(workspaceIdentifiers: string[]): Promise<PublishOutcome[]> {
+    return invoke("publish_workspaces", { workspaceIdentifiers });
   }
 
   startRun(request: StartRunRequest): Promise<string[]> {

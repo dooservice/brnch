@@ -37,6 +37,26 @@ const sampleEvents = [
   { kind: "run_finished", succeeded: false, summary: "Las pruebas de búsqueda fallan: falta el filtro por categoría.", cost_in_dollars: 0.31, duration_in_milliseconds: 41200 },
 ];
 
+const sampleDiff = [
+  "diff --git a/src/catalog/SearchBox.tsx b/src/catalog/SearchBox.tsx",
+  "new file mode 100644",
+  "@@ -0,0 +1,9 @@",
+  '+import { useState } from "react";',
+  '+import { useFilters } from "./useFilters";',
+  "+",
+  "+export function SearchBox() {",
+  "+  const { query, setQuery } = useFilters();",
+  "+  return <input value={query} onChange={(e) => setQuery(e.target.value)} />;",
+  "+}",
+  "diff --git a/src/catalog/useFilters.ts b/src/catalog/useFilters.ts",
+  "@@ -10,6 +10,9 @@ export function useFilters() {",
+  "   const [category, setCategory] = useState(null);",
+  "-  return { category, setCategory };",
+  "+  const [query, setQuery] = useState(\"\");",
+  "+  return { category, setCategory, query, setQuery };",
+  " }",
+].join("\n");
+
 const scenarios = [
   { file: "01-empty", projects: [], active: null },
   { file: "02-project-open", projects, active: "p1" },
@@ -60,6 +80,32 @@ const scenarios = [
       await page.getByRole("button", { name: "Nueva corrida" }).click();
       await page.getByLabel("Tarea").fill("Añade una búsqueda por nombre y categoría al catálogo, con pruebas.");
       await page.getByRole("button", { name: "Más copias" }).click();
+    },
+  },
+  {
+    file: "08-changes",
+    projects,
+    active: "p1",
+    act: async (page) => {
+      await page.getByRole("button", { name: /agents\/add-search/ }).click();
+      await page.getByRole("tab", { name: /Cambios/ }).click();
+    },
+  },
+  {
+    file: "09-conflicts",
+    projects,
+    active: "p1",
+    act: async (page) => {
+      await page.getByRole("button", { name: "Conflictos" }).click();
+    },
+  },
+  {
+    file: "10-publish",
+    projects,
+    active: "p1",
+    act: async (page) => {
+      await page.getByRole("button", { name: /agents\/add-search/ }).click();
+      await page.getByRole("button", { name: "Publicar" }).click();
     },
   },
   {
@@ -92,6 +138,11 @@ function fakeBackend(scenario) {
           return args.workspaceIdentifier === "w1"
             ? scenario.sampleEvents.map((event, index) => ({ workspaceIdentifier: "w1", sequence: index + 1, eventJson: JSON.stringify(event) }))
             : [];
+        case "read_workspace_diff": return { unifiedDiff: scenario.sampleDiff, wasTruncated: false };
+        case "find_project_conflicts":
+          return [{ firstWorkspaceIdentifier: "w1", secondWorkspaceIdentifier: "w3", clashingPaths: ["src/Header.tsx", "src/theme/tokens.ts"] }];
+        case "publish_workspaces":
+          return args.workspaceIdentifiers.map((id) => ({ workspaceIdentifier: id, branchName: "agents/add-search", failure: null }));
         case "plugin:event|listen": return 1;
         default: return null;
       }
@@ -115,7 +166,7 @@ const { port } = server.address();
 const browser = await chromium.launch();
 for (const scenario of scenarios) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-  await page.addInitScript(fakeBackend, { ...scenario, workspacesByProject, sampleEvents });
+  await page.addInitScript(fakeBackend, { ...scenario, workspacesByProject, sampleEvents, sampleDiff });
   await page.goto(`http://localhost:${port}/`);
   await page.waitForTimeout(400);
   await scenario.act?.(page);

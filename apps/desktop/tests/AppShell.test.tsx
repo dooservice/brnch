@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { AppShell } from "../src/components/AppShell";
 import { ProjectSwitcherState } from "../src/state/ProjectSwitcherState";
+import { ReviewState } from "../src/state/ReviewState";
 import { WorkspaceTimelineState } from "../src/state/WorkspaceTimelineState";
 import { InMemoryProjectBackend } from "./InMemoryProjectBackend";
 
@@ -14,7 +15,7 @@ async function shellWithProjects(...names: string[]) {
   }
   const state = new ProjectSwitcherState(backend);
   const timeline = new WorkspaceTimelineState(backend);
-  render(<AppShell state={state} timeline={timeline} />);
+  render(<AppShell state={state} timeline={timeline} review={new ReviewState(backend)} />);
   return { state, backend };
 }
 
@@ -144,5 +145,58 @@ describe("AppShell sidebar", () => {
 
     await user.click(screen.getByRole("button", { name: /web-store/ }));
     expect(screen.queryByRole("button", { name: /agents\/project-1/ })).not.toBeInTheDocument();
+  });
+});
+
+describe("AppShell review", () => {
+  async function openSelectedWorkspace(user: ReturnType<typeof userEvent.setup>, ...names: string[]) {
+    const shell = await shellWithProjects(...names);
+    await user.click(await screen.findByRole("button", { name: new RegExp(names[0]!) }));
+    await user.click(await screen.findByRole("button", { name: /agents\/project-1/ }));
+    return shell;
+  }
+
+  it("lists the changed files in the Cambios tab and shows the lines of the chosen one", async () => {
+    const user = userEvent.setup();
+    const { backend } = await shellWithProjects("web-store");
+    backend.diffs.set("workspace-of-project-1", {
+      wasTruncated: false,
+      unifiedDiff: ["diff --git a/src/a.ts b/src/a.ts", "@@ -1,1 +1,2 @@", " keep", "+brand new line"].join("\n"),
+    });
+    await user.click(await screen.findByRole("button", { name: /web-store/ }));
+    await user.click(await screen.findByRole("button", { name: /agents\/project-1/ }));
+
+    await user.click(screen.getByRole("tab", { name: /Cambios/ }));
+
+    expect(await screen.findByRole("button", { name: /src\/a\.ts/ })).toBeInTheDocument();
+    expect(await screen.findByText("brand new line")).toBeInTheDocument();
+  });
+
+  it("says so when the agent has not changed anything", async () => {
+    const user = userEvent.setup();
+    await openSelectedWorkspace(user, "web-store");
+
+    await user.click(screen.getByRole("tab", { name: /Cambios/ }));
+
+    expect(await screen.findByText(/aún no ha cambiado ningún archivo/)).toBeInTheDocument();
+  });
+
+  it("publishes the selected workspace and reports a refusal with its reason", async () => {
+    const user = userEvent.setup();
+    const { backend } = await openSelectedWorkspace(user, "web-store");
+    backend.publishFailure = "La política de gitd rechazó la rama";
+
+    await user.click(screen.getByRole("button", { name: "Publicar" }));
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Publicar" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("La política de gitd rechazó la rama");
+    expect(backend.publishedBatches).toEqual([["workspace-of-project-1"]]);
+  });
+
+  it("offers the conflict check only when there are at least two workspaces", async () => {
+    const user = userEvent.setup();
+    await openSelectedWorkspace(user, "web-store");
+
+    expect(screen.queryByRole("button", { name: "Conflictos" })).not.toBeInTheDocument();
   });
 });
