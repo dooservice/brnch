@@ -199,12 +199,17 @@ dependencies = [
 name = "brnch-desktop"
 version = "0.1.0"
 dependencies = [
+ "brnch-agents",
  "brnch-core",
+ "brnch-gitd",
+ "brnch-process",
+ "brnch-sandbox",
  "brnch-store",
  "serde",
  "serde_json",
  "tauri",
  "tauri-build",
+ "tokio",
 ]
 
 [[package]]

@@ -11,13 +11,20 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+brnch-agents = { version = "0.1.0", path = "../../../crates/brnch-agents" }
 brnch-core = { version = "0.1.0", path = "../../../crates/brnch-core" }
+brnch-gitd = { version = "0.1.0", path = "../../../crates/brnch-gitd" }
+brnch-process = { version = "0.1.0", path = "../../../crates/brnch-process" }
+brnch-sandbox = { version = "0.1.0", path = "../../../crates/brnch-sandbox" }
 brnch-store = { version = "0.1.0", path = "../../../crates/brnch-store" }
 serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
 tauri = "2.12.5"
+tokio = { version = "1.54.1", features = ["rt", "macros", "sync"] }
 
 [build-dependencies]
 tauri-build = "2.7.4"
 
 [dev-dependencies]
 serde_json = "1.0.154"
+tokio = { version = "1.54.1", features = ["rt", "macros", "time"] }

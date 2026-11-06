@@ -1,18 +1,20 @@
 use brnch_core::BrnchResult;
-use brnch_core::project::{ProjectId, ProjectStore, ProjectView};
+use std::sync::Arc;
+
+use brnch_core::project::{EventHistoryStore, ProjectId, ProjectStore, ProjectView, WorkspaceId};
 
 use crate::{ProjectSummary, WorkspaceSummary};
 
 /// What the window can do with projects. Commands call this and nothing else, so it can be
 /// tested without a window.
 pub struct ProjectService<Store> {
-    store: Store,
+    store: Arc<Store>,
 }
 
 impl<Store: ProjectStore> ProjectService<Store> {
     const CURRENT_LAYOUT_VERSION: u32 = 1;
 
-    pub fn new(store: Store) -> Self {
+    pub fn new(store: Arc<Store>) -> Self {
         Self { store }
     }
 
@@ -70,5 +72,25 @@ impl<Store: ProjectStore> ProjectService<Store> {
                 layout_json: layout_json.to_owned(),
             },
         )
+    }
+}
+
+impl<Store: ProjectStore + EventHistoryStore> ProjectService<Store> {
+    pub fn list_events(
+        &self,
+        workspace_identifier: &str,
+        after_sequence: u64,
+    ) -> BrnchResult<Vec<crate::RunNotice>> {
+        let workspace = WorkspaceId::new(workspace_identifier);
+        Ok(self
+            .store
+            .list_events(&workspace, after_sequence)?
+            .into_iter()
+            .map(|stored| crate::RunNotice {
+                workspace_identifier: workspace_identifier.to_owned(),
+                sequence: stored.sequence,
+                event_json: stored.event_json,
+            })
+            .collect())
     }
 }

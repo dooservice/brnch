@@ -2,7 +2,9 @@ use brnch_desktop::ProjectService;
 use brnch_store::SqliteProjectStore;
 
 fn service() -> ProjectService<SqliteProjectStore> {
-    ProjectService::new(SqliteProjectStore::open_in_memory().unwrap())
+    ProjectService::new(std::sync::Arc::new(
+        SqliteProjectStore::open_in_memory().unwrap(),
+    ))
 }
 
 #[test]

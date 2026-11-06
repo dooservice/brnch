@@ -1,10 +1,27 @@
 use brnch_store::SqliteProjectStore;
 use tauri::Manager;
 
-use crate::ProjectService;
+use std::path::PathBuf;
+use std::sync::Arc;
+
 use crate::project_commands;
+use crate::{ProjectService, RunGateway};
 
 const DATABASE_FILE: &str = "brnch.sqlite3";
+const WORKSPACES_ROOT_VARIABLE: &str = "BRNCH_WORKSPACES_ROOT";
+const READ_ONLY_VARIABLE: &str = "BRNCH_SANDBOX_READ_ONLY";
+
+/// Folders the confined agent may read but not change, such as gitd's pool and the folder
+/// where its program is installed. Separated like the system's `PATH`.
+fn read_only_directories() -> Vec<String> {
+    std::env::var_os(READ_ONLY_VARIABLE)
+        .map(|value| {
+            std::env::split_paths(&value)
+                .map(|path| path.to_string_lossy().into_owned())
+                .collect()
+        })
+        .unwrap_or_default()
+}
 
 /// Opens the window. Failing to open the store stops the application with a clear message
 /// instead of running without memory.
@@ -17,7 +34,14 @@ pub fn run() {
         .setup(|application| {
             let directory = application.path().app_data_dir()?;
             std::fs::create_dir_all(&directory)?;
-            let store = SqliteProjectStore::open(&directory.join(DATABASE_FILE))?;
+            let store = Arc::new(SqliteProjectStore::open(&directory.join(DATABASE_FILE))?);
+            let workspaces_root = std::env::var_os(WORKSPACES_ROOT_VARIABLE)
+                .map_or_else(|| directory.join("workspaces"), PathBuf::from);
+            application.manage(RunGateway::new(
+                Arc::clone(&store),
+                workspaces_root,
+                read_only_directories(),
+            ));
             application.manage(ProjectService::new(store));
             Ok(())
         })
@@ -30,6 +54,8 @@ pub fn run() {
             project_commands::list_workspaces,
             project_commands::load_view,
             project_commands::save_view,
+            project_commands::start_run,
+            project_commands::list_workspace_events,
         ])
         .run(tauri::generate_context!())
         .expect("the brnch window failed to start");

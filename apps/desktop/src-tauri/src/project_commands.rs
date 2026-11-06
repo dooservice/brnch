@@ -4,7 +4,12 @@
 use brnch_store::SqliteProjectStore;
 use tauri::State;
 
-use crate::{ProjectService, ProjectSummary, WorkspaceSummary};
+use std::sync::Arc;
+
+use crate::{
+    ProjectService, ProjectSummary, RunGateway, RunNotice, RunNotifier, StartRunRequest,
+    TauriRunNotifier, WorkspaceSummary,
+};
 
 type Service<'service> = State<'service, ProjectService<SqliteProjectStore>>;
 
@@ -76,5 +81,29 @@ pub fn save_view(
 ) -> Result<(), String> {
     service
         .save_view(&project_identifier, &layout_json)
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub async fn start_run(
+    application: tauri::AppHandle,
+    gateway: State<'_, RunGateway>,
+    request: StartRunRequest,
+) -> Result<Vec<String>, String> {
+    let notifier: Arc<dyn RunNotifier> = Arc::new(TauriRunNotifier { application });
+    gateway
+        .start(&request, &notifier)
+        .await
+        .map_err(|failure| describe(&failure))
+}
+
+#[tauri::command]
+pub fn list_workspace_events(
+    service: Service,
+    workspace_identifier: String,
+    after_sequence: u64,
+) -> Result<Vec<RunNotice>, String> {
+    service
+        .list_events(&workspace_identifier, after_sequence)
         .map_err(|failure| describe(&failure))
 }
