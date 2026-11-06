@@ -20,10 +20,17 @@ impl TerminalListener for Recording {
     }
 }
 
-fn wait_for(recording: &Recording, expected: &str) {
+/// Answers the cursor-position question Windows' console asks first, as the real window does.
+fn wait_for(service: &TerminalService, recording: &Recording, expected: &str) {
+    let mut answered = false;
     for _ in 0..200 {
-        if recording.text.lock().unwrap().contains(expected) {
+        let text = recording.text.lock().unwrap().clone();
+        if text.contains(expected) {
             return;
+        }
+        if !answered && text.contains("\u{1b}[6n") {
+            answered = true;
+            service.write("w1", b"\x1b[1;1R").unwrap();
         }
         std::thread::sleep(Duration::from_millis(25));
     }
@@ -42,8 +49,8 @@ fn a_terminal_runs_what_is_typed_in_the_workspace_folder_and_comes_back_with_its
 
     let first = service.attach("w1", &directory, 24, 80).unwrap();
     service.write("w1", b"echo brnch-says-hi; pwd\r").unwrap();
-    wait_for(&recording, "brnch-says-hi");
-    wait_for(&recording, directory.file_name().unwrap().to_str().unwrap());
+    wait_for(&service, &recording, "brnch-says-hi");
+    wait_for(&service, &recording, directory.file_name().unwrap().to_str().unwrap());
     service.resize("w1", 30, 100).unwrap();
     let again = service.attach("w1", &directory, 24, 80).unwrap();
 
