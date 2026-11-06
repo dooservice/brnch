@@ -43,6 +43,28 @@ jobs:
           GITD_SOCKET: C:/gitd-test/gitd.sock
           GITD_TEST_ROOT: C:/gitd-test/workspaces
         run: cargo test -p brnch-gitd --test gitd_workspace_provider_tests -- --ignored --nocapture
+      - name: Who can open the socket
+        if: always()
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Net.Sockets
+          foreach ($path in 'C:\gitd-test\gitd.sock', 'C:/gitd-test/gitd.sock') {
+            $socket = New-Object System.Net.Sockets.Socket([System.Net.Sockets.AddressFamily]::Unix, [System.Net.Sockets.SocketType]::Stream, [System.Net.Sockets.ProtocolType]::Unspecified)
+            try { $socket.Connect((New-Object System.Net.Sockets.UnixDomainSocketEndPoint($path))); "dotnet $path : connected" } catch { "dotnet $path : $($_.Exception.Message)" }
+            $socket.Dispose()
+          }
+          Set-Location $env:RUNNER_TEMP
+          cargo new --quiet uds-probe
+          Set-Location uds-probe
+          cargo add uds_windows@1 --quiet
+          @'
+          fn main() {
+              for path in [r"C:\gitd-test\gitd.sock", "C:/gitd-test/gitd.sock"] {
+                  println!("uds_windows {path} : {:?}", uds_windows::UnixStream::connect(path).map(|_| "connected"));
+              }
+          }
+          '@ | Set-Content src/main.rs
+          cargo run --quiet
       - name: What gitd logged
         if: always()
         shell: pwsh
