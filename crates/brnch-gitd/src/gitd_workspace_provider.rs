@@ -20,6 +20,10 @@ impl GitdWorkspaceProvider {
         let gitd = Gitd::connect(Options::new())
             .await
             .map_err(|failure| GitdFailureTranslator::translate(&failure))?;
+        // The channel connects lazily, so only a real call shows whether gitd answers.
+        gitd.info()
+            .await
+            .map_err(|failure| GitdFailureTranslator::translate(&failure))?;
         Ok(Self { gitd, settings })
     }
 }
