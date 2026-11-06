@@ -83,13 +83,8 @@ fn removing_a_project_removes_its_workspaces_view_and_active_mark() {
 
     store.remove_project(&project.identifier).unwrap();
 
-    assert!(store.list_projects().unwrap().is_empty());
-    assert!(
-        store
-            .list_workspaces(&project.identifier)
-            .unwrap()
-            .is_empty()
-    );
+    assert_eq!(store.list_projects().unwrap().len(), 0);
+    assert_eq!(store.list_workspaces(&project.identifier).unwrap().len(), 0);
     assert_eq!(store.load_view(&project.identifier).unwrap(), None);
     assert_eq!(store.active_project().unwrap(), None);
 }
