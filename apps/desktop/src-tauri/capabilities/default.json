@@ -11,6 +11,6 @@
     "core:window:allow-close",
     "core:window:allow-start-dragging",
     "dialog:allow-open",
-    "opener:allow-open-url"
+    { "identifier": "opener:allow-open-url", "allow": [{ "url": "https://*" }] }
   ]
 }

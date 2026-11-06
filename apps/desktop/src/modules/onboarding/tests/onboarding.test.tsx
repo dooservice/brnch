@@ -38,21 +38,8 @@ describe('first start', () => {
     await user.click(await screen.findByRole('button', { name: 'Continuar con GitHub' }))
     expect(await screen.findByText('@josue')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Elegir repositorios en GitHub' }))
-    await user.click(screen.getByRole('button', { name: 'Probar acceso' }))
 
-    expect(desktop.opened).toEqual(['https://github.com/apps/gitd-app/installations/new'])
-    expect(await screen.findByText(/gitd puede leer este repositorio · rama principal main/)).toBeInTheDocument()
-  })
-
-  it('says why gitd cannot reach a repository', async () => {
-    const user = userEvent.setup()
-    desktop.repositoryAccess = { level: 'denied', defaultBranch: '', failure: 'Repository not found.' }
-    await openPublishingStep(user)
-
-    await user.click(await screen.findByRole('button', { name: 'Continuar con GitHub' }))
-    await user.click(await screen.findByRole('button', { name: 'Probar acceso' }))
-
-    expect(await screen.findByText(/gitd no llega a este repositorio.*Repository not found\./)).toBeInTheDocument()
+    expect(desktop.opened).toEqual(['https://github.com/login/device', 'https://github.com/apps/gitd-app/installations/new'])
   })
 
   it('hands a token to gitd and lists it afterwards', async () => {

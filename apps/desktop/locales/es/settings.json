@@ -179,11 +179,7 @@
       "disconnect": "Desconectar",
       "reachTitle": "Qué repositorios puede tocar gitd",
       "reachHint": "Solo los que elijas en GitHub al instalar la app de gitd. Puedes dar todos o solo algunos, y cambiarlo cuando quieras.",
-      "choose": "Elegir repositorios en GitHub",
-      "probeLabel": "Comprueba un repositorio",
-      "probe": "Probar acceso",
-      "probeOk": "gitd puede leer este repositorio · rama principal {{branch}}",
-      "probeDenied": "gitd no llega a este repositorio. Instala la app de gitd en él desde «Elegir repositorios»."
+      "choose": "Elegir repositorios en GitHub"
     },
     "token": {
       "prefix": "Para qué repositorios",

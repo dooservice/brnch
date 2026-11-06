@@ -5,10 +5,8 @@ import Badge from '@/components/badge'
 import Button from '@/components/button'
 import { useNow } from '@/hooks/use_now'
 import { failureText, openExternal } from '@/lib/tauri'
-import { useBeginGithubLogin, useCheckRepositoryAccess, useFinishGithubLogin, useRemoveGitCredential } from '../../api/use_git_credentials'
+import { useBeginGithubLogin, useFinishGithubLogin, useRemoveGitCredential } from '../../api/use_git_credentials'
 import type { GithubLoginPrompt } from '../../types/settings.types'
-
-const GITHUB_HOST = 'https://github.com/'
 
 function remaining(prompt: GithubLoginPrompt, startedAt: number, now: number): string {
   const seconds = Math.max(0, Math.round((startedAt + prompt.expiresInSeconds * 1000 - now) / 1000))
@@ -21,8 +19,6 @@ export default function GithubSignIn({ onBack, onFinished }: { onBack: () => voi
   const { mutate: beginLogin, data: prompt, isPending: starting, error: startError } = useBeginGithubLogin()
   const { mutate: finishLogin, data: result, error: finishError, reset: resetFinish } = useFinishGithubLogin()
   const remove = useRemoveGitCredential()
-  const access = useCheckRepositoryAccess()
-  const [repository, setRepository] = useState(GITHUB_HOST)
   const [startedAt, setStartedAt] = useState(0)
   const requested = useRef(false)
   const now = useNow(1000)
@@ -32,6 +28,8 @@ export default function GithubSignIn({ onBack, onFinished }: { onBack: () => voi
     beginLogin(undefined, {
       onSuccess: next => {
         setStartedAt(Date.now())
+        void navigator.clipboard?.writeText(next.userCode).catch(() => undefined)
+        void openExternal(next.verificationUrl).catch(() => undefined)
         finishLogin(next.loginIdentifier)
       },
     })
@@ -61,16 +59,6 @@ export default function GithubSignIn({ onBack, onFinished }: { onBack: () => voi
             <div className="flex-1"><p className="font-semibold">{t('connections.github.reachTitle')}</p><p className="mt-0.5 text-[12px] text-muted">{t('connections.github.reachHint')}</p></div>
             {result.installUrl !== '' && <Button variant="outline" icon={<ExternalLinkIcon size={14} />} onClick={() => void openExternal(result.installUrl)}>{t('connections.github.choose')}</Button>}
           </div>
-          <form className="flex flex-col gap-2 border-t border-line pt-3" onSubmit={event => { event.preventDefault(); access.mutate(repository) }}>
-            <label className="text-[12px] text-muted" htmlFor="probe-repository">{t('connections.github.probeLabel')}</label>
-            <div className="flex gap-2">
-              <input id="probe-repository" value={repository} onChange={event => setRepository(event.target.value)} className="field flex-1 font-mono text-[12.5px]" autoComplete="off" />
-              <Button type="submit" variant="outline" loading={access.isPending} disabled={repository.trim() === ''}>{t('connections.github.probe')}</Button>
-            </div>
-            {access.data && (access.data.level === 'reachable' || access.data.level === 'public') && <p className="flex items-center gap-2 text-ok"><CheckCircle2Icon size={14} />{t('connections.github.probeOk', { branch: access.data.defaultBranch })}</p>}
-            {access.data && (access.data.level === 'denied' || access.data.level === 'unknown') && <p role="alert" className="text-warn">{t('connections.github.probeDenied')}{access.data.failure !== '' && ` (${access.data.failure})`}</p>}
-            {access.isError && <p role="alert" className="text-danger">{failureText(access.error)}</p>}
-          </form>
         </div>
         <div className="flex justify-end"><Button onClick={onFinished}>{t('connections.done')}</Button></div>
       </div>
