@@ -94,7 +94,7 @@ export default function SettingsSecurity() {
             <div key={system} className="rounded-xl border border-line bg-card px-4 py-3.5">
               <p className="text-[11px] text-muted">{t(`security.systems.${system}.name`)}</p>
               <p className="mt-1 font-medium">{t(`security.systems.${system}.mechanism`)}</p>
-              <Badge variant={system === 'linux' ? 'success' : 'warning'} className="mt-2">{t(`security.systems.${system}.state`)}</Badge>
+              <Badge variant={system !== 'macos' ? 'success' : 'warning'} className="mt-2">{t(`security.systems.${system}.state`)}</Badge>
             </div>
           ))}
         </div>

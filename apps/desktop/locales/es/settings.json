@@ -46,7 +46,7 @@
       "windows": {
         "name": "Windows",
         "mechanism": "Cuenta local aparte",
-        "state": "Sin terminar"
+        "state": "Medido en CI"
       },
       "linux": {
         "name": "Linux",

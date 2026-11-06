@@ -46,7 +46,7 @@
       "windows": {
         "name": "Windows",
         "mechanism": "Dedicated local account",
-        "state": "Not finished"
+        "state": "Measured in CI"
       },
       "linux": {
         "name": "Linux",

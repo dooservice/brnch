@@ -60,6 +60,9 @@ const diff = [
   " }",
 ].join("\n");
 
+const SOURCE = ['import { useState } from "react";', 'import { useFilters } from "./useFilters";', "", "export function SearchBox() {", "  const { query, setQuery } = useFilters();", "  return <input value={query} onChange={(e) => setQuery(e.target.value)} />;", "}", ""].join("\n");
+const TERMINAL = "\x1b[32mdev@brnch\x1b[0m:\x1b[34m~/workspaces/web-store/add-search\x1b[0m$ npm test -- search\r\n\r\n PASS  src/catalog/SearchBox.test.tsx\r\n  ✓ filters the catalog as you type (14 ms)\r\n\r\nTests: 1 passed, 1 total\r\n\x1b[32mdev@brnch\x1b[0m:\x1b[34m~/workspaces/web-store/add-search\x1b[0m$ ";
+
 function fakeBackend(data) {
   window.localStorage.setItem("brnch.onboarded", data.onboarded ? "1" : "");
   window.localStorage.setItem("brnch.language", data.language ?? "es");
@@ -89,7 +92,18 @@ function fakeBackend(data) {
             { workspaceIdentifier: "w5", files: 6, added: 142, removed: 37 },
             { workspaceIdentifier: "w1", files: 2, added: 9, removed: 1 },
           ];
-        case "sandbox_status": return { available: true, mechanism: "bubblewrap", reason: null };
+        case "sandbox_status": return data.sandbox ?? { available: true, mechanism: "bubblewrap", reason: null };
+        case "probe_sandbox": return { homeHidden: true, workspaceWritable: true, failure: null };
+        case "list_workspace_files": {
+          const folder = args.relativePath;
+          if (folder === "") return [{ name: "src", relativePath: "src", isDirectory: true }, { name: "package.json", relativePath: "package.json", isDirectory: false }, { name: "README.md", relativePath: "README.md", isDirectory: false }];
+          if (folder === "src") return [{ name: "catalog", relativePath: "src/catalog", isDirectory: true }];
+          return [{ name: "SearchBox.tsx", relativePath: "src/catalog/SearchBox.tsx", isDirectory: false }, { name: "useFilters.ts", relativePath: "src/catalog/useFilters.ts", isDirectory: false }];
+        }
+        case "read_workspace_file": return { content: data.source, isBinary: false, isTooLarge: false };
+        case "find_workspace_files": return [];
+        case "open_terminal": return { terminalIdentifier: "terminal-1", backlogBase64: btoa(unescape(encodeURIComponent(data.terminal))) };
+        case "write_terminal": case "resize_terminal": return null;
         case "detect_agents": return [{ kind: "claude_code", installed: true, version: "2.1.0 (Claude Code)" }];
         case "gitd_status": return { connected: true, message: null };
         case "plugin:event|listen": return 1;
@@ -137,7 +151,11 @@ const scenarios = [
     },
   },
   { file: "11-settings-agents", active: "p1", act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Agentes" }).click(); } },
-  { file: "12-settings-security", active: "p1", act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Seguridad" }).click(); } },
+  { file: "12-settings-security", height: 1180, active: "p1", act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Seguridad" }).click(); } },
+  { file: "14-files", active: "p1", act: async (page) => { await page.getByRole("link", { name: /add-search Claude Code/ }).click(); await page.getByRole("tab", { name: /Archivos/ }).click(); await page.getByText("src", { exact: true }).click(); await page.getByText("catalog", { exact: true }).click(); await page.getByText("SearchBox.tsx").click(); } },
+  { file: "15-terminal", active: "p1", act: async (page) => { await page.getByRole("link", { name: /add-search Claude Code/ }).click(); await page.getByRole("tab", { name: /Terminal/ }).click(); } },
+  { file: "16-security-measured", height: 1180, active: "p1", act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Seguridad" }).click(); await page.getByRole("button", { name: "Comprobar ahora" }).click(); } },
+  { file: "17-windows-setup", height: 1180, active: "p1", windows: true, sandbox: { available: false, mechanism: "dedicated Windows account", reason: "the agent account is not created yet" }, act: async (page) => { await page.getByRole("button", { name: "Ajustes" }).click(); await page.getByRole("link", { name: "Seguridad" }).click(); } },
   { file: "13-english", active: "p1", language: "en", act: async (page) => page.getByRole("link", { name: /add-search Claude Code/ }).click() },
 ];
 
@@ -156,8 +174,8 @@ const server = createServer(async (request, response) => {
 const { port } = server.address();
 const browser = await chromium.launch();
 for (const scenario of scenarios) {
-  const page = await browser.newPage({ viewport: { width: 1360, height: 860 } });
-  const data = { projects, workspacesByProject, events, diff, onboarded: true, ...scenario };
+  const page = await browser.newPage({ viewport: { width: 1360, height: scenario.height ?? 860 }, ...(scenario.windows ? { userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130 Safari/537.36" } : {}) });
+  const data = { projects, workspacesByProject, events, diff, source: SOURCE, terminal: TERMINAL, onboarded: true, ...scenario };
   await page.addInitScript(fakeBackend, data);
   await page.goto(`http://localhost:${port}/`);
   await page.waitForTimeout(700);
