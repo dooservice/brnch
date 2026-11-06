@@ -4,7 +4,9 @@ use brnch_core::project::{ProjectId, ProjectStore, WorkspaceId, WorkspaceRecord}
 use brnch_core::workspace::{AgentWorkspace, ConflictAnalyzer, WorkspaceProvider};
 use brnch_core::{BrnchError, BrnchResult};
 
-use crate::{ConflictSummary, DiffSummary, PublishOutcome};
+use brnch_core::project::RunRecordStore;
+
+use crate::{ConflictSummary, DiffSummary, PublishOutcome, WorkspaceStatistics};
 
 /// Reviewing what agents did: read a workspace's diff, find which workspaces clash and publish
 /// the ones a person approves.
@@ -16,7 +18,7 @@ pub struct ReviewService<Provider, Store> {
 impl<Provider, Store> ReviewService<Provider, Store>
 where
     Provider: WorkspaceProvider + ConflictAnalyzer,
-    Store: ProjectStore,
+    Store: ProjectStore + RunRecordStore,
 {
     pub fn new(provider: Arc<Provider>, store: Arc<Store>) -> Self {
         Self { provider, store }
@@ -32,6 +34,31 @@ where
             unified_diff: diff.unified_diff,
             was_truncated: diff.was_truncated,
         })
+    }
+
+    /// How much each workspace of the project that has had a task changed.
+    pub async fn statistics(
+        &self,
+        project_identifier: &str,
+    ) -> BrnchResult<Vec<WorkspaceStatistics>> {
+        let mut statistics = Vec::new();
+        for record in self
+            .store
+            .list_workspaces(&ProjectId::new(project_identifier))?
+        {
+            if self.store.find_run(&record.identifier)?.is_none() {
+                continue;
+            }
+            let diff = self
+                .provider
+                .read_diff(&Self::workspace_of(&record))
+                .await?;
+            statistics.push(WorkspaceStatistics::from_diff(
+                record.identifier.as_str(),
+                &diff.unified_diff,
+            ));
+        }
+        Ok(statistics)
     }
 
     /// Every pair of the project's workspaces that would not merge cleanly.

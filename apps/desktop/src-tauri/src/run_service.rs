@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, PoisonError};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use brnch_agents::{AgentCatalog, AgentEvent, AgentKind, EventSink, NormalizingListener};
 use brnch_core::agent::{AgentRunCoordinator, AgentRunRequest, AgentRunner, PermissionMode};
@@ -92,7 +92,11 @@ where
         let run_identifier = Uuid::new_v4().to_string();
         let mut started = Vec::new();
         for branch_name in planned {
-            let directory = self.directory_for(&project.name, &branch_name);
+            let directory = self.directory_for(
+                project.workspaces_directory.as_deref(),
+                &project.name,
+                &branch_name,
+            );
             let record =
                 shared
                     .store
@@ -106,6 +110,7 @@ where
                     title: request.run_label.clone(),
                     prompt: request.prompt.clone(),
                     started_at_milliseconds: Self::now_in_milliseconds(),
+                    base_commit: None,
                 },
             )?;
             started.push(record.identifier.clone());
@@ -114,7 +119,10 @@ where
                 workspace_directory: directory,
                 run_label: branch_name,
                 prompt: request.prompt.clone(),
-                base_branch: request.base_branch.clone(),
+                base_branch: request
+                    .base_branch
+                    .clone()
+                    .or_else(|| project.base_branch.clone()),
             };
             self.spawn_run(request, run, record.identifier, Arc::clone(notifier));
         }
@@ -139,6 +147,7 @@ where
                 summary: STOPPED_BY_PERSON.to_owned(),
                 cost_in_dollars: None,
                 duration_in_milliseconds: None,
+                total_tokens: None,
             });
         true
     }
@@ -220,14 +229,20 @@ where
         }))
     }
 
-    fn directory_for(&self, project_name: &str, branch_name: &str) -> String {
+    /// A project that names its own folder gets its workspaces directly inside it; the others go
+    /// under the application's folder, in one subfolder per project.
+    fn directory_for(
+        &self,
+        project_folder: Option<&str>,
+        project_name: &str,
+        branch_name: &str,
+    ) -> String {
         let folder = branch_name.rsplit('/').next().unwrap_or(branch_name);
-        self.shared
-            .workspaces_root
-            .join(project_name)
-            .join(folder)
-            .to_string_lossy()
-            .into_owned()
+        let base = project_folder.map_or_else(
+            || self.shared.workspaces_root.join(project_name),
+            PathBuf::from,
+        );
+        base.join(folder).to_string_lossy().into_owned()
     }
 
     fn sink_for(
@@ -252,6 +267,9 @@ where
         let shared = Arc::clone(&self.shared);
         let kind = request.agent_kind;
         let mode = request.permission_mode;
+        let limit = request
+            .maximum_minutes
+            .map(|minutes| (minutes, Duration::from_secs(u64::from(minutes) * 60)));
         let key = workspace.as_str().to_owned();
         let task_key = key.clone();
         let handle = tokio::spawn(async move {
@@ -267,12 +285,26 @@ where
             let listener = NormalizingListener::new(catalog.normalizer(kind), &sink);
             let coordinator =
                 AgentRunCoordinator::new(&shared.settings, &*shared.provider, &shared.runner);
-            let result = coordinator
-                .run(&catalog.definition(kind, mode), &run, &listener)
-                .await;
+            let definition = catalog.definition(kind, mode);
+            let working = coordinator.run(&definition, &run, &listener);
+            let result = match limit {
+                Some((minutes, duration)) => tokio::time::timeout(duration, working)
+                    .await
+                    .unwrap_or_else(|_| {
+                        Err(BrnchError::AgentProcess(format!(
+                            "the time limit of {minutes} minutes was reached"
+                        )))
+                    }),
+                None => working.await,
+            };
             Self::forget(&shared, &task_key);
-            if let Err(failure) = result {
-                sink.publish(Self::failed_finish(&failure));
+            match result {
+                Ok(report) => {
+                    let _ = shared
+                        .store
+                        .set_base_commit(&sink.workspace, &report.workspace.base_commit);
+                }
+                Err(failure) => sink.publish(Self::failed_finish(&failure)),
             }
         });
         self.shared
@@ -296,6 +328,7 @@ where
             summary: failure.to_string(),
             cost_in_dollars: None,
             duration_in_milliseconds: None,
+            total_tokens: None,
         }
     }
 

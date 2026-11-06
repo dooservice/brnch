@@ -6,6 +6,8 @@ pub trait RunRecordStore {
     fn record_run(&self, workspace: &WorkspaceId, details: &WorkspaceRunDetails)
     -> BrnchResult<()>;
 
+    fn set_base_commit(&self, workspace: &WorkspaceId, commit: &str) -> BrnchResult<()>;
+
     fn find_run(&self, workspace: &WorkspaceId) -> BrnchResult<Option<WorkspaceRunDetails>>;
 
     /// Workspaces with a recorded run, whatever its state.

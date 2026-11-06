@@ -8,4 +8,6 @@ pub struct WorkspaceRunDetails {
     pub title: String,
     pub prompt: String,
     pub started_at_milliseconds: i64,
+    /// The commit the workspace was made at; known once gitd has prepared it.
+    pub base_commit: Option<String>,
 }

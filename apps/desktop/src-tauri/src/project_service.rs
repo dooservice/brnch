@@ -42,6 +42,27 @@ impl<Store: ProjectStore> ProjectService<Store> {
             .map(ProjectSummary::from)
     }
 
+    /// Adds a project together with where its runs start from and where its workspaces go.
+    pub fn add_project_with_settings(
+        &self,
+        name: &str,
+        repository_url: &str,
+        base_branch: Option<&str>,
+        workspaces_directory: Option<&str>,
+    ) -> BrnchResult<ProjectSummary> {
+        let mut created = self.store.add_project(name, repository_url)?;
+        let base_branch = base_branch.filter(|branch| !branch.trim().is_empty());
+        let workspaces_directory = workspaces_directory.filter(|path| !path.trim().is_empty());
+        self.store.update_project_settings(
+            &created.identifier,
+            base_branch,
+            workspaces_directory,
+        )?;
+        created.base_branch = base_branch.map(str::to_owned);
+        created.workspaces_directory = workspaces_directory.map(str::to_owned);
+        Ok(ProjectSummary::from(created))
+    }
+
     pub fn activate_project(&self, identifier: &str) -> BrnchResult<()> {
         self.store.activate_project(&ProjectId::new(identifier))
     }

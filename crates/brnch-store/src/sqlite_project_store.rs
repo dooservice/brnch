@@ -96,6 +96,8 @@ impl ProjectStore for SqliteProjectStore {
             identifier: ProjectId::new(&identifier),
             name: name.to_owned(),
             repository_url: repository_url.to_owned(),
+            base_branch: None,
+            workspaces_directory: None,
         })
     }
 
@@ -103,7 +105,7 @@ impl ProjectStore for SqliteProjectStore {
         let connection = self.connection();
         let mut statement = connection
             .prepare(
-                "SELECT identifier, name, repository_url FROM projects
+                "SELECT identifier, name, repository_url, base_branch, workspaces_directory FROM projects
                  ORDER BY last_opened_at DESC, rowid DESC",
             )
             .map_err(Self::failure)?;
@@ -113,10 +115,30 @@ impl ProjectStore for SqliteProjectStore {
                     identifier: ProjectId::new(&row.get::<_, String>(0)?),
                     name: row.get(1)?,
                     repository_url: row.get(2)?,
+                    base_branch: row.get(3)?,
+                    workspaces_directory: row.get(4)?,
                 })
             })
             .and_then(Iterator::collect)
             .map_err(Self::failure)
+    }
+
+    fn update_project_settings(
+        &self,
+        project: &ProjectId,
+        base_branch: Option<&str>,
+        workspaces_directory: Option<&str>,
+    ) -> BrnchResult<()> {
+        let connection = self.connection();
+        Self::require_project(&connection, project)?;
+        connection
+            .execute(
+                "UPDATE projects SET base_branch = ?2, workspaces_directory = ?3
+                 WHERE identifier = ?1",
+                params![project.as_str(), base_branch, workspaces_directory],
+            )
+            .map_err(Self::failure)?;
+        Ok(())
     }
 
     fn remove_project(&self, project: &ProjectId) -> BrnchResult<()> {
@@ -348,15 +370,16 @@ impl RunRecordStore for SqliteProjectStore {
         self.connection()
             .execute(
                 "INSERT INTO workspace_runs
-                    (workspace_identifier, run_identifier, agent_kind, permission_mode, title, prompt, started_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+                    (workspace_identifier, run_identifier, agent_kind, permission_mode, title, prompt, started_at, base_commit)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
                  ON CONFLICT(workspace_identifier) DO UPDATE SET
                     run_identifier = excluded.run_identifier,
                     agent_kind = excluded.agent_kind,
                     permission_mode = excluded.permission_mode,
                     title = excluded.title,
                     prompt = excluded.prompt,
-                    started_at = excluded.started_at",
+                    started_at = excluded.started_at,
+                    base_commit = excluded.base_commit",
                 params![
                     workspace.as_str(),
                     details.run_identifier,
@@ -364,8 +387,19 @@ impl RunRecordStore for SqliteProjectStore {
                     details.permission_mode,
                     details.title,
                     details.prompt,
-                    details.started_at_milliseconds
+                    details.started_at_milliseconds,
+                    details.base_commit
                 ],
+            )
+            .map_err(Self::failure)?;
+        Ok(())
+    }
+
+    fn set_base_commit(&self, workspace: &WorkspaceId, commit: &str) -> BrnchResult<()> {
+        self.connection()
+            .execute(
+                "UPDATE workspace_runs SET base_commit = ?2 WHERE workspace_identifier = ?1",
+                params![workspace.as_str(), commit],
             )
             .map_err(Self::failure)?;
         Ok(())
@@ -374,7 +408,7 @@ impl RunRecordStore for SqliteProjectStore {
     fn find_run(&self, workspace: &WorkspaceId) -> BrnchResult<Option<WorkspaceRunDetails>> {
         self.connection()
             .query_row(
-                "SELECT run_identifier, agent_kind, permission_mode, title, prompt, started_at
+                "SELECT run_identifier, agent_kind, permission_mode, title, prompt, started_at, base_commit
                  FROM workspace_runs WHERE workspace_identifier = ?1",
                 [workspace.as_str()],
                 |row| {
@@ -385,6 +419,7 @@ impl RunRecordStore for SqliteProjectStore {
                         title: row.get(3)?,
                         prompt: row.get(4)?,
                         started_at_milliseconds: row.get(5)?,
+                        base_commit: row.get(6)?,
                     })
                 },
             )

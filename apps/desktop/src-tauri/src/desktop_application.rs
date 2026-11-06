@@ -65,6 +65,8 @@ pub fn run() {
             project_commands::sandbox_status,
             project_commands::detect_agents,
             project_commands::gitd_status,
+            project_commands::inspect_repository,
+            project_commands::workspace_statistics,
         ])
         .run(tauri::generate_context!())
         .expect("the brnch window failed to start");

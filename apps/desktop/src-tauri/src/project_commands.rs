@@ -36,9 +36,16 @@ pub fn add_project(
     service: Service,
     name: String,
     repository_url: String,
+    base_branch: Option<String>,
+    workspaces_directory: Option<String>,
 ) -> Result<ProjectSummary, String> {
     service
-        .add_project(&name, &repository_url)
+        .add_project_with_settings(
+            &name,
+            &repository_url,
+            base_branch.as_deref(),
+            workspaces_directory.as_deref(),
+        )
         .map_err(|failure| describe(&failure))
 }
 
@@ -183,4 +190,20 @@ pub async fn gitd_status(
     gateway: State<'_, RunGateway>,
 ) -> Result<crate::run_gateway::GitdStatus, String> {
     Ok(gateway.gitd_status().await)
+}
+
+#[tauri::command]
+pub async fn inspect_repository(location: String) -> crate::RepositoryInspection {
+    crate::RepositoryInspector::inspect(&location).await
+}
+
+#[tauri::command]
+pub async fn workspace_statistics(
+    gateway: State<'_, RunGateway>,
+    project_identifier: String,
+) -> Result<Vec<crate::WorkspaceStatistics>, String> {
+    gateway
+        .statistics(&project_identifier)
+        .await
+        .map_err(|failure| describe(&failure))
 }

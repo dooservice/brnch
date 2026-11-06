@@ -9,7 +9,7 @@ use brnch_core::agent::PermissionMode;
 use brnch_core::agent::{
     AgentCommand, AgentOutcome, AgentOutputLine, AgentOutputListener, AgentRunner, OutputStream,
 };
-use brnch_core::project::{EventHistoryStore, ProjectStore};
+use brnch_core::project::{EventHistoryStore, ProjectStore, RunRecordStore};
 use brnch_core::workspace::{
     AgentWorkspace, PublishedBranch, WorkspaceDiff, WorkspaceProvider, WorkspaceRequest,
 };
@@ -143,6 +143,7 @@ fn request(project_identifier: &str, copies: u32) -> StartRunRequest {
         permission_mode: PermissionMode::EditFiles,
         base_branch: None,
         copies,
+        maximum_minutes: None,
     }
 }
 
@@ -301,4 +302,63 @@ async fn a_follow_up_needs_a_session_to_continue() {
     assert!(
         matches!(result, Err(BrnchError::AgentProcess(message)) if message.contains("no session"))
     );
+}
+
+#[tokio::test]
+async fn a_project_with_its_own_folder_gets_its_workspaces_there_and_a_finished_run_keeps_its_base_commit()
+ {
+    let (service, store) = service(true);
+    let project = store
+        .add_project("web-store", "https://example.com/web")
+        .unwrap();
+    store
+        .update_project_settings(&project.identifier, Some("develop"), Some("/disk/mine"))
+        .unwrap();
+    let notifier: Arc<dyn RunNotifier> = Arc::new(CollectingNotifier::default());
+
+    let started = service
+        .start(&request(project.identifier.as_str(), 1), &notifier)
+        .unwrap();
+
+    let workspace = store.find_workspace(&started[0]).unwrap().unwrap();
+    assert_eq!(workspace.directory, "/disk/mine/add-search");
+    wait_for_events(&store, &started[0], 3).await;
+    for _ in 0..200 {
+        if store
+            .find_run(&started[0])
+            .unwrap()
+            .unwrap()
+            .base_commit
+            .is_some()
+        {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    assert_eq!(
+        store
+            .find_run(&started[0])
+            .unwrap()
+            .unwrap()
+            .base_commit
+            .as_deref(),
+        Some("abc")
+    );
+}
+
+#[tokio::test]
+async fn an_agent_that_works_longer_than_the_limit_is_stopped_and_the_history_says_why() {
+    let (service, store, _) = service_with(true, true);
+    let project = store
+        .add_project("web-store", "https://example.com/web")
+        .unwrap();
+    let notifier: Arc<dyn RunNotifier> = Arc::new(CollectingNotifier::default());
+    let mut limited = request(project.identifier.as_str(), 1);
+    limited.maximum_minutes = Some(0);
+
+    let started = service.start(&limited, &notifier).unwrap();
+
+    wait_for_events(&store, &started[0], 2).await;
+    let last = store.last_event(&started[0]).unwrap().unwrap().event_json;
+    assert!(last.contains("time limit"));
 }

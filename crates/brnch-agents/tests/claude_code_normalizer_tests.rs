@@ -37,6 +37,7 @@ fn a_recorded_run_becomes_the_expected_events_in_order() {
             summary: "Edited a.txt".to_owned(),
             cost_in_dollars: Some(0.0123),
             duration_in_milliseconds: Some(4200),
+            total_tokens: None,
         },
     ];
 
@@ -65,6 +66,21 @@ fn an_unknown_message_type_is_kept_as_unparsed_output() {
             raw_line: line.to_owned()
         }]
     );
+}
+
+#[test]
+fn the_tokens_the_agent_reports_are_added_up() {
+    let line = r#"{"type":"result","is_error":false,"result":"ok","usage":{"input_tokens":1000,"output_tokens":234}}"#;
+
+    let events = ClaudeCodeNormalizer.normalize_line(line);
+
+    assert!(matches!(
+        events.as_slice(),
+        [AgentEvent::RunFinished {
+            total_tokens: Some(1234),
+            ..
+        }]
+    ));
 }
 
 #[test]
@@ -158,6 +174,7 @@ mod listener {
                 summary: "ok".to_owned(),
                 cost_in_dollars: Some(0.1),
                 duration_in_milliseconds: Some(5),
+                total_tokens: None,
             },
             AgentEvent::UnparsedOutput {
                 raw_line: "??".to_owned(),

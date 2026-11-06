@@ -8,6 +8,7 @@ use brnch_sandbox::{SandboxSelector, SandboxStatus, SandboxedAgentRunner};
 use brnch_store::SqliteProjectStore;
 use tokio::sync::OnceCell;
 
+use crate::WorkspaceStatistics;
 use crate::{
     ConflictSummary, DiffSummary, PublishOutcome, ReviewService, RunNotifier, RunService,
     StartRunRequest,
@@ -110,6 +111,14 @@ impl RunGateway {
     pub async fn diff(&self, workspace_identifier: &str) -> BrnchResult<DiffSummary> {
         let connected = self.connected.get_or_try_init(|| self.connect()).await?;
         connected.review.diff(workspace_identifier).await
+    }
+
+    pub async fn statistics(
+        &self,
+        project_identifier: &str,
+    ) -> BrnchResult<Vec<WorkspaceStatistics>> {
+        let connected = self.connected.get_or_try_init(|| self.connect()).await?;
+        connected.review.statistics(project_identifier).await
     }
 
     pub async fn conflicts(&self, project_identifier: &str) -> BrnchResult<Vec<ConflictSummary>> {

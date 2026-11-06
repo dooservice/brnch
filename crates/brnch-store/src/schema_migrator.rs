@@ -39,6 +39,9 @@ const MIGRATIONS: &[&str] = &[
         prompt TEXT NOT NULL,
         started_at INTEGER NOT NULL
     );",
+    "ALTER TABLE projects ADD COLUMN base_branch TEXT;
+    ALTER TABLE projects ADD COLUMN workspaces_directory TEXT;
+    ALTER TABLE workspace_runs ADD COLUMN base_commit TEXT;",
 ];
 
 pub struct SchemaMigrator;

@@ -22,6 +22,7 @@ where
                 summary: SUMMARY.to_owned(),
                 cost_in_dollars: None,
                 duration_in_milliseconds: None,
+                total_tokens: None,
             };
             if let Ok(json) = serde_json::to_string(&event) {
                 store.append_event(&workspace, &json)?;

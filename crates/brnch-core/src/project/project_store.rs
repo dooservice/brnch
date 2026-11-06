@@ -5,6 +5,13 @@ use crate::BrnchResult;
 pub trait ProjectStore {
     fn add_project(&self, name: &str, repository_url: &str) -> BrnchResult<ProjectRecord>;
 
+    fn update_project_settings(
+        &self,
+        project: &ProjectId,
+        base_branch: Option<&str>,
+        workspaces_directory: Option<&str>,
+    ) -> BrnchResult<()>;
+
     /// Most recently opened first.
     fn list_projects(&self) -> BrnchResult<Vec<ProjectRecord>>;
 

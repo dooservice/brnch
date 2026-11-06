@@ -10,6 +10,7 @@ fn finished(succeeded: bool) -> String {
         summary: String::new(),
         cost_in_dollars: Some(0.25),
         duration_in_milliseconds: Some(3_000),
+        total_tokens: Some(1_200),
     })
     .unwrap()
 }
@@ -22,6 +23,7 @@ fn details() -> WorkspaceRunDetails {
         title: "Add search".to_owned(),
         prompt: "p".to_owned(),
         started_at_milliseconds: 5,
+        base_commit: None,
     }
 }
 

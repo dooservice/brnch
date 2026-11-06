@@ -28,6 +28,9 @@ pub struct WorkspaceSummary {
     pub started_at_milliseconds: Option<i64>,
     pub cost_in_dollars: Option<f64>,
     pub duration_in_milliseconds: Option<u64>,
+    pub total_tokens: Option<u64>,
+    pub permission_mode: Option<String>,
+    pub base_commit: Option<String>,
 }
 
 impl WorkspaceSummary {
@@ -38,14 +41,15 @@ impl WorkspaceSummary {
     ) -> Self {
         let finish = last_event
             .and_then(|stored| serde_json::from_str::<AgentEvent>(&stored.event_json).ok());
-        let (status, cost, duration) = match (details, finish) {
-            (None, _) => (WorkspaceStatus::Idle, None, None),
+        let (status, cost, duration, tokens) = match (details, finish) {
+            (None, _) => (WorkspaceStatus::Idle, None, None, None),
             (
                 Some(_),
                 Some(AgentEvent::RunFinished {
                     succeeded,
                     cost_in_dollars,
                     duration_in_milliseconds,
+                    total_tokens,
                     ..
                 }),
             ) => (
@@ -56,8 +60,9 @@ impl WorkspaceSummary {
                 },
                 cost_in_dollars,
                 duration_in_milliseconds,
+                total_tokens,
             ),
-            (Some(_), _) => (WorkspaceStatus::Running, None, None),
+            (Some(_), _) => (WorkspaceStatus::Running, None, None, None),
         };
         Self {
             identifier: record.identifier.as_str().to_owned(),
@@ -70,6 +75,9 @@ impl WorkspaceSummary {
             status,
             cost_in_dollars: cost,
             duration_in_milliseconds: duration,
+            total_tokens: tokens,
+            permission_mode: details.map(|run| run.permission_mode.clone()),
+            base_commit: details.and_then(|run| run.base_commit.clone()),
         }
     }
 

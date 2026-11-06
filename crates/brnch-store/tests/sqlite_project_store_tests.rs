@@ -243,6 +243,7 @@ mod run_records {
             title: title.to_owned(),
             prompt: "do the thing".to_owned(),
             started_at_milliseconds: 1_000,
+            base_commit: None,
         }
     }
 
@@ -307,4 +308,61 @@ mod run_records {
         );
         assert_eq!(store.last_event(&workspace.identifier).unwrap(), None);
     }
+}
+
+#[test]
+fn a_project_remembers_its_base_branch_and_where_its_workspaces_go() {
+    let store = store();
+    let project = store.add_project("p", REPOSITORY).unwrap();
+    assert_eq!(store.list_projects().unwrap()[0].base_branch, None);
+
+    store
+        .update_project_settings(&project.identifier, Some("develop"), Some("D:\\brnch\\p"))
+        .unwrap();
+
+    let saved = store.list_projects().unwrap().remove(0);
+    assert_eq!(saved.base_branch.as_deref(), Some("develop"));
+    assert_eq!(saved.workspaces_directory.as_deref(), Some("D:\\brnch\\p"));
+    assert!(matches!(
+        store.update_project_settings(&ProjectId::new("nope"), None, None),
+        Err(BrnchError::UnknownProject(_))
+    ));
+}
+
+#[test]
+fn the_base_commit_of_a_workspace_is_kept_once_known() {
+    use brnch_core::project::{RunRecordStore, WorkspaceRunDetails};
+    let store = store();
+    let project = store.add_project("p", REPOSITORY).unwrap();
+    let workspace = store
+        .add_workspace(&project.identifier, "/w", "agents/a")
+        .unwrap();
+    store
+        .record_run(
+            &workspace.identifier,
+            &WorkspaceRunDetails {
+                run_identifier: "r".to_owned(),
+                agent_kind: "claude_code".to_owned(),
+                permission_mode: "edit_files".to_owned(),
+                title: "t".to_owned(),
+                prompt: "p".to_owned(),
+                started_at_milliseconds: 1,
+                base_commit: None,
+            },
+        )
+        .unwrap();
+
+    store
+        .set_base_commit(&workspace.identifier, "3f9a1c2")
+        .unwrap();
+
+    assert_eq!(
+        store
+            .find_run(&workspace.identifier)
+            .unwrap()
+            .unwrap()
+            .base_commit
+            .as_deref(),
+        Some("3f9a1c2")
+    );
 }

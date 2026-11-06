@@ -91,7 +91,17 @@ impl ClaudeCodeNormalizer {
             summary: Self::text_of(&message["result"]),
             cost_in_dollars: message["total_cost_usd"].as_f64(),
             duration_in_milliseconds: message["duration_ms"].as_u64(),
+            total_tokens: Self::total_tokens(&message["usage"]),
         }]
+    }
+
+    fn total_tokens(usage: &Value) -> Option<u64> {
+        let input = usage["input_tokens"].as_u64();
+        let output = usage["output_tokens"].as_u64();
+        match (input, output) {
+            (None, None) => None,
+            (first, second) => Some(first.unwrap_or(0) + second.unwrap_or(0)),
+        }
     }
 
     fn text_of(value: &Value) -> String {

@@ -29,6 +29,9 @@ pub enum AgentEvent {
         summary: String,
         cost_in_dollars: Option<f64>,
         duration_in_milliseconds: Option<u64>,
+        /// Input plus output tokens, when the agent reports them.
+        #[serde(default)]
+        total_tokens: Option<u64>,
     },
     /// A line the normalizer did not understand. Kept so a format change is visible, not lost.
     UnparsedOutput {

@@ -13,4 +13,6 @@ pub struct StartRunRequest {
     pub permission_mode: PermissionMode,
     pub base_branch: Option<String>,
     pub copies: u32,
+    /// Stops the agent when it has worked this long; no limit when `None`.
+    pub maximum_minutes: Option<u32>,
 }

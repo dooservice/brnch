@@ -8,6 +8,8 @@ pub struct ProjectSummary {
     pub identifier: String,
     pub name: String,
     pub repository_url: String,
+    pub base_branch: Option<String>,
+    pub workspaces_directory: Option<String>,
 }
 
 impl From<ProjectRecord> for ProjectSummary {
@@ -16,6 +18,8 @@ impl From<ProjectRecord> for ProjectSummary {
             identifier: record.identifier.as_str().to_owned(),
             name: record.name,
             repository_url: record.repository_url,
+            base_branch: record.base_branch,
+            workspaces_directory: record.workspaces_directory,
         }
     }
 }
