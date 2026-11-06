@@ -37,6 +37,8 @@ foreach ($path in @($standardOutput, $standardError)) { Set-Content -LiteralPath
 $process = Start-Process powershell.exe -Credential $credential -LoadUserProfile -WorkingDirectory $WorkspaceDirectory -PassThru `
     -RedirectStandardOutput $standardOutput -RedirectStandardError $standardError `
     -ArgumentList @('-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', "`"$InnerScript`"", '-JobFile', "`"$JobFile`"")
+# Without holding the handle now, ExitCode comes back empty once the process has ended.
+$null = $process.Handle
 
 function Read-Increment([string]$path, [ref]$offset, $writer) {
     $stream = [IO.File]::Open($path, 'Open', 'Read', 'ReadWrite')
