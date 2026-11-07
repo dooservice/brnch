@@ -18,7 +18,9 @@ impl AcpListener for Silent {
 async fn the_claude_adapter_speaks_acp_and_asks_for_a_credential_when_it_has_none() {
     let workspace = std::env::temp_dir().join(format!("brnch-acp-{}", std::process::id()));
     std::fs::create_dir_all(&workspace).unwrap();
-    let key = std::env::var("ANTHROPIC_API_KEY").ok();
+    let key = std::env::var("ANTHROPIC_API_KEY")
+        .ok()
+        .filter(|value| !value.is_empty());
     let environment = key
         .iter()
         .map(|value| ("ANTHROPIC_API_KEY".to_owned(), value.clone()))
