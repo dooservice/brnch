@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -91,11 +91,11 @@ where
         }
         let run_identifier = Uuid::new_v4().to_string();
         let mut started = Vec::new();
-        for branch_name in planned {
-            let directory = self.directory_for(
+        for planned_name in planned {
+            let (branch_name, directory) = self.free_branch_and_directory(
                 project.workspaces_directory.as_deref(),
                 &project.name,
-                &branch_name,
+                &planned_name,
             );
             let record =
                 shared
@@ -243,6 +243,29 @@ where
             PathBuf::from,
         );
         base.join(folder).to_string_lossy().into_owned()
+    }
+
+    /// A run with the same title as an earlier one would land on that run's folder and branch, so
+    /// it gets the next free number: gitd starts each workspace on a branch of its own.
+    fn free_branch_and_directory(
+        &self,
+        project_folder: Option<&str>,
+        project_name: &str,
+        branch_name: &str,
+    ) -> (String, String) {
+        let mut attempt = 1;
+        loop {
+            let candidate = if attempt == 1 {
+                branch_name.to_owned()
+            } else {
+                format!("{branch_name}-{attempt}")
+            };
+            let directory = self.directory_for(project_folder, project_name, &candidate);
+            if !Path::new(&directory).exists() {
+                return (candidate, directory);
+            }
+            attempt += 1;
+        }
     }
 
     fn sink_for(
