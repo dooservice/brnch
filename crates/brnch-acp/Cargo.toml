@@ -1,0 +1,18 @@
+[package]
+name = "brnch-acp"
+description = "Drives coding agents through the Agent Client Protocol."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+agent-client-protocol = { version = "5.0.0", features = ["process"] }
+brnch-core = { version = "0.1.0", path = "../brnch-core" }
+
+[dev-dependencies]
+tokio = { version = "1.54.1", features = ["rt", "rt-multi-thread", "macros", "time"] }
